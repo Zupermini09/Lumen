@@ -65,8 +65,7 @@ public sealed partial class PlayerViewModel : TransportViewModel
     public IReadOnlyList<ChapterInfo> Chapters => _details.Chapters;
 
     /// <summary>Resume where the user left off, unless they (nearly) finished it.</summary>
-    public TimeSpan StartPosition =>
-        _item.PlaybackPosition > TimeSpan.FromSeconds(5) && !_item.Played ? _item.PlaybackPosition : TimeSpan.Zero;
+    public TimeSpan StartPosition => _item.ResumePosition;
 
     /// <summary>Shows "Start over" while playback resumed from a saved position.</summary>
     [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]

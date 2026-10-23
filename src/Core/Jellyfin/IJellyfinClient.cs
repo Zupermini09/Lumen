@@ -32,6 +32,22 @@ public interface IJellyfinClient
 
     Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, CancellationToken cancellationToken = default);
 
+    /// <summary>One item with overview, genres, cast, streams... (the details pages).</summary>
+    Task<ItemDetails> GetItemDetailsAsync(string itemId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<MediaItem>> GetSeasonsAsync(MediaItem series, CancellationToken cancellationToken = default);
+
+    /// <summary>The episodes of a series, or of one season of it, with overviews.</summary>
+    Task<IReadOnlyList<MediaItem>> GetEpisodesAsync(MediaItem series, MediaItem? season, CancellationToken cancellationToken = default);
+
+    /// <summary>The episode to watch next in a series, or null when there is none (nothing aired yet, or all watched).</summary>
+    Task<MediaItem?> GetSeriesNextUpAsync(MediaItem series, CancellationToken cancellationToken = default);
+
+    /// <summary>Marks an item (or all episodes of a series/season) as watched or not watched.</summary>
+    Task SetPlayedAsync(string itemId, bool played, CancellationToken cancellationToken = default);
+
+    Task SetFavoriteAsync(string itemId, bool favorite, CancellationToken cancellationToken = default);
+
     Uri GetImageUri(string itemId, ImageKind kind, string? tag, int maxHeight);
     Uri GetUserImageUri(ServerInfo server, UserInfo user, int maxHeight);
 

@@ -102,8 +102,8 @@ Code signing (decide before first public release):
 - [ ] Sorting, filtering (unwatched, favourites, genre, year, rating, HD/4K/HDR, etc.), alphabet jump, view modes (poster, thumb, list), grouping
 
 **Item details**
-- [ ] Metadata, cast and crew, trailers/special features, similar items, chapters, external links, media info (streams), versions picker
-- [ ] Watched/favourite toggles, rating, play/resume/shuffle, add to playlist/collection, copy stream URL
+- [ ] Metadata, cast and crew, trailers/special features, similar items, chapters, external links, media info (streams), versions picker — *done: movie, episode and series/season pages with metadata, cast, director/writers, media info (streams); seasons and episode lists; Missing: trailers/special features, similar items, chapters list, external links, versions picker.*
+- [ ] Watched/favourite toggles, rating, play/resume/shuffle, add to playlist/collection, copy stream URL — *done: watched and favourite toggles, play/resume/start over, series Play/Resume next episode. Missing: rating, shuffle, playlists/collections, copy stream URL.*
 
 **Video playback**
 - [ ] Direct play, direct stream and transcoding fallback (HLS), quality/bitrate selection, hardware decoding (D3D11 on Windows, VideoToolbox on macOS, VAAPI on Linux) — *done: direct play (static stream).*

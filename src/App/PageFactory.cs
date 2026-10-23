@@ -11,6 +11,8 @@ internal sealed class PageFactory(IServiceProvider services) : IPageFactory
     public PageViewModel Home() => Create<HomeViewModel>();
     public PageViewModel Items(MediaItem parent) => Create<ItemsViewModel>(parent);
     public PageViewModel Player(MediaItem item) => Create<PlayerViewModel>(item);
+    public PageViewModel Details(MediaItem item) => Create<ItemDetailsViewModel>(item);
+    public PageViewModel Series(MediaItem item) => Create<SeriesDetailsViewModel>(item);
     public PageViewModel PlaybackTest() => Create<PlaybackTestViewModel>();
     public PageViewModel About() => Create<AboutViewModel>();
 

@@ -54,6 +54,16 @@ internal sealed class UserItemDataDto
 {
     public long PlaybackPositionTicks { get; set; }
     public bool Played { get; set; }
+    public bool IsFavorite { get; set; }
+}
+
+internal sealed class PersonDto
+{
+    public string Id { get; set; } = "";
+    public string? Name { get; set; }
+    public string? Role { get; set; }
+    public string? Type { get; set; }
+    public string? PrimaryImageTag { get; set; }
 }
 
 internal sealed class BaseItemDto
@@ -76,6 +86,22 @@ internal sealed class BaseItemDto
     public string? SeriesPrimaryImageTag { get; set; }
     public string? AlbumId { get; set; }
     public string? AlbumPrimaryImageTag { get; set; }
+    public string? Overview { get; set; }
+    public string? SeasonId { get; set; }
+
+    // Details pages only (fields=Overview,Genres,People,MediaStreams...).
+    public List<string>? Genres { get; set; }
+    public string? OfficialRating { get; set; }
+    public double? CommunityRating { get; set; }
+    public List<string>? Taglines { get; set; }
+    public List<PersonDto>? People { get; set; }
+    public List<MediaStreamDto>? MediaStreams { get; set; }
+    public List<MediaSourceDto>? MediaSources { get; set; }
+    public string? Status { get; set; }
+    public DateTime? EndDate { get; set; }
+    public List<string>? BackdropImageTags { get; set; }
+    public string? ParentBackdropItemId { get; set; }
+    public List<string>? ParentBackdropImageTags { get; set; }
 
     public MediaItem ToModel() => new()
     {
@@ -94,12 +120,43 @@ internal sealed class BaseItemDto
         RunTime = RunTimeTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null,
         PlaybackPosition = TimeSpan.FromTicks(UserData?.PlaybackPositionTicks ?? 0),
         Played = UserData?.Played ?? false,
+        IsFavorite = UserData?.IsFavorite ?? false,
+        Overview = Overview,
+        SeasonId = SeasonId,
         PrimaryImageTag = ImageTags?.GetValueOrDefault("Primary"),
         ThumbImageTag = ImageTags?.GetValueOrDefault("Thumb"),
         SeriesPrimaryImageTag = SeriesPrimaryImageTag,
         AlbumId = AlbumId,
         AlbumPrimaryImageTag = AlbumPrimaryImageTag,
     };
+
+    public ItemDetails ToDetails()
+    {
+        // Episodes and seasons have no backdrop of their own: like the web client, show the series'.
+        var (backdropItem, backdropTag) =
+            BackdropImageTags is { Count: > 0 } own ? (Id, own[0])
+            : ParentBackdropItemId is { Length: > 0 } parent && ParentBackdropImageTags is { Count: > 0 } inherited ? (parent, inherited[0])
+            : ((string?)null, (string?)null);
+
+        // The top-level list is the first file version's; older servers only fill it inside MediaSources.
+        var streams = MediaStreams is { Count: > 0 } ? MediaStreams : MediaSources?.FirstOrDefault()?.MediaStreams;
+
+        return new ItemDetails
+        {
+            Item = ToModel(),
+            Genres = Genres ?? [],
+            OfficialRating = string.IsNullOrWhiteSpace(OfficialRating) ? null : OfficialRating,
+            CommunityRating = CommunityRating is > 0 ? CommunityRating : null,
+            Tagline = Taglines?.FirstOrDefault(t => !string.IsNullOrWhiteSpace(t)),
+            People = People?.Where(p => p.Id.Length > 0 && !string.IsNullOrWhiteSpace(p.Name))
+                .Select(p => new PersonInfo(p.Id, p.Name!, string.IsNullOrWhiteSpace(p.Role) ? null : p.Role, p.Type ?? "", p.PrimaryImageTag)).ToList() ?? [],
+            Streams = streams?.Select(s => s.ToModel()).ToList() ?? [],
+            Status = Status,
+            EndYear = EndDate?.Year,
+            BackdropItemId = backdropItem,
+            BackdropTag = backdropTag,
+        };
+    }
 }
 
 internal sealed class MediaStreamDto

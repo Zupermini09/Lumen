@@ -11,6 +11,8 @@ public sealed class JellyfinClient : IJellyfinClient
 {
     private static readonly TimeSpan ProbeTimeout = TimeSpan.FromSeconds(6);
     private const string ItemFields = "PrimaryImageAspectRatio,MediaSourceCount";
+    private const string DetailsFields = "Overview,Genres,People,MediaStreams,Taglines,PrimaryImageAspectRatio";
+    private const string EpisodeFields = "Overview,PrimaryImageAspectRatio";
 
     private readonly HttpClient _http;
     private readonly ClientIdentity _identity;
@@ -203,6 +205,65 @@ public sealed class JellyfinClient : IJellyfinClient
         var result = await SendAsync<ItemsResultDto>(HttpMethod.Get, session.Server.Address,
             "Items?" + ChildrenQuery(parent, session.User.Id), session.AccessToken, null, cancellationToken);
         return ToModels(result);
+    }
+
+    public async Task<ItemDetails> GetItemDetailsAsync(string itemId, CancellationToken cancellationToken = default)
+    {
+        var session = _session.Require();
+        var item = await GetWithFallbackAsync<BaseItemDto>(session,
+            $"Items/{itemId}?userId={session.User.Id}&fields={DetailsFields}",
+            $"Users/{session.User.Id}/Items/{itemId}?fields={DetailsFields}", cancellationToken);
+        return item?.ToDetails() ?? throw new HttpRequestException("The server returned no item.", null, HttpStatusCode.NotFound);
+    }
+
+    public async Task<IReadOnlyList<MediaItem>> GetSeasonsAsync(MediaItem series, CancellationToken cancellationToken = default)
+    {
+        var session = _session.Require();
+        var result = await SendAsync<ItemsResultDto>(HttpMethod.Get, session.Server.Address,
+            $"Shows/{series.Id}/Seasons?userId={session.User.Id}&fields={ItemFields}&enableImageTypes=Primary&imageTypeLimit=1",
+            session.AccessToken, null, cancellationToken);
+        return ToModels(result);
+    }
+
+    public async Task<IReadOnlyList<MediaItem>> GetEpisodesAsync(MediaItem series, MediaItem? season, CancellationToken cancellationToken = default)
+    {
+        var session = _session.Require();
+        var seasonQuery = season is null ? "" : $"&seasonId={season.Id}";
+        var result = await SendAsync<ItemsResultDto>(HttpMethod.Get, session.Server.Address,
+            $"Shows/{series.Id}/Episodes?userId={session.User.Id}{seasonQuery}&fields={EpisodeFields}&enableImageTypes=Primary,Thumb&imageTypeLimit=1",
+            session.AccessToken, null, cancellationToken);
+        return ToModels(result);
+    }
+
+    public async Task<MediaItem?> GetSeriesNextUpAsync(MediaItem series, CancellationToken cancellationToken = default)
+    {
+        var session = _session.Require();
+        var result = await SendAsync<ItemsResultDto>(HttpMethod.Get, session.Server.Address,
+            $"Shows/NextUp?userId={session.User.Id}&seriesId={series.Id}&limit=1&fields={ItemFields}&enableImageTypes=Primary,Thumb&imageTypeLimit=1",
+            session.AccessToken, null, cancellationToken);
+        return ToModels(result).FirstOrDefault();
+    }
+
+    public Task SetPlayedAsync(string itemId, bool played, CancellationToken cancellationToken = default) =>
+        SetUserFlagAsync("UserPlayedItems", "PlayedItems", itemId, played, cancellationToken);
+
+    public Task SetFavoriteAsync(string itemId, bool favorite, CancellationToken cancellationToken = default) =>
+        SetUserFlagAsync("UserFavoriteItems", "FavoriteItems", itemId, favorite, cancellationToken);
+
+    // POST sets the flag, DELETE clears it. 10.9+ routes are "UserPlayedItems/{id}?userId="; older servers have
+    // "Users/{userId}/PlayedItems/{id}".
+    private async Task SetUserFlagAsync(string route, string legacyRoute, string itemId, bool value, CancellationToken cancellationToken)
+    {
+        var session = _session.Require();
+        var method = value ? HttpMethod.Post : HttpMethod.Delete;
+        try
+        {
+            await SendAsync<object>(method, session.Server.Address, $"{route}/{itemId}?userId={session.User.Id}", session.AccessToken, null, cancellationToken);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed)
+        {
+            await SendAsync<object>(method, session.Server.Address, $"Users/{session.User.Id}/{legacyRoute}/{itemId}", session.AccessToken, null, cancellationToken);
+        }
     }
 
     /// <summary>

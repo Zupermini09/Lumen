@@ -15,5 +15,8 @@ public abstract class PageViewModel : ViewModelBase, IDisposable
     /// <summary>Called when another page is shown on top of this one.</summary>
     public virtual void OnNavigatedFrom() { }
 
+    /// <summary>Called when the page is shown again after the page on top of it was closed (Back).</summary>
+    public virtual void OnNavigatedTo() { }
+
     public virtual void Dispose() => GC.SuppressFinalize(this);
 }

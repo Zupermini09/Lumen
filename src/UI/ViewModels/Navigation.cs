@@ -23,13 +23,44 @@ public interface IPageFactory
     PageViewModel Home();
     PageViewModel Items(MediaItem parent);
     PageViewModel Player(MediaItem item);
+
+    /// <summary>The details page of a movie or episode.</summary>
+    PageViewModel Details(MediaItem item);
+
+    /// <summary>The page of a series (or of one of its seasons, which is then preselected).</summary>
+    PageViewModel Series(MediaItem item);
     PageViewModel PlaybackTest();
     PageViewModel About();
 }
 
+public enum ItemTarget
+{
+    Folder,
+    Player,
+    Details,
+    Series,
+}
+
 public static class ItemNavigation
 {
-    /// <summary>Playable items open the player; folders (libraries, shows, seasons, albums...) open their contents.</summary>
+    /// <summary>
+    /// Like the web client: movies and episodes open their details, series and seasons the series page; other playable
+    /// items (music videos, tracks...) play; folders (libraries, albums, collections...) open their contents.
+    /// </summary>
+    public static ItemTarget TargetFor(MediaItem item) => item.Type switch
+    {
+        "Movie" or "Episode" => ItemTarget.Details,
+        "Series" => ItemTarget.Series,
+        "Season" when item.SeriesId is not null => ItemTarget.Series,
+        _ => item.IsPlayable ? ItemTarget.Player : ItemTarget.Folder,
+    };
+
     public static void Open(MediaItem item, INavigator navigator, IPageFactory pages) =>
-        navigator.Navigate(item.IsPlayable ? pages.Player(item) : pages.Items(item));
+        navigator.Navigate(TargetFor(item) switch
+        {
+            ItemTarget.Details => pages.Details(item),
+            ItemTarget.Series => pages.Series(item),
+            ItemTarget.Player => pages.Player(item),
+            _ => pages.Items(item),
+        });
 }

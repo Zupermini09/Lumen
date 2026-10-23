@@ -25,3 +25,17 @@ public class TimeFormatTests
     [Fact]
     public void Formats_megabytes() => Assert.Equal("150 MB", TimeFormat.Megabytes(150L * 1024 * 1024 + 12));
 }
+
+public class DurationFormatTests
+{
+    [Theory]
+    [InlineData(0, "0s")]
+    [InlineData(30, "30s")]
+    [InlineData(60, "1m")]
+    [InlineData(45 * 60, "45m")]
+    [InlineData(60 * 60, "1h")]
+    [InlineData(101 * 60, "1h 41m")]
+    [InlineData(169 * 60 + 20, "2h 49m")]
+    public void Runtimes_are_short_and_readable(int seconds, string expected) =>
+        Assert.Equal(expected, TimeFormat.Duration(TimeSpan.FromSeconds(seconds)));
+}

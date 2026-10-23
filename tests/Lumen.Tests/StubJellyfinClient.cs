@@ -19,6 +19,12 @@ internal abstract class StubJellyfinClient : IJellyfinClient
     public virtual Task<IReadOnlyList<MediaItem>> GetNextUpAsync(int limit, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task<MediaItem?> GetNextEpisodeAsync(MediaItem episode, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<ItemDetails> GetItemDetailsAsync(string itemId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<IReadOnlyList<MediaItem>> GetSeasonsAsync(MediaItem series, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<IReadOnlyList<MediaItem>> GetEpisodesAsync(MediaItem series, MediaItem? season, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<MediaItem?> GetSeriesNextUpAsync(MediaItem series, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task SetPlayedAsync(string itemId, bool played, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task SetFavoriteAsync(string itemId, bool favorite, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Uri GetImageUri(string itemId, ImageKind kind, string? tag, int maxHeight) => throw new NotSupportedException();
     public virtual Uri GetUserImageUri(ServerInfo server, UserInfo user, int maxHeight) => throw new NotSupportedException();
     public virtual Task<PlaybackDetails> GetPlaybackDetailsAsync(MediaItem item, CancellationToken cancellationToken = default) => throw new NotSupportedException();

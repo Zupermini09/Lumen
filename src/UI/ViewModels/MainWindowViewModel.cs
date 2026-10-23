@@ -115,6 +115,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigator, IDi
         var current = CurrentPage;
         Show(previous);
         current?.Dispose();
+        previous.OnNavigatedTo();
     }
 
     /// <summary>Handles the navigation pane: Home, Play a file, About, Sign out.</summary>

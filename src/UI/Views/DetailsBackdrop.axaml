@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:imaging="using:Lumen.UI.Imaging"
+             x:Class="Lumen.UI.Views.DetailsBackdrop"
+             x:DataType="vm:DetailsViewModelBase">
+  <!-- The backdrop fades out towards the bottom so the page content stays readable over it. -->
+  <Image Height="460" VerticalAlignment="Top" Stretch="UniformToFill" Opacity="0.4"
+         imaging:RemoteImage.Uri="{Binding BackdropUri}">
+    <Image.OpacityMask>
+      <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0.35" Color="Black" />
+        <GradientStop Offset="1" Color="Transparent" />
+      </LinearGradientBrush>
+    </Image.OpacityMask>
+  </Image>
+</UserControl>
