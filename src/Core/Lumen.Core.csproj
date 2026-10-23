@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Models and interfaces shared by every layer. No UI, SDK or native dependencies. -->
+</Project>

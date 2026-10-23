@@ -1,0 +1,205 @@
+name: Build
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_VERSION: '10.0.x'
+  NFPM_VERSION: '2.43.0'
+  APPIMAGETOOL_VERSION: '1.9.0'
+  SMOKE_MEDIA: tests/media/smoke-6s.mp4
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: v
+        shell: bash
+        run: |
+          # Tag v1.2.3 -> 1.2.3; otherwise <base version from Directory.Build.props>-ci.<run number>.
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF#refs/tags/v}"
+          else
+            base="$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props)"
+            version="$base-ci.$GITHUB_RUN_NUMBER"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Version: $version"
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - run: dotnet build Lumen.sln -c Release
+      - run: dotnet test Lumen.sln -c Release --no-build
+
+  windows:
+    needs: [version, test]
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Publish
+        run: dotnet publish src/App/Lumen.App.csproj -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -p:Version=${{ env.VERSION }} -o artifacts/publish/win-x64
+      - name: Smoke test (launch + play)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath artifacts/publish/win-x64/Lumen.exe -ArgumentList '--smoke-test','--smoke-play',(Resolve-Path $env:SMOKE_MEDIA).Path -PassThru -Wait
+          Get-Content "$env:LOCALAPPDATA/Lumen/logs/*.log" -Tail 30
+          if ($p.ExitCode -ne 0) { throw "Smoke test failed with exit code $($p.ExitCode)" }
+      - name: Package (installer + portable zip)
+        shell: pwsh
+        run: packaging/windows/build.ps1 -Version $env:VERSION -PublishDir artifacts/publish/win-x64 -OutputDir artifacts/dist
+      - uses: actions/upload-artifact@v6
+        with:
+          name: windows
+          path: artifacts/dist/*
+          if-no-files-found: error
+
+  macos:
+    needs: [version, test]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-latest
+          - arch: x64
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Publish
+        run: dotnet publish src/App/Lumen.App.csproj -c Release -r osx-${{ matrix.arch }} --self-contained -p:PublishReadyToRun=true -p:Version=${{ env.VERSION }} -o artifacts/publish/osx-${{ matrix.arch }}
+      - name: Package (.app + .dmg)
+        run: packaging/macos/build-dmg.sh "$VERSION" ${{ matrix.arch }} artifacts/publish/osx-${{ matrix.arch }} artifacts/dist
+      - name: Smoke test (launch + play from the .app)
+        run: |
+          status=0
+          artifacts/dist/Lumen.app/Contents/MacOS/Lumen --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA" || status=$?
+          tail -n 30 ~/Library/Logs/Lumen/*.log || true
+          exit $status
+      - name: Remove test .app
+        run: rm -rf artifacts/dist/Lumen.app
+      - uses: actions/upload-artifact@v6
+        with:
+          name: macos-${{ matrix.arch }}
+          path: artifacts/dist/*
+          if-no-files-found: error
+
+  linux:
+    needs: [version, test]
+    # Built on the oldest supported Ubuntu: an AppImage only runs on systems with the same or newer glibc.
+    runs-on: ubuntu-22.04
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Install libvlc, packaging tools, Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libvlc5 vlc-plugin-base vlc-plugin-video-output libvlc-bin desktop-file-utils xvfb
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -sSfL "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_Linux_x86_64.tar.gz" | tar xz -C "$RUNNER_TEMP/bin" nfpm
+          curl -sSfL -o "$RUNNER_TEMP/bin/appimagetool" "https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-x86_64.AppImage"
+          chmod +x "$RUNNER_TEMP/bin/appimagetool"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Publish
+        run: dotnet publish src/App/Lumen.App.csproj -c Release -r linux-x64 --self-contained -p:PublishReadyToRun=true -p:Version=$VERSION -o artifacts/publish/linux-x64
+      - name: Smoke test (launch + play, system libvlc)
+        run: xvfb-run -a artifacts/publish/linux-x64/Lumen --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA"
+      - name: Package .deb
+        run: packaging/linux/build-deb.sh "$VERSION" artifacts/publish/linux-x64 artifacts/dist
+      - name: Package AppImage
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+        run: packaging/linux/build-appimage.sh "$VERSION" artifacts/publish/linux-x64 artifacts/dist
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux
+          path: artifacts/dist/*
+          if-no-files-found: error
+
+  # Installs the Linux packages on a clean, newer Ubuntu to prove they work outside the build machine.
+  linux-install-test:
+    needs: linux
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: tests/media
+      - uses: actions/download-artifact@v7
+        with:
+          name: linux
+          path: dist
+      - name: Install Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb
+      - name: AppImage runs without VLC installed
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: '1'
+        run: |
+          if ldconfig -p | grep -q 'libvlc\.so'; then echo "libvlc is unexpectedly installed"; exit 1; fi
+          chmod +x dist/*.AppImage
+          xvfb-run -a dist/*.AppImage --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA"
+      - name: .deb installs with its dependencies and runs
+        run: |
+          sudo apt-get install -y ./dist/*.deb
+          xvfb-run -a lumen --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA"
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, windows, macos, linux, linux-install-test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Lumen ${{ needs.version.outputs.version }}
+          files: dist/*
+          generate_release_notes: true
+          prerelease: ${{ contains(needs.version.outputs.version, '-') }}

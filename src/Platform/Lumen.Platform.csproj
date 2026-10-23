@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- All OS-specific code lives here (paths, native library setup, later: secret store, media keys). -->
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Lumen.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lumen.Tests" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Download Lumen</title>
+  <meta name="description" content="Lumen, a fast native desktop client for Jellyfin on Windows, macOS and Linux.">
+  <link rel="icon" href="lumen-128.png">
+  <style>
+    :root {
+      --bg: #f6f5fb; --fg: #17152b; --muted: #5d5a73; --card: #ffffff; --line: #e3e0f0;
+      --accent: #6d3ae8; --accent-fg: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #121020; --fg: #eeecf8; --muted: #a29fba; --card: #1c1930; --line: #2d2946; --accent: #8b5cf6; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 56px 16px; }
+    header { display: flex; align-items: center; gap: 16px; }
+    header img { width: 72px; height: 72px; }
+    h1 { margin: 0; font-size: 2.2rem; }
+    .tagline { margin: 0; color: var(--muted); }
+    .hero { margin: 40px 0 16px; padding: 28px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+    .primary { display: inline-block; padding: 14px 26px; border-radius: 10px; background: var(--accent); color: var(--accent-fg);
+               font-weight: 600; font-size: 1.1rem; text-decoration: none; }
+    .primary:hover { filter: brightness(1.08); }
+    .meta { margin-top: 10px; color: var(--muted); font-size: .9rem; }
+    h2 { font-size: 1.1rem; margin: 36px 0 8px; }
+    ul.downloads { list-style: none; padding: 0; margin: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--card); }
+    ul.downloads li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+    ul.downloads li:first-child { border-top: 0; }
+    a { color: var(--accent); }
+    .note { color: var(--muted); font-size: .92rem; }
+    code { font-size: .9em; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="lumen-256.png" alt="">
+    <div>
+      <h1>Lumen</h1>
+      <p class="tagline">A fast, native desktop client for Jellyfin.</p>
+    </div>
+  </header>
+
+  <section class="hero">
+    <a id="primary" class="primary" href="https://github.com/Zupermini09/Lumen/releases/latest">Download Lumen</a>
+    <div id="meta" class="meta">Loading the latest release…</div>
+  </section>
+
+  <p id="hint" class="note"></p>
+
+  <h2>All downloads</h2>
+  <ul id="downloads" class="downloads">
+    <li><a href="https://github.com/Zupermini09/Lumen/releases/latest">See the latest release on GitHub</a></li>
+  </ul>
+
+  <p class="note" style="margin-top:28px">
+    Lumen is free software under the GNU GPL v3 and is not affiliated with the Jellyfin project.
+    <a href="https://github.com/Zupermini09/Lumen">Source code</a>
+  </p>
+</main>
+
+<script>
+  const REPO = "Zupermini09/Lumen";
+  const KINDS = [
+    { os: "windows", suffix: "-win-x64-setup.exe", label: "Windows installer (64-bit)",
+      hint: "Windows may show a SmartScreen warning because the installer is not signed yet: choose “More info”, then “Run anyway”." },
+    { os: "windows", suffix: "-win-x64-portable.zip", label: "Windows portable (.zip, no install)" },
+    { os: "mac", suffix: "-macos-arm64.dmg", label: "macOS, Apple Silicon (M1 and newer)",
+      hint: "Open the .dmg and drag Lumen to Applications. The first time, right-click Lumen and choose Open (the app is not notarized yet)." },
+    { os: "mac", suffix: "-macos-x64.dmg", label: "macOS, Intel" },
+    { os: "linux", suffix: "-linux-x86_64.AppImage", label: "Linux AppImage (any distribution)",
+      hint: "Make the AppImage executable (chmod +x) and run it. Linux builds are experimental." },
+    { os: "linux", suffix: "-linux-amd64.deb", label: "Linux .deb (Debian, Ubuntu, Mint)" },
+  ];
+
+  function detectOs() {
+    const p = (navigator.userAgentData?.platform || navigator.platform || navigator.userAgent).toLowerCase();
+    if (p.includes("win")) return "windows";
+    if (p.includes("mac")) return "mac";
+    if (p.includes("linux") && !/android/.test(navigator.userAgent.toLowerCase())) return "linux";
+    return null;
+  }
+
+  function sizeMb(bytes) { return `${Math.round(bytes / 1048576)} MB`; }
+
+  async function load() {
+    const meta = document.getElementById("meta");
+    try {
+      const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`);
+      if (!res.ok) throw new Error(res.status === 404 ? "No release has been published yet." : `GitHub returned ${res.status}.`);
+      const release = await res.json();
+      const found = KINDS.map(k => ({ ...k, asset: release.assets.find(a => a.name.endsWith(k.suffix)) })).filter(k => k.asset);
+
+      const list = document.getElementById("downloads");
+      list.replaceChildren(...found.map(k => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = k.asset.browser_download_url;
+        a.textContent = k.label;
+        const span = document.createElement("span");
+        span.className = "note";
+        span.textContent = sizeMb(k.asset.size);
+        li.append(a, span);
+        return li;
+      }));
+      const sums = release.assets.find(a => a.name === "SHA256SUMS.txt");
+      if (sums) {
+        const li = document.createElement("li");
+        li.innerHTML = `<a href="${sums.browser_download_url}">SHA-256 checksums</a>`;
+        list.append(li);
+      }
+
+      const os = detectOs();
+      const best = found.find(k => k.os === os);
+      const primary = document.getElementById("primary");
+      if (best) {
+        primary.href = best.asset.browser_download_url;
+        primary.textContent = `Download for ${best.label.split(",")[0].split(" (")[0].replace(" installer", "")}`;
+        meta.textContent = `Version ${release.tag_name.replace(/^v/, "")} · ${best.label} · ${sizeMb(best.asset.size)}`;
+        document.getElementById("hint").textContent = best.hint || "";
+      } else {
+        meta.textContent = `Version ${release.tag_name.replace(/^v/, "")} · choose your platform below.`;
+      }
+    } catch (e) {
+      meta.textContent = `${e.message} See the releases page on GitHub.`;
+    }
+  }
+  load();
+</script>
+</body>
+</html>

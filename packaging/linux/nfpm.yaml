@@ -1,0 +1,44 @@
+# nfpm config for the .deb. @...@ placeholders are filled in by build-deb.sh.
+name: lumen
+arch: amd64
+platform: linux
+version: @VERSION@
+section: video
+priority: optional
+maintainer: Lumen contributors <noreply@github.com>
+description: |
+  A fast, native desktop client for Jellyfin.
+  Plays video and music with VLC (libvlc) and uses little memory.
+homepage: https://github.com/Zupermini09/Lumen
+license: GPL-3.0-only
+
+depends:
+  # Playback: VLC's library, its base plugins (codecs, demuxers, audio) and video outputs (X11/OpenGL).
+  - libvlc5
+  - vlc-plugin-base
+  - vlc-plugin-video-output
+  # .NET runtime (bundled) needs ICU; the package name carries the ICU version, which differs per release.
+  - libicu78 | libicu77 | libicu76 | libicu74 | libicu72 | libicu71 | libicu70
+  # Avalonia UI on X11
+  - libx11-6
+  - libice6
+  - libsm6
+  - libfontconfig1
+
+contents:
+  - src: @PUBLISH_DIR@
+    dst: /opt/lumen
+    type: tree
+  - src: /opt/lumen/Lumen
+    dst: /usr/bin/lumen
+    type: symlink
+  - src: ./packaging/linux/lumen.desktop
+    dst: /usr/share/applications/lumen.desktop
+  - src: ./packaging/assets/lumen-128.png
+    dst: /usr/share/icons/hicolor/128x128/apps/lumen.png
+  - src: ./packaging/assets/lumen-256.png
+    dst: /usr/share/icons/hicolor/256x256/apps/lumen.png
+  - src: ./packaging/assets/lumen-512.png
+    dst: /usr/share/icons/hicolor/512x512/apps/lumen.png
+  - src: ./LICENSE
+    dst: /usr/share/doc/lumen/copyright

@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:vm="using:Lumen.UI.ViewModels"
+        xmlns:views="using:Lumen.UI.Views"
+        x:Class="Lumen.UI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Title}"
+        Icon="avares://Lumen.UI/Assets/lumen.ico"
+        Width="1280" Height="760" MinWidth="720" MinHeight="480"
+        WindowStartupLocation="CenterScreen">
+
+  <Window.DataTemplates>
+    <DataTemplate DataType="vm:PlaybackTestViewModel">
+      <views:PlaybackTestView />
+    </DataTemplate>
+    <DataTemplate DataType="vm:AboutViewModel">
+      <views:AboutView />
+    </DataTemplate>
+  </Window.DataTemplates>
+
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Padding="12,4"
+            Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Right" Text="{Binding MemoryText}" FontSize="12" Opacity="0.7" />
+        <TextBlock Text="{Binding Version, StringFormat='Lumen {0}'}" FontSize="12" Opacity="0.7" />
+      </DockPanel>
+    </Border>
+
+    <ui:NavigationView x:Name="Navigation"
+                       PaneDisplayMode="LeftCompact"
+                       IsSettingsVisible="False"
+                       IsBackButtonVisible="False"
+                       OpenPaneLength="220"
+                       Content="{Binding CurrentPage}">
+      <ui:NavigationView.MenuItems>
+        <ui:NavigationViewItem Content="Playback test" Tag="PlaybackTest">
+          <ui:NavigationViewItem.IconSource>
+            <ui:SymbolIconSource Symbol="Play" />
+          </ui:NavigationViewItem.IconSource>
+        </ui:NavigationViewItem>
+      </ui:NavigationView.MenuItems>
+      <ui:NavigationView.FooterMenuItems>
+        <ui:NavigationViewItem Content="About" Tag="About">
+          <ui:NavigationViewItem.IconSource>
+            <ui:SymbolIconSource Symbol="Help" />
+          </ui:NavigationViewItem.IconSource>
+        </ui:NavigationViewItem>
+      </ui:NavigationView.FooterMenuItems>
+    </ui:NavigationView>
+  </DockPanel>
+</Window>

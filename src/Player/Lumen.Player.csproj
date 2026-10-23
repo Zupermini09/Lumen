@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- LibVLC playback backend. Only this project (and the composition root) knows about LibVLC. -->
+  <ItemGroup>
+    <PackageReference Include="LibVLCSharp" />
+    <PackageReference Include="LibVLCSharp.Avalonia" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Serilog" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Lumen.Core.csproj" />
+  </ItemGroup>
+</Project>

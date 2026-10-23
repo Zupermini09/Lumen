@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>Lumen</AssemblyName>
+    <RootNamespace>Lumen.App</RootNamespace>
+    <ApplicationIcon>..\..\packaging\assets\lumen.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <!-- Smaller, faster-starting self-contained builds. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <TieredPGO>true</TieredPGO>
+  </PropertyGroup>
+
+  <!-- Which OS we are building for: the RID when publishing, otherwise the build machine. -->
+  <PropertyGroup>
+    <LumenTargetOs Condition="$(RuntimeIdentifier.StartsWith('win'))">windows</LumenTargetOs>
+    <LumenTargetOs Condition="$(RuntimeIdentifier.StartsWith('osx'))">macos</LumenTargetOs>
+    <LumenTargetOs Condition="$(RuntimeIdentifier.StartsWith('linux'))">linux</LumenTargetOs>
+    <LumenTargetOs Condition="'$(LumenTargetOs)' == '' And $([MSBuild]::IsOSPlatform('Windows'))">windows</LumenTargetOs>
+    <LumenTargetOs Condition="'$(LumenTargetOs)' == '' And $([MSBuild]::IsOSPlatform('OSX'))">macos</LumenTargetOs>
+    <LumenTargetOs Condition="'$(LumenTargetOs)' == ''">linux</LumenTargetOs>
+
+    <!-- Only bundle the x64 libvlc on Windows (the package defaults to x86 + x64 + arm64). -->
+    <VlcWindowsX86Enabled>false</VlcWindowsX86Enabled>
+    <VlcWindowsArm64Enabled>false</VlcWindowsArm64Enabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="FluentAvaloniaUI" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <!-- libvlc is bundled on Windows and macOS. Linux uses the system libvlc (.deb) or the copy inside the AppImage. -->
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Condition="'$(LumenTargetOs)' == 'windows'" />
+    <PackageReference Include="VideoLAN.LibVLC.Mac" Condition="'$(LumenTargetOs)' == 'macos'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Lumen.Core.csproj" />
+    <ProjectReference Include="..\Platform\Lumen.Platform.csproj" />
+    <ProjectReference Include="..\Player\Lumen.Player.csproj" />
+    <ProjectReference Include="..\UI\Lumen.UI.csproj" />
+  </ItemGroup>
+</Project>
