@@ -142,8 +142,15 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: Install libvlc, packaging tools, Xvfb
         run: |
-          sudo apt-get update
-          sudo apt-get install -y -o Acquire::Retries=3 --no-install-recommends libvlc5 vlc-plugin-base vlc-plugin-video-output libvlc-bin desktop-file-utils xvfb
+          apt_retry() {  # Ubuntu mirrors sometimes stall; time out and retry instead of hanging the job
+            for attempt in 1 2 3; do
+              timeout 300 sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 "$@" && return 0
+              echo "apt-get $* failed or stalled (attempt $attempt), retrying..."; sleep 10
+            done
+            return 1
+          }
+          apt_retry update
+          apt_retry install -y --no-install-recommends libvlc5 vlc-plugin-base vlc-plugin-video-output libvlc-bin desktop-file-utils xvfb
           mkdir -p "$RUNNER_TEMP/bin"
           curl -sSfL "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_Linux_x86_64.tar.gz" | tar xz -C "$RUNNER_TEMP/bin" nfpm
           curl -sSfL -o "$RUNNER_TEMP/bin/appimagetool" "https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-x86_64.AppImage"
@@ -181,8 +188,15 @@ jobs:
           path: dist
       - name: Install Xvfb
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends xvfb
+          apt_retry() {  # Ubuntu mirrors sometimes stall; time out and retry instead of hanging the job
+            for attempt in 1 2 3; do
+              timeout 300 sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 "$@" && return 0
+              echo "apt-get $* failed or stalled (attempt $attempt), retrying..."; sleep 10
+            done
+            return 1
+          }
+          apt_retry update
+          apt_retry install -y --no-install-recommends xvfb
       - name: AppImage bundles everything VLC needs (no missing libraries)
         run: |
           chmod +x dist/*.AppImage
@@ -206,7 +220,10 @@ jobs:
       - name: .deb installs with its dependencies and runs
         if: ${{ !cancelled() }}
         run: |
-          sudo apt-get install -y ./dist/*.deb
+          for attempt in 1 2 3; do
+            timeout 600 sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 install -y ./dist/*.deb && break
+            [ "$attempt" = 3 ] && exit 1; echo "apt-get install of the .deb stalled (attempt $attempt), retrying..."; sleep 10
+          done
           rm -rf ~/.local/state/lumen/logs
           status=0
           xvfb-run -a lumen --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA" || status=$?
