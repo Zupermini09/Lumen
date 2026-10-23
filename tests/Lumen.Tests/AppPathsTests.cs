@@ -4,6 +4,9 @@ namespace Lumen.Tests;
 
 public class AppPathsTests
 {
+    // Expected paths are built with Path.Combine so the tests pass on every host OS (separators differ).
+    private static string P(params string[] parts) => Path.Combine(parts);
+
     private static Func<string, string?> Env(params (string Key, string Value)[] values) =>
         key => values.FirstOrDefault(v => v.Key == key).Value;
 
@@ -19,18 +22,18 @@ public class AppPathsTests
     public void MacOS_uses_library_folders()
     {
         var paths = AppPaths.Resolve(OperatingSystemKind.MacOS, Env(), "/Users/a");
-        Assert.Equal("/Users/a/Library/Application Support/Lumen", paths.DataDirectory);
-        Assert.Equal("/Users/a/Library/Logs/Lumen", paths.LogDirectory);
-        Assert.Equal("/Users/a/Library/Caches/Lumen", paths.CacheDirectory);
+        Assert.Equal(P("/Users/a", "Library", "Application Support", "Lumen"), paths.DataDirectory);
+        Assert.Equal(P("/Users/a", "Library", "Logs", "Lumen"), paths.LogDirectory);
+        Assert.Equal(P("/Users/a", "Library", "Caches", "Lumen"), paths.CacheDirectory);
     }
 
     [Fact]
     public void Linux_defaults_to_xdg_locations()
     {
         var paths = AppPaths.Resolve(OperatingSystemKind.Linux, Env(), "/home/a");
-        Assert.Equal("/home/a/.config/lumen", paths.DataDirectory);
-        Assert.Equal("/home/a/.cache/lumen", paths.CacheDirectory);
-        Assert.Equal("/home/a/.local/state/lumen/logs", paths.LogDirectory);
+        Assert.Equal(P("/home/a", ".config", "lumen"), paths.DataDirectory);
+        Assert.Equal(P("/home/a", ".cache", "lumen"), paths.CacheDirectory);
+        Assert.Equal(P("/home/a", ".local", "state", "lumen", "logs"), paths.LogDirectory);
     }
 
     [Fact]
@@ -38,8 +41,8 @@ public class AppPathsTests
     {
         var paths = AppPaths.Resolve(OperatingSystemKind.Linux,
             Env(("XDG_CONFIG_HOME", "/cfg"), ("XDG_CACHE_HOME", "/cache"), ("XDG_STATE_HOME", "/state")), "/home/a");
-        Assert.Equal("/cfg/lumen", paths.DataDirectory);
-        Assert.Equal("/cache/lumen", paths.CacheDirectory);
-        Assert.Equal("/state/lumen/logs", paths.LogDirectory);
+        Assert.Equal(P("/cfg", "lumen"), paths.DataDirectory);
+        Assert.Equal(P("/cache", "lumen"), paths.CacheDirectory);
+        Assert.Equal(P("/state", "lumen", "logs"), paths.LogDirectory);
     }
 }
