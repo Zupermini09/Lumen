@@ -102,6 +102,7 @@ public sealed class App : Application
 
         var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
         RemoteImage.Loader = provider.GetRequiredService<ImageLoader>();
+        VideoPage.PointerPosition = new PointerPosition();
 
         // Load libvlc eagerly so a missing or broken installation is reported at startup, not on first play.
         var player = provider.GetRequiredService<IPlayerService>();

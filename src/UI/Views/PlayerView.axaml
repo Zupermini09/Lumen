@@ -5,7 +5,7 @@
                  x:Class="Lumen.UI.Views.PlayerView"
                  x:DataType="vm:PlayerViewModel">
   <Grid RowDefinitions="Auto,*,Auto">
-    <DockPanel Grid.Row="0" Margin="16,12">
+    <DockPanel x:Name="Header" Grid.Row="0" Margin="16,12">
       <Button x:Name="StartOverButton" DockPanel.Dock="Right" Content="Start over" IsVisible="{Binding IsResuming}"
               Click="OnStartOverClick" />
       <StackPanel>
@@ -19,6 +19,6 @@
       <ContentControl x:Name="Host" />
     </Border>
 
-    <views:TransportBar Grid.Row="2" Margin="16,12" />
+    <views:TransportBar x:Name="Controls" Grid.Row="2" Margin="16,12" />
   </Grid>
 </views:VideoPage>

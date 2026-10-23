@@ -10,6 +10,7 @@ public partial class PlayerView : VideoPage
     public PlayerView() => InitializeComponent();
 
     protected override ContentControl VideoHost => Host;
+    protected override IReadOnlyList<Control> Chrome => [Header, Controls];
 
     private PlayerViewModel? ViewModel => DataContext as PlayerViewModel;
 

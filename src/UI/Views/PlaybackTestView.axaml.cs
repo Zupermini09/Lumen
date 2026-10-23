@@ -13,6 +13,8 @@ public partial class PlaybackTestView : VideoPage
     public PlaybackTestView() => InitializeComponent();
 
     protected override ContentControl VideoHost => Host;
+    protected override IReadOnlyList<Control> Chrome => [Controls];
+    protected override IReadOnlyList<Control> WindowedOnly => [SourceBar];
 
     private PlaybackTestViewModel? ViewModel => DataContext as PlaybackTestViewModel;
 
@@ -30,6 +32,9 @@ public partial class PlaybackTestView : VideoPage
         VerticalAlignment = VerticalAlignment.Top,
         Child = new TextBlock { Text = "Overlay test: this label should stay visible over the video", Foreground = Brushes.White },
     };
+
+    private void OnVideoDoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e) =>
+        (TopLevel.GetTopLevel(this) as MainWindow)?.ToggleFullScreen();
 
     private async void OnBrowseClick(object? sender, RoutedEventArgs e)
     {
