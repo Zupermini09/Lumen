@@ -24,6 +24,7 @@ env:
 
 jobs:
   version:
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.v.outputs.version }}
@@ -43,6 +44,7 @@ jobs:
           echo "Version: $version"
 
   test:
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -57,6 +59,7 @@ jobs:
       - run: dotnet test Lumen.sln -c Release --no-build
 
   windows:
+    timeout-minutes: 30
     needs: [version, test]
     runs-on: windows-latest
     env:
@@ -84,6 +87,7 @@ jobs:
           if-no-files-found: error
 
   macos:
+    timeout-minutes: 30
     needs: [version, test]
     strategy:
       fail-fast: false
@@ -123,6 +127,7 @@ jobs:
           if-no-files-found: error
 
   linux:
+    timeout-minutes: 30
     needs: [version, test]
     # Built on the oldest supported Ubuntu: an AppImage only runs on systems with the same or newer glibc.
     runs-on: ubuntu-22.04
@@ -136,7 +141,7 @@ jobs:
       - name: Install libvlc, packaging tools, Xvfb
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libvlc5 vlc-plugin-base vlc-plugin-video-output libvlc-bin desktop-file-utils xvfb
+          sudo apt-get install -y -o Acquire::Retries=3 --no-install-recommends libvlc5 vlc-plugin-base vlc-plugin-video-output libvlc-bin desktop-file-utils xvfb
           mkdir -p "$RUNNER_TEMP/bin"
           curl -sSfL "https://github.com/goreleaser/nfpm/releases/download/v${NFPM_VERSION}/nfpm_${NFPM_VERSION}_Linux_x86_64.tar.gz" | tar xz -C "$RUNNER_TEMP/bin" nfpm
           curl -sSfL -o "$RUNNER_TEMP/bin/appimagetool" "https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-x86_64.AppImage"
@@ -160,6 +165,7 @@ jobs:
 
   # Installs the Linux packages on a clean, newer Ubuntu to prove they work outside the build machine.
   linux-install-test:
+    timeout-minutes: 20
     needs: linux
     runs-on: ubuntu-24.04
     steps:
@@ -202,6 +208,7 @@ jobs:
           exit $status
 
   release:
+    timeout-minutes: 15
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [version, windows, macos, linux, linux-install-test]
     runs-on: ubuntu-latest
