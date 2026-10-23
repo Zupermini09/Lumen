@@ -17,7 +17,13 @@ public partial class TransportBar : UserControl
 
     private TransportViewModel? ViewModel => DataContext as TransportViewModel;
 
+    private static readonly TimeSpan SeekStep = TimeSpan.FromSeconds(15);
+
     private void OnSkipClick(object? sender, RoutedEventArgs e) => ViewModel?.Skip();
+
+    private void OnBackClick(object? sender, RoutedEventArgs e) => ViewModel?.SeekBy(-SeekStep);
+
+    private void OnForwardClick(object? sender, RoutedEventArgs e) => ViewModel?.SeekBy(SeekStep);
 
     private void OnAudioClick(object? sender, RoutedEventArgs e) =>
         ShowMenu(sender, ViewModel?.AudioOptions(), "No audio tracks");
@@ -42,6 +48,9 @@ public partial class TransportBar : UserControl
     /// <summary>True while a player menu is open, so full screen does not hide the controls under it.</summary>
     public static bool IsMenuOpen { get; private set; }
 
+    /// <summary>When the last player menu closed (UTC); the click that closes a menu must not reach the video.</summary>
+    public static DateTime LastMenuClosed { get; private set; }
+
     private static void ShowMenu(object? anchor, IReadOnlyList<MenuOption>? options, string emptyText, IEnumerable<Control>? extra = null)
     {
         if (anchor is not Control control || options is null)
@@ -61,7 +70,11 @@ public partial class TransportBar : UserControl
             flyout.Items.Add(control2);
 
         flyout.Opened += (_, _) => IsMenuOpen = true;
-        flyout.Closed += (_, _) => IsMenuOpen = false;
+        flyout.Closed += (_, _) =>
+        {
+            IsMenuOpen = false;
+            LastMenuClosed = DateTime.UtcNow;
+        };
         flyout.ShowAt(control);
     }
 
@@ -86,10 +99,10 @@ public partial class TransportBar : UserControl
                 vm.TogglePauseCommand.Execute(null);
                 return true;
             case Key.Left when e.KeyModifiers == KeyModifiers.None:
-                vm.SeekBy(TimeSpan.FromSeconds(-10));
+                vm.SeekBy(-SeekStep);
                 return true;
             case Key.Right when e.KeyModifiers == KeyModifiers.None:
-                vm.SeekBy(TimeSpan.FromSeconds(30));
+                vm.SeekBy(SeekStep);
                 return true;
             case Key.Up:
                 vm.Volume = Math.Min(100, vm.Volume + 5);

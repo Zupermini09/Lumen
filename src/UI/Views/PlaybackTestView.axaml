@@ -16,7 +16,7 @@
       <Button Grid.Column="2" Content="Play" Margin="8,0,0,0" Classes="accent" Command="{Binding PlayCommand}" />
     </Grid>
 
-    <Border Grid.Row="1" Background="Black" CornerRadius="6" ClipToBounds="True" DoubleTapped="OnVideoDoubleTapped">
+    <Border Grid.Row="1" Background="Black" CornerRadius="6" ClipToBounds="True">
       <ContentControl x:Name="Host" />
     </Border>
 

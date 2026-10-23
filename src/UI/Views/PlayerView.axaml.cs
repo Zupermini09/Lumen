@@ -34,7 +34,4 @@ public partial class PlayerView : VideoPage
         ViewModel?.CancelCountdown();
         Focus();
     }
-
-    private void OnVideoDoubleTapped(object? sender, TappedEventArgs e) =>
-        (TopLevel.GetTopLevel(this) as MainWindow)?.ToggleFullScreen();
 }
