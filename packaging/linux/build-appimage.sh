@@ -38,8 +38,10 @@ fi
 cp -a "$syslib"/libicuuc.so.* "$syslib"/libicui18n.so.* "$syslib"/libicudata.so.* "$appdir/usr/lib/"
 
 # Shared-library dependencies of libvlc and every plugin, minus libraries that must come from the host
-# (glibc, the C++ runtime, graphics drivers, X11/Wayland, audio servers, fonts, D-Bus). Based on the AppImage excludelist.
-exclude='^(ld-linux|linux-vdso|libc|libm|libdl|libpthread|librt|libresolv|libutil|libnsl|libanl|libgcc_s|libstdc\+\+|libGL|libGLX|libGLdispatch|libEGL|libGLES|libOpenGL|libgbm|libdrm|libva|libvdpau|libX11|libX11-xcb|libxcb|libXau|libXdmcp|libXext|libXrender|libXfixes|libXi|libXrandr|libXcursor|libXinerama|libXss|libSM|libICE|libwayland-[a-z]+|libxkbcommon|libasound|libpulse|libjack|libpipewire|libfontconfig|libfreetype|libharfbuzz|libexpat|libz|libdbus-1|libsystemd|libudev|libuuid|libcom_err|libgpg-error|libselinux)\.so'
+# (glibc, the C++ runtime, the OpenGL/EGL driver stack, X11/Wayland, audio servers, fonts, D-Bus). Based on the AppImage excludelist.
+# libva and libvdpau ARE bundled: libavcodec links them directly, so without them VLC has no video decoder at all.
+# They load the host's GPU drivers at runtime.
+exclude='^(ld-linux|linux-vdso|libc|libm|libdl|libpthread|librt|libresolv|libutil|libnsl|libanl|libgcc_s|libstdc\+\+|libGL|libGLX|libGLdispatch|libEGL|libGLES|libOpenGL|libgbm|libdrm|libX11|libX11-xcb|libxcb|libXau|libXdmcp|libXext|libXrender|libXfixes|libXi|libXrandr|libXcursor|libXinerama|libXss|libSM|libICE|libwayland-[a-z]+|libxkbcommon|libasound|libpulse|libjack|libpipewire|libfontconfig|libfreetype|libharfbuzz|libexpat|libz|libdbus-1|libsystemd|libudev|libuuid|libcom_err|libgpg-error|libselinux)\.so'
 collect() {
   ldd "$1" 2>/dev/null | awk '/=> \//{print $3}' | while read -r lib; do
     name="$(basename "$lib")"

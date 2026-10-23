@@ -185,9 +185,11 @@ jobs:
           chmod +x dist/*.AppImage
           (cd "$RUNNER_TEMP" && "$GITHUB_WORKSPACE"/dist/*.AppImage --appimage-extract >/dev/null)
           root="$RUNNER_TEMP/squashfs-root"
-          missing="$(LD_LIBRARY_PATH="$root/usr/lib:$root/usr/lib/vlc" find "$root/usr/lib" -name '*.so*' -type f -exec ldd {} \; 2>/dev/null | grep 'not found' | sort -u || true)"
-          echo "${missing:-no missing libraries}"
-          # Report only; libraries the host is expected to provide are listed in build-appimage.sh.
+          missing="$(LD_LIBRARY_PATH="$root/usr/lib:$root/usr/lib/vlc" find "$root/usr/lib" -name '*.so*' -type f -exec ldd {} \; 2>/dev/null | grep 'not found' | awk '{print $1}' | sort -u || true)"
+          echo "Not found on this runner: ${missing:-none}"
+          # Allowed: libraries a desktop provides (GL/EGL driver stack, PulseAudio) or optional tracing (lttng, .NET only).
+          unexpected="$(echo "$missing" | grep -vE '^(libEGL|libGL|libGLX|libGLESv2|libpulse|libpulse-simple|liblttng-ust)\.so' | grep . || true)"
+          if [ -n "$unexpected" ]; then echo "::error::AppImage is missing bundled libraries: $unexpected"; exit 1; fi
       - name: AppImage runs without VLC installed
         env:
           APPIMAGE_EXTRACT_AND_RUN: '1'

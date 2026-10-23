@@ -139,7 +139,7 @@ Code signing (decide before first public release):
 ## Progress
 
 - **M0 (done, pending manual checks on Windows/macOS, see TESTING.md):** solution layout, Avalonia + FluentAvalonia shell, `IPlayerService` with the LibVLC backend and a playback test page (with an overlay-over-video probe), per-OS paths and libvlc loading in `Platform/`, Serilog logging, CI producing `.exe` + portable `.zip`, `.dmg` (arm64 and x64), `.deb` and `.AppImage`, smoke tests on all three OSes, release job with SHA-256 checksums, download page in `docs/`.
-  - Lessons: LibVLCSharp asks for the unversioned `libvlc` on Linux (only present with the `-dev` package), so `Platform/LibVlcLocator` maps it to `libvlc.so.5`; disposing LibVLC from Avalonia's `Exit` event can race the native video surface and crash, so services are disposed after the UI lifetime ends.
+  - Lessons: LibVLCSharp asks for the unversioned `libvlc` on Linux (only present with the `-dev` package), so `Platform/LibVlcLocator` maps it to `libvlc.so.5`; disposing LibVLC from Avalonia's `Exit` event can race the native video surface and crash, so services are disposed after the UI lifetime ends. The AppImage must bundle `libva`/`libvdpau` (Ubuntu's libavcodec links them, so without them VLC has no video decoder); CI fails if the AppImage misses any library other than the host GL/EGL stack and PulseAudio. GitHub's macOS runners have no GPU, so CI cannot check video output on macOS (manual check).
 
 ## Milestones
 Each milestone ends with: builds clean on all three OSes (via CI), app runs, manual test notes in `TESTING.md`, parity checklist ticked, memory targets verified, a git commit.
