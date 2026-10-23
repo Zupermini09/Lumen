@@ -101,3 +101,44 @@ internal sealed class BaseItemDto
         AlbumPrimaryImageTag = AlbumPrimaryImageTag,
     };
 }
+
+internal sealed class MediaStreamDto
+{
+    public int Index { get; set; }
+    public string? Type { get; set; }
+    public string? Codec { get; set; }
+    public string? Language { get; set; }
+    public string? DisplayTitle { get; set; }
+    public string? Title { get; set; }
+    public bool IsDefault { get; set; }
+    public bool IsForced { get; set; }
+    public bool IsExternal { get; set; }
+
+    public MediaStreamInfo ToModel() => new(Index, Type ?? "", Codec, Language,
+        DisplayTitle ?? Title ?? Language ?? $"Track {Index}", IsDefault, IsForced, IsExternal);
+}
+
+internal sealed class MediaSourceDto
+{
+    public string? Id { get; set; }
+    public List<MediaStreamDto> MediaStreams { get; set; } = [];
+    public int? DefaultAudioStreamIndex { get; set; }
+    public int? DefaultSubtitleStreamIndex { get; set; }
+}
+
+internal sealed class PlaybackInfoDto
+{
+    public List<MediaSourceDto> MediaSources { get; set; } = [];
+    public string? PlaySessionId { get; set; }
+}
+
+internal sealed class ChapterDto
+{
+    public string? Name { get; set; }
+    public long StartPositionTicks { get; set; }
+}
+
+internal sealed class ItemChaptersDto
+{
+    public List<ChapterDto>? Chapters { get; set; }
+}

@@ -111,36 +111,18 @@ public sealed class SessionAndStorageTests : IDisposable
         public void Remove(string key) => _values.Remove(key);
     }
 
-    private sealed class FakeClient : IJellyfinClient
+    private sealed class FakeClient : StubJellyfinClient
     {
         public bool TokenValid { get; init; } = true;
         public bool SignedOut { get; private set; }
 
-        public Task<UserInfo?> ValidateSessionAsync(SessionInfo session, CancellationToken cancellationToken = default) =>
+        public override Task<UserInfo?> ValidateSessionAsync(SessionInfo session, CancellationToken cancellationToken = default) =>
             Task.FromResult(TokenValid ? session.User : null);
 
-        public Task SignOutAsync(SessionInfo session, CancellationToken cancellationToken = default)
+        public override Task SignOutAsync(SessionInfo session, CancellationToken cancellationToken = default)
         {
             SignedOut = true;
             return Task.CompletedTask;
         }
-
-        public Task<ServerInfo> FindServerAsync(string userInput, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<IReadOnlyList<UserInfo>> GetPublicUsersAsync(ServerInfo server, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<SessionInfo> AuthenticateAsync(ServerInfo server, string userName, string password, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<bool> IsQuickConnectEnabledAsync(ServerInfo server, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<QuickConnectRequest> StartQuickConnectAsync(ServerInfo server, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<bool> IsQuickConnectAuthorizedAsync(ServerInfo server, QuickConnectRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<SessionInfo> AuthenticateWithQuickConnectAsync(ServerInfo server, QuickConnectRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<IReadOnlyList<MediaItem>> GetLibrariesAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<IReadOnlyList<MediaItem>> GetResumeItemsAsync(int limit, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<IReadOnlyList<MediaItem>> GetNextUpAsync(int limit, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Uri GetImageUri(string itemId, ImageKind kind, string? tag, int maxHeight) => throw new NotSupportedException();
-        public Uri GetUserImageUri(ServerInfo server, UserInfo user, int maxHeight) => throw new NotSupportedException();
-        public Uri GetStreamUri(MediaItem item) => throw new NotSupportedException();
-        public Task ReportPlaybackStartAsync(PlaybackReport report, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task ReportPlaybackProgressAsync(PlaybackReport report, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task ReportPlaybackStoppedAsync(PlaybackReport report, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }

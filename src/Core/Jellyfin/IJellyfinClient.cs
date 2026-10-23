@@ -32,8 +32,14 @@ public interface IJellyfinClient
     Uri GetImageUri(string itemId, ImageKind kind, string? tag, int maxHeight);
     Uri GetUserImageUri(ServerInfo server, UserInfo user, int maxHeight);
 
+    /// <summary>File version, tracks with the user's default choices (PlaybackInfo) and chapters.</summary>
+    Task<PlaybackDetails> GetPlaybackDetailsAsync(MediaItem item, CancellationToken cancellationToken = default);
+
     /// <summary>A direct-play URL the player can open (the server sends the file as is).</summary>
-    Uri GetStreamUri(MediaItem item);
+    Uri GetStreamUri(MediaItem item, string? mediaSourceId = null);
+
+    /// <summary>URL of an external subtitle file, converted by the server to a format the player reads.</summary>
+    Uri GetSubtitleUri(MediaItem item, string mediaSourceId, MediaStreamInfo stream);
 
     Task ReportPlaybackStartAsync(PlaybackReport report, CancellationToken cancellationToken = default);
     Task ReportPlaybackProgressAsync(PlaybackReport report, CancellationToken cancellationToken = default);
@@ -42,7 +48,7 @@ public interface IJellyfinClient
 
 public sealed record QuickConnectRequest(string Code, string Secret);
 
-public sealed record PlaybackReport(string ItemId, string PlaySessionId, TimeSpan Position, bool IsPaused);
+public sealed record PlaybackReport(string ItemId, string MediaSourceId, string PlaySessionId, TimeSpan Position, bool IsPaused);
 
 public class ServerConnectionException(string message, Exception? inner = null) : Exception(message, inner);
 

@@ -31,6 +31,9 @@ public sealed class LibVlcPlayerService : IPlayerService
         player.EncounteredError += OnError;
         player.TimeChanged += (_, e) => PositionChanged?.Invoke(this, TimeSpan.FromMilliseconds(e.Time));
         player.LengthChanged += (_, e) => DurationChanged?.Invoke(this, TimeSpan.FromMilliseconds(e.Length));
+        player.ESAdded += (_, _) => TracksChanged?.Invoke(this, EventArgs.Empty);
+        player.ESDeleted += (_, _) => TracksChanged?.Invoke(this, EventArgs.Empty);
+        player.ESSelected += (_, _) => TracksChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public PlaybackState State => _state;
@@ -51,6 +54,36 @@ public sealed class LibVlcPlayerService : IPlayerService
         set => _engine.MediaPlayer.Mute = value;
     }
 
+    public IReadOnlyList<TrackInfo> AudioTracks => Tracks(_engine.MediaPlayer.AudioTrackDescription);
+    public IReadOnlyList<TrackInfo> SubtitleTracks => Tracks(_engine.MediaPlayer.SpuDescription);
+    public int AudioTrackId => _engine.MediaPlayer.AudioTrack;
+    public int SubtitleTrackId => _engine.MediaPlayer.Spu;
+
+    public void SelectAudioTrack(int id) => _engine.MediaPlayer.SetAudioTrack(id);
+
+    public void SelectSubtitleTrack(int id) => _engine.MediaPlayer.SetSpu(id);
+
+    public void AddExternalSubtitle(Uri uri, bool select) =>
+        _engine.MediaPlayer.AddSlave(MediaSlaveType.Subtitle, uri.AbsoluteUri, select);
+
+    public TimeSpan SubtitleDelay
+    {
+        // LibVLC uses microseconds.
+        get => TimeSpan.FromMicroseconds(_engine.MediaPlayer.SpuDelay);
+        set => _engine.MediaPlayer.SetSpuDelay((long)value.TotalMicroseconds);
+    }
+
+    public double Rate
+    {
+        get => _engine.MediaPlayer.Rate;
+        set => _engine.MediaPlayer.SetRate((float)Math.Clamp(value, 0.25, 4));
+    }
+
+    // LibVLC lists a "Disable" pseudo-track with id -1 first; callers use -1 explicitly instead.
+    private static IReadOnlyList<TrackInfo> Tracks(LibVLCSharp.Shared.Structures.TrackDescription[]? descriptions) =>
+        descriptions?.Where(d => d.Id >= 0).Select(d => new TrackInfo(d.Id, d.Name ?? $"Track {d.Id}")).ToList() ?? [];
+
+    public event EventHandler? TracksChanged;
     public event EventHandler<PlaybackState>? StateChanged;
     public event EventHandler<TimeSpan>? PositionChanged;
     public event EventHandler<TimeSpan>? DurationChanged;
@@ -66,6 +99,9 @@ public sealed class LibVlcPlayerService : IPlayerService
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 StopAndReleaseMedia();
+                // Speed and subtitle delay are per-media choices; start each item at the defaults.
+                _engine.MediaPlayer.SetRate(1);
+                _engine.MediaPlayer.SetSpuDelay(0);
                 _media = startAt is { TotalSeconds: > 0 } start
                     ? new Media(_engine.LibVlc, source, $":start-time={start.TotalSeconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}")
                     : new Media(_engine.LibVlc, source);

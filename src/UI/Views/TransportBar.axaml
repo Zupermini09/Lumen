@@ -24,6 +24,10 @@
                    Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
       </StackPanel>
       <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+        <Button Content="Chapters" ToolTip.Tip="Chapters" Click="OnChaptersClick" />
+        <Button Content="Audio" ToolTip.Tip="Audio track" Click="OnAudioClick" />
+        <Button Content="Subtitles" ToolTip.Tip="Subtitles (G / H: delay)" Click="OnSubtitlesClick" />
+        <Button Content="{Binding SpeedText}" ToolTip.Tip="Playback speed ([ / ])" MinWidth="52" Click="OnSpeedClick" />
         <ToggleButton IsChecked="{Binding IsMuted}" ToolTip.Tip="Mute (M)" Width="44">
           <ui:SymbolIcon Symbol="Mute" />
         </ToggleButton>

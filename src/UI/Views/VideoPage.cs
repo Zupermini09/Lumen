@@ -156,6 +156,11 @@ public abstract class VideoPage : UserControl
     {
         _hideTimer.Stop();
         // Keep the controls up while paused or stopped; hide them only during playback.
+        if (TransportBar.IsMenuOpen)
+        {
+            _hideTimer.Start();
+            return;
+        }
         if (IsFullScreen && Transport?.State == PlaybackState.Playing)
             UpdateChrome(show: false);
     }

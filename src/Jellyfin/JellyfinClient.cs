@@ -231,14 +231,74 @@ public sealed class JellyfinClient : IJellyfinClient
         return new Uri(server.Address, $"Users/{user.Id}/Images/Primary?maxHeight={maxHeight}&quality=90{tagQuery}");
     }
 
-    public Uri GetStreamUri(MediaItem item)
+    public Uri GetStreamUri(MediaItem item, string? mediaSourceId = null)
     {
         var session = _session.Require();
         var kind = item.MediaType == "Audio" ? "Audio" : "Videos";
         // static=true: send the original file (direct play). The token goes in the query because the player
         // cannot send headers; LibVlcEngine redacts it from logs.
         return new Uri(session.Server.Address,
-            $"{kind}/{item.Id}/stream?static=true&mediaSourceId={item.Id}&deviceId={Uri.EscapeDataString(_identity.DeviceId)}&api_key={Uri.EscapeDataString(session.AccessToken)}");
+            $"{kind}/{item.Id}/stream?static=true&mediaSourceId={mediaSourceId ?? item.Id}&deviceId={Uri.EscapeDataString(_identity.DeviceId)}&api_key={Uri.EscapeDataString(session.AccessToken)}");
+    }
+
+    public Uri GetSubtitleUri(MediaItem item, string mediaSourceId, MediaStreamInfo stream)
+    {
+        var session = _session.Require();
+        return new Uri(session.Server.Address,
+            $"Videos/{item.Id}/{mediaSourceId}/Subtitles/{stream.Index}/0/Stream.{SubtitleFormat(stream.Codec)}?api_key={Uri.EscapeDataString(session.AccessToken)}");
+    }
+
+    /// <summary>Text formats VLC reads natively are served as is; everything else is converted to SubRip by the server.</summary>
+    internal static string SubtitleFormat(string? codec) => codec?.ToLowerInvariant() switch
+    {
+        "ass" => "ass",
+        "ssa" => "ssa",
+        "vtt" or "webvtt" => "vtt",
+        _ => "srt",
+    };
+
+    public async Task<PlaybackDetails> GetPlaybackDetailsAsync(MediaItem item, CancellationToken cancellationToken = default)
+    {
+        var session = _session.Require();
+        // A permissive profile: Lumen plays everything directly (VLC decodes almost any format), so the server only
+        // has to tell us the streams and the user's default track choices.
+        var info = await SendAsync<PlaybackInfoDto>(HttpMethod.Post, session.Server.Address,
+            $"Items/{item.Id}/PlaybackInfo?userId={session.User.Id}", session.AccessToken, new
+            {
+                DeviceProfile = new
+                {
+                    Name = "Lumen",
+                    DirectPlayProfiles = new object[] { new { Type = "Video" }, new { Type = "Audio" } },
+                },
+            }, cancellationToken);
+
+        var source = info?.MediaSources.FirstOrDefault();
+        var chapters = await GetChaptersAsync(item, session, cancellationToken);
+        if (source is null)
+            return PlaybackDetails.Fallback(item) with { Chapters = chapters };
+
+        return new PlaybackDetails(
+            source.Id ?? item.Id,
+            info!.PlaySessionId,
+            source.MediaStreams.Select(s => s.ToModel()).ToList(),
+            source.DefaultAudioStreamIndex,
+            source.DefaultSubtitleStreamIndex,
+            chapters);
+    }
+
+    private async Task<IReadOnlyList<ChapterInfo>> GetChaptersAsync(MediaItem item, SessionInfo session, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var details = await GetWithFallbackAsync<ItemChaptersDto>(session,
+                $"Items/{item.Id}?userId={session.User.Id}&fields=Chapters",
+                $"Users/{session.User.Id}/Items/{item.Id}?fields=Chapters", cancellationToken);
+            return details?.Chapters?.Select((c, i) => new ChapterInfo(c.Name ?? $"Chapter {i + 1}", TimeSpan.FromTicks(c.StartPositionTicks))).ToList() ?? [];
+        }
+        catch (HttpRequestException)
+        {
+            return []; // chapters are optional
+        }
     }
 
     // ---- Playback reporting ----------------------------------------------------------------------------------
@@ -258,7 +318,7 @@ public sealed class JellyfinClient : IJellyfinClient
         await SendAsync<object>(HttpMethod.Post, session.Server.Address, path, session.AccessToken, new
         {
             ItemId = report.ItemId,
-            MediaSourceId = report.ItemId,
+            MediaSourceId = report.MediaSourceId,
             PlaySessionId = report.PlaySessionId,
             PositionTicks = report.Position.Ticks,
             IsPaused = report.IsPaused,

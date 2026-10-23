@@ -39,6 +39,12 @@ public abstract partial class TransportViewModel : PageViewModel
     [ObservableProperty]
     private bool _isMuted;
 
+    /// <summary>Speeds offered in the speed menu (like the web client).</summary>
+    public static readonly double[] Speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
+    [ObservableProperty]
+    private string _speedText = "1×";
+
     protected TransportViewModel(IPlayerService player, IVideoSurfaceFactory surfaceFactory)
     {
         Player = player;
@@ -70,6 +76,53 @@ public abstract partial class TransportViewModel : PageViewModel
 
     public void SeekBy(TimeSpan offset) => Player.Seek(Player.Position + offset);
 
+    public void SeekTo(TimeSpan position) => Player.Seek(position);
+
+    // ---- Tracks, subtitle delay, speed (menus are built when opened, so they always show the current state) ----
+
+    public virtual IReadOnlyList<MenuOption> AudioOptions() =>
+        Player.AudioTracks.Select(t => new MenuOption(t.Name, t.Id == Player.AudioTrackId, () => Player.SelectAudioTrack(t.Id))).ToList();
+
+    public virtual IReadOnlyList<MenuOption> SubtitleOptions() =>
+        Player.SubtitleTracks
+            .Select(t => new MenuOption(t.Name, t.Id == Player.SubtitleTrackId, () => Player.SelectSubtitleTrack(t.Id)))
+            .Prepend(new MenuOption("Off", Player.SubtitleTrackId < 0, () => Player.SelectSubtitleTrack(-1)))
+            .ToList();
+
+    /// <summary>Chapter list (empty when the item has none).</summary>
+    public virtual IReadOnlyList<MenuOption> ChapterOptions() => [];
+
+    public IReadOnlyList<MenuOption> SpeedOptions() =>
+        Speeds.Select(s => new MenuOption(FormatSpeed(s), Math.Abs(Player.Rate - s) < 0.01, () => SetSpeed(s))).ToList();
+
+    public string SubtitleDelayText => $"Subtitle delay: {Player.SubtitleDelay.TotalSeconds:+0.0;-0.0;0.0} s";
+
+    public void AdjustSubtitleDelay(TimeSpan change)
+    {
+        Player.SubtitleDelay += change;
+        OnPropertyChanged(nameof(SubtitleDelayText));
+    }
+
+    public void ResetSubtitleDelay()
+    {
+        Player.SubtitleDelay = TimeSpan.Zero;
+        OnPropertyChanged(nameof(SubtitleDelayText));
+    }
+
+    public void SetSpeed(double speed)
+    {
+        Player.Rate = speed;
+        SpeedText = FormatSpeed(speed);
+    }
+
+    public void ChangeSpeed(int steps)
+    {
+        var index = Array.FindIndex(Speeds, s => Math.Abs(s - Player.Rate) < 0.01);
+        SetSpeed(Speeds[Math.Clamp((index < 0 ? Array.IndexOf(Speeds, 1d) : index) + steps, 0, Speeds.Length - 1)]);
+    }
+
+    private static string FormatSpeed(double speed) => $"{speed:0.##}×";
+
     partial void OnPositionSecondsChanged(double value)
     {
         // Only seek when the user moved the slider, not when the player reported progress.
@@ -96,6 +149,8 @@ public abstract partial class TransportViewModel : PageViewModel
             State = state;
             if (state is PlaybackState.Stopped or PlaybackState.Idle)
                 ApplyPosition(TimeSpan.Zero);
+            if (state == PlaybackState.Opening)
+                SpeedText = FormatSpeed(1); // the player resets speed for each item
         });
 
     private void OnPositionChanged(object? sender, TimeSpan position)
@@ -143,3 +198,6 @@ public abstract partial class TransportViewModel : PageViewModel
         base.Dispose();
     }
 }
+
+/// <summary>An entry in a player menu (audio track, subtitle track, speed...).</summary>
+public sealed record MenuOption(string Label, bool IsSelected, Action Select);

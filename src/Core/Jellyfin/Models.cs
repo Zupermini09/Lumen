@@ -55,3 +55,31 @@ public sealed record MediaItem
 
     public bool IsPlayable => !IsFolder && MediaType is "Video" or "Audio";
 }
+
+public sealed record MediaStreamInfo(
+    int Index,
+    string Type,
+    string? Codec,
+    string? Language,
+    string DisplayTitle,
+    bool IsDefault,
+    bool IsForced,
+    bool IsExternal);
+
+public sealed record ChapterInfo(string Name, TimeSpan Start);
+
+/// <summary>What the player needs from the server before starting: which file version, its tracks and defaults.</summary>
+public sealed record PlaybackDetails(
+    string MediaSourceId,
+    string? PlaySessionId,
+    IReadOnlyList<MediaStreamInfo> Streams,
+    int? DefaultAudioStreamIndex,
+    int? DefaultSubtitleStreamIndex,
+    IReadOnlyList<ChapterInfo> Chapters)
+{
+    public IEnumerable<MediaStreamInfo> AudioStreams => Streams.Where(s => s.Type == "Audio");
+    public IEnumerable<MediaStreamInfo> SubtitleStreams => Streams.Where(s => s.Type == "Subtitle");
+
+    /// <summary>When the server knows nothing more (old server, error): play the item's own file with player defaults.</summary>
+    public static PlaybackDetails Fallback(MediaItem item) => new(item.Id, null, [], null, null, []);
+}
