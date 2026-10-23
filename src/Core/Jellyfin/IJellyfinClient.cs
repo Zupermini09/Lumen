@@ -35,6 +35,9 @@ public interface IJellyfinClient
     /// <summary>File version, tracks with the user's default choices (PlaybackInfo) and chapters.</summary>
     Task<PlaybackDetails> GetPlaybackDetailsAsync(MediaItem item, CancellationToken cancellationToken = default);
 
+    /// <summary>Intro/credits/... segments for an item; empty when the server has none or is too old for the API.</summary>
+    Task<IReadOnlyList<Playback.MediaSegment>> GetMediaSegmentsAsync(MediaItem item, CancellationToken cancellationToken = default);
+
     /// <summary>A direct-play URL the player can open (the server sends the file as is).</summary>
     Uri GetStreamUri(MediaItem item, string? mediaSourceId = null);
 

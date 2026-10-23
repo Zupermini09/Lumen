@@ -21,6 +21,7 @@ internal abstract class StubJellyfinClient : IJellyfinClient
     public virtual Uri GetImageUri(string itemId, ImageKind kind, string? tag, int maxHeight) => throw new NotSupportedException();
     public virtual Uri GetUserImageUri(ServerInfo server, UserInfo user, int maxHeight) => throw new NotSupportedException();
     public virtual Task<PlaybackDetails> GetPlaybackDetailsAsync(MediaItem item, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<IReadOnlyList<Lumen.Core.Playback.MediaSegment>> GetMediaSegmentsAsync(MediaItem item, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Uri GetStreamUri(MediaItem item, string? mediaSourceId = null) => throw new NotSupportedException();
     public virtual Uri GetSubtitleUri(MediaItem item, string mediaSourceId, MediaStreamInfo stream) => throw new NotSupportedException();
     public virtual Task ReportPlaybackStartAsync(PlaybackReport report, CancellationToken cancellationToken = default) => throw new NotSupportedException();

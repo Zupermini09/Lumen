@@ -11,6 +11,14 @@ public sealed class AppSettings
     public string? LastServerId { get; set; }
     public List<SavedServer> Servers { get; set; } = [];
     public int Volume { get; set; } = 100;
+
+    /// <summary>Per segment type: show a skip button (default), skip automatically, or ignore.</summary>
+    public Dictionary<Playback.SegmentType, Playback.SegmentAction> SegmentActions { get; set; } = new();
+
+    public Playback.SegmentAction ActionFor(Playback.SegmentType type) =>
+        SegmentActions.TryGetValue(type, out var action) ? action
+        : type == Playback.SegmentType.Unknown ? Playback.SegmentAction.Off
+        : Playback.SegmentAction.Ask;
 }
 
 public interface ISettingsStore

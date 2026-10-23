@@ -286,6 +286,31 @@ public sealed class JellyfinClient : IJellyfinClient
             chapters);
     }
 
+    public async Task<IReadOnlyList<Core.Playback.MediaSegment>> GetMediaSegmentsAsync(MediaItem item, CancellationToken cancellationToken = default)
+    {
+        var session = _session.Require();
+        try
+        {
+            var result = await SendAsync<MediaSegmentsResultDto>(HttpMethod.Get, session.Server.Address,
+                $"MediaSegments/{item.Id}", session.AccessToken, null, cancellationToken);
+            return ParseSegments(result);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
+        {
+            return []; // servers before 10.10 have no media segments API
+        }
+    }
+
+    internal static IReadOnlyList<Core.Playback.MediaSegment> ParseSegments(MediaSegmentsResultDto? result) =>
+        result?.Items
+            .Where(s => s.EndTicks > s.StartTicks)
+            .Select(s => new Core.Playback.MediaSegment(
+                Enum.TryParse<Core.Playback.SegmentType>(s.Type, ignoreCase: true, out var type) ? type : Core.Playback.SegmentType.Unknown,
+                TimeSpan.FromTicks(s.StartTicks),
+                TimeSpan.FromTicks(s.EndTicks)))
+            .OrderBy(s => s.Start)
+            .ToList() ?? [];
+
     private async Task<IReadOnlyList<ChapterInfo>> GetChaptersAsync(MediaItem item, SessionInfo session, CancellationToken cancellationToken)
     {
         try

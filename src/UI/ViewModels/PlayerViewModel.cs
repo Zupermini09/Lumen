@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using Lumen.Core;
 using Lumen.Core.Jellyfin;
 using Lumen.Core.Playback;
 using Serilog;
@@ -19,7 +20,10 @@ public sealed class PlayerViewModel : TransportViewModel
     private readonly IJellyfinClient _client;
     private readonly ILogger _log;
     private readonly DispatcherTimer _progressTimer;
+    private readonly ISettingsStore _settings;
     private PlaybackDetails _details;
+    private SegmentTracker _segments = new([], _ => SegmentAction.Off);
+    private MediaSegment? _skipSegment;
     private string _playSessionId = Guid.NewGuid().ToString("N");
     private bool _reportedStart;
     private bool _stopped;
@@ -28,11 +32,13 @@ public sealed class PlayerViewModel : TransportViewModel
     private DateTime _pendingSubtitleDeadline;
     private TimeSpan _lastPosition;
 
-    public PlayerViewModel(MediaItem item, IJellyfinClient client, IPlayerService player, IVideoSurfaceFactory surfaceFactory, ILogger log)
+    public PlayerViewModel(MediaItem item, IJellyfinClient client, IPlayerService player, IVideoSurfaceFactory surfaceFactory,
+        ISettingsStore settings, ILogger log)
         : base(player, surfaceFactory)
     {
         _item = item;
         _client = client;
+        _settings = settings;
         _details = PlaybackDetails.Fallback(item);
         _log = log.ForContext<PlayerViewModel>();
         (ItemTitle, ItemSubtitle) = MediaCardViewModel.Describe(item);
@@ -71,6 +77,8 @@ public sealed class PlayerViewModel : TransportViewModel
             _log.Information("Playback info unavailable, playing with player defaults: {Error}", ex.Message);
         }
 
+        _ = LoadSegmentsAsync();
+
         try
         {
             await Player.PlayAsync(_client.GetStreamUri(_item, _details.MediaSourceId), StartPosition);
@@ -88,6 +96,48 @@ public sealed class PlayerViewModel : TransportViewModel
         _reportedStart = false;
         _tracksPrepared = false;
         await Player.PlayAsync(_client.GetStreamUri(_item, _details.MediaSourceId));
+    }
+
+    // ---- Skip segments ----------------------------------------------------------------------------------------
+
+    private async Task LoadSegmentsAsync()
+    {
+        try
+        {
+            var segments = await _client.GetMediaSegmentsAsync(_item);
+            _segments = new SegmentTracker(segments, type => _settings.Settings.ActionFor(type));
+            if (segments.Count > 0)
+                _log.Information("{Count} media segments for this item", segments.Count);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException or TaskCanceledException)
+        {
+            _log.Information("Media segments unavailable: {Error}", ex.Message); // optional feature
+        }
+    }
+
+    protected override void OnPositionUpdated(TimeSpan position)
+    {
+        if (!_segments.HasSegments || State is not (PlaybackState.Playing or PlaybackState.Paused))
+            return;
+
+        var decision = _segments.Update(position);
+        if (decision.SeekTo is { } target)
+        {
+            SeekTo(target);
+            return;
+        }
+
+        _skipSegment = decision.ButtonFor;
+        SkipLabel = _skipSegment?.SkipLabel;
+    }
+
+    public override void Skip()
+    {
+        if (_skipSegment is not { } segment)
+            return;
+        SeekTo(_segments.Skip(segment));
+        _skipSegment = null;
+        SkipLabel = null;
     }
 
     // ---- Tracks -----------------------------------------------------------------------------------------------

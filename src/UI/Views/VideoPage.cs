@@ -114,6 +114,8 @@ public abstract class VideoPage : UserControl
     {
         if (e.PropertyName == nameof(TransportViewModel.State))
             UpdateChrome(show: Transport?.State != PlaybackState.Playing);
+        else if (e.PropertyName == nameof(TransportViewModel.HasSkip) && Transport?.HasSkip == true)
+            UpdateChrome(show: true); // a skip button must be seen, even in full screen
     }
 
     private void OnAnyPointerMoved(object? sender, PointerEventArgs e)
@@ -156,7 +158,7 @@ public abstract class VideoPage : UserControl
     {
         _hideTimer.Stop();
         // Keep the controls up while paused or stopped; hide them only during playback.
-        if (TransportBar.IsMenuOpen)
+        if (TransportBar.IsMenuOpen || Transport?.HasSkip == true)
         {
             _hideTimer.Start();
             return;

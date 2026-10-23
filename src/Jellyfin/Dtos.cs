@@ -142,3 +142,15 @@ internal sealed class ItemChaptersDto
 {
     public List<ChapterDto>? Chapters { get; set; }
 }
+
+internal sealed class MediaSegmentDto
+{
+    public string? Type { get; set; }
+    public long StartTicks { get; set; }
+    public long EndTicks { get; set; }
+}
+
+internal sealed class MediaSegmentsResultDto
+{
+    public List<MediaSegmentDto> Items { get; set; } = [];
+}

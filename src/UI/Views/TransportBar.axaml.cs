@@ -17,6 +17,8 @@ public partial class TransportBar : UserControl
 
     private TransportViewModel? ViewModel => DataContext as TransportViewModel;
 
+    private void OnSkipClick(object? sender, RoutedEventArgs e) => ViewModel?.Skip();
+
     private void OnAudioClick(object? sender, RoutedEventArgs e) =>
         ShowMenu(sender, ViewModel?.AudioOptions(), "No audio tracks");
 
@@ -100,6 +102,9 @@ public partial class TransportBar : UserControl
                 return true;
             case Key.F:
                 (TopLevel.GetTopLevel(origin) as MainWindow)?.ToggleFullScreen();
+                return true;
+            case Key.S when vm.HasSkip:
+                vm.Skip();
                 return true;
             case Key.G:
                 vm.AdjustSubtitleDelay(TimeSpan.FromMilliseconds(-100));

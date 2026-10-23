@@ -45,6 +45,19 @@ public abstract partial class TransportViewModel : PageViewModel
     [ObservableProperty]
     private string _speedText = "1×";
 
+    /// <summary>Text of the skip button ("Skip Intro"...), or null when there is nothing to skip right now.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSkip))]
+    private string? _skipLabel;
+
+    public bool HasSkip => SkipLabel is not null;
+
+    /// <summary>Skips the current segment (button or S key).</summary>
+    public virtual void Skip() { }
+
+    /// <summary>Called on the UI thread whenever the displayed position changes.</summary>
+    protected virtual void OnPositionUpdated(TimeSpan position) { }
+
     protected TransportViewModel(IPlayerService player, IVideoSurfaceFactory surfaceFactory)
     {
         Player = player;
@@ -182,6 +195,7 @@ public abstract partial class TransportViewModel : PageViewModel
         {
             PositionSeconds = position.TotalSeconds;
             PositionText = TimeFormat.Playback(position, TimeSpan.FromSeconds(DurationSeconds));
+            OnPositionUpdated(position);
         }
         finally
         {
