@@ -105,10 +105,13 @@ jobs:
         run: dotnet publish src/App/Lumen.App.csproj -c Release -r osx-${{ matrix.arch }} --self-contained -p:PublishReadyToRun=true -p:Version=${{ env.VERSION }} -o artifacts/publish/osx-${{ matrix.arch }}
       - name: Package (.app + .dmg)
         run: packaging/macos/build-dmg.sh "$VERSION" ${{ matrix.arch }} artifacts/publish/osx-${{ matrix.arch }} artifacts/dist
+      # GitHub's macOS runners are VMs without a GPU, so VLC cannot create its OpenGL video output there
+      # ("Failure to create CGL context"). CI checks that the bundled libvlc loads and decodes; video output
+      # on macOS is verified manually (TESTING.md).
       - name: Smoke test (launch + play from the .app)
         run: |
           status=0
-          artifacts/dist/Lumen.app/Contents/MacOS/Lumen --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA" || status=$?
+          artifacts/dist/Lumen.app/Contents/MacOS/Lumen --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA" --smoke-no-video || status=$?
           tail -n 30 ~/Library/Logs/Lumen/*.log || true
           exit $status
       - name: Remove test .app
@@ -171,17 +174,32 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends xvfb
+      - name: AppImage bundles everything VLC needs (no missing libraries)
+        run: |
+          chmod +x dist/*.AppImage
+          (cd "$RUNNER_TEMP" && "$GITHUB_WORKSPACE"/dist/*.AppImage --appimage-extract >/dev/null)
+          root="$RUNNER_TEMP/squashfs-root"
+          missing="$(LD_LIBRARY_PATH="$root/usr/lib:$root/usr/lib/vlc" find "$root/usr/lib" -name '*.so*' -type f -exec ldd {} \; 2>/dev/null | grep 'not found' | sort -u || true)"
+          echo "${missing:-no missing libraries}"
+          # Report only; libraries the host is expected to provide are listed in build-appimage.sh.
       - name: AppImage runs without VLC installed
         env:
           APPIMAGE_EXTRACT_AND_RUN: '1'
         run: |
           if ldconfig -p | grep -q 'libvlc\.so'; then echo "libvlc is unexpectedly installed"; exit 1; fi
-          chmod +x dist/*.AppImage
-          xvfb-run -a dist/*.AppImage --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA"
+          status=0
+          xvfb-run -a dist/*.AppImage --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA" || status=$?
+          grep -E 'WRN|ERR|SMOKE' ~/.local/state/lumen/logs/*.log | grep -v 'audio' | tail -n 40 || true
+          exit $status
       - name: .deb installs with its dependencies and runs
+        if: ${{ !cancelled() }}
         run: |
           sudo apt-get install -y ./dist/*.deb
-          xvfb-run -a lumen --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA"
+          rm -rf ~/.local/state/lumen/logs
+          status=0
+          xvfb-run -a lumen --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA" || status=$?
+          grep -E 'WRN|ERR|SMOKE' ~/.local/state/lumen/logs/*.log | grep -v 'audio' | tail -n 40 || true
+          exit $status
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
