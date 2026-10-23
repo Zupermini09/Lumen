@@ -16,16 +16,41 @@ internal static class SmokeTestRunner
 {
     private static readonly TimeSpan MinimumPlayed = TimeSpan.FromSeconds(2);
 
+    private static volatile string _stage = "starting";
+
     public static void Attach(MainWindow window, IServiceProvider services, StartupOptions options, IClassicDesktopStyleApplicationLifetime desktop)
     {
+        StartWatchdog(options.SmokeTimeout + TimeSpan.FromSeconds(60));
+        _stage = "waiting for the main window to open";
+
         window.Opened += async (_, _) =>
         {
             var (passed, detail) = await RunAsync(window, services, options);
             var line = $"SMOKE: {(passed ? "PASS" : "FAIL")} {detail} (RAM {Environment.WorkingSet / (1024 * 1024)} MB)";
             Console.WriteLine(line);
             Log.Information("{SmokeResult}", line);
+            _stage = "shutting down";
             desktop.Shutdown(passed ? 0 : 1);
         };
+    }
+
+    /// <summary>
+    /// Hard deadline for the whole run, independent of the UI thread: a hang anywhere (window never opening,
+    /// a deadlock on shutdown) becomes a fast, logged failure instead of a stuck CI job.
+    /// </summary>
+    private static void StartWatchdog(TimeSpan limit)
+    {
+        var thread = new Thread(() =>
+        {
+            Thread.Sleep(limit);
+            var line = $"SMOKE: FAIL watchdog: no result after {limit.TotalSeconds:0}s (stage: {_stage})";
+            Console.WriteLine(line);
+            Log.Error("{SmokeResult}", line);
+            Log.CloseAndFlush();
+            Environment.Exit(2);
+        })
+        { IsBackground = true, Name = "Smoke test watchdog" };
+        thread.Start();
     }
 
     private static async Task<(bool Passed, string Detail)> RunAsync(MainWindow window, IServiceProvider services, StartupOptions options)
@@ -33,6 +58,7 @@ internal static class SmokeTestRunner
         try
         {
             var player = services.GetRequiredService<IPlayerService>();
+            _stage = "window opened";
             if (options.SmokePlayPath is null)
             {
                 await Task.Delay(TimeSpan.FromSeconds(2));
@@ -44,7 +70,9 @@ internal static class SmokeTestRunner
 
             window.Select(PageKey.PlaybackTest);
             await Task.Delay(TimeSpan.FromSeconds(1)); // let the video surface attach
+            _stage = "starting playback";
             await player.PlayAsync(uri);
+            _stage = "playing";
 
             var deadline = DateTime.UtcNow + options.SmokeTimeout;
             while (DateTime.UtcNow < deadline)
@@ -59,6 +87,7 @@ internal static class SmokeTestRunner
             var position = player.Position;
             var state = player.State;
             var videoOutputs = player.VideoOutputCount;
+            _stage = "stopping playback";
             await player.StopAsync();
             await Dispatcher.UIThread.InvokeAsync(() => { });
 

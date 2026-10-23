@@ -72,6 +72,7 @@ jobs:
       - name: Publish
         run: dotnet publish src/App/Lumen.App.csproj -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true -p:Version=${{ env.VERSION }} -o artifacts/publish/win-x64
       - name: Smoke test (launch + play)
+        timeout-minutes: 5
         shell: pwsh
         run: |
           $p = Start-Process -FilePath artifacts/publish/win-x64/Lumen.exe -ArgumentList '--smoke-test','--smoke-play',(Resolve-Path $env:SMOKE_MEDIA).Path -PassThru -Wait
@@ -113,6 +114,7 @@ jobs:
       # ("Failure to create CGL context"). CI checks that the bundled libvlc loads and decodes; video output
       # on macOS is verified manually (TESTING.md).
       - name: Smoke test (launch + play from the .app)
+        timeout-minutes: 5
         run: |
           status=0
           artifacts/dist/Lumen.app/Contents/MacOS/Lumen --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA" --smoke-no-video || status=$?
@@ -150,6 +152,7 @@ jobs:
       - name: Publish
         run: dotnet publish src/App/Lumen.App.csproj -c Release -r linux-x64 --self-contained -p:PublishReadyToRun=true -p:Version=$VERSION -o artifacts/publish/linux-x64
       - name: Smoke test (launch + play, system libvlc)
+        timeout-minutes: 5
         run: xvfb-run -a artifacts/publish/linux-x64/Lumen --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA"
       - name: Package .deb
         run: packaging/linux/build-deb.sh "$VERSION" artifacts/publish/linux-x64 artifacts/dist
@@ -191,6 +194,7 @@ jobs:
           unexpected="$(echo "$missing" | grep -vE '^(libEGL|libGL|libGLX|libGLESv2|libpulse|libpulse-simple|liblttng-ust)\.so' | grep . || true)"
           if [ -n "$unexpected" ]; then echo "::error::AppImage is missing bundled libraries: $unexpected"; exit 1; fi
       - name: AppImage runs without VLC installed
+        timeout-minutes: 5
         env:
           APPIMAGE_EXTRACT_AND_RUN: '1'
         run: |
