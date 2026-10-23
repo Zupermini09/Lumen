@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:jf="using:Lumen.Core.Jellyfin"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Lumen.UI.Views.ConnectView"
+             x:DataType="vm:ConnectViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="32" Spacing="16" MaxWidth="520" HorizontalAlignment="Center" VerticalAlignment="Center">
+      <StackPanel Orientation="Horizontal" Spacing="16">
+        <Image Source="avares://Lumen.UI/Assets/lumen-256.png" Width="56" Height="56" />
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Text="Connect to your server" Theme="{StaticResource TitleTextBlockStyle}" />
+          <TextBlock Text="Lumen is a desktop client for Jellyfin" Opacity="0.7" />
+        </StackPanel>
+      </StackPanel>
+
+      <TextBlock Text="Server address" Margin="0,8,0,0" />
+      <TextBox x:Name="AddressBox" Text="{Binding Address}" Watermark="e.g. 192.168.1.10:8096 or https://jellyfin.example.com">
+        <TextBox.KeyBindings>
+          <KeyBinding Gesture="Enter" Command="{Binding ConnectCommand}" />
+        </TextBox.KeyBindings>
+      </TextBox>
+      <TextBlock Text="http and https both work. Without http(s)://, Lumen tries https first, then http on port 8096."
+                 TextWrapping="Wrap" FontSize="12" Opacity="0.6" />
+
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Button Content="Connect" Classes="accent" Command="{Binding ConnectCommand}" MinWidth="120" />
+        <ui:ProgressRing IsIndeterminate="True" Width="24" Height="24" IsVisible="{Binding IsBusy}" />
+      </StackPanel>
+
+      <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
+                 TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+
+      <StackPanel Spacing="8" IsVisible="{Binding HasRecentServers}" Margin="0,16,0,0">
+        <TextBlock Text="Recent servers" FontWeight="SemiBold" />
+        <ItemsControl ItemsSource="{Binding RecentServers}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="jf:SavedServer">
+              <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Margin="0,0,0,6"
+                      Command="{Binding $parent[UserControl].((vm:ConnectViewModel)DataContext).ConnectRecentCommand}"
+                      CommandParameter="{Binding}">
+                <StackPanel>
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding Address}" FontSize="12" Opacity="0.7" />
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <Button Content="Play a local file instead" Classes="link" Command="{Binding PlayLocalFileCommand}"
+              Background="Transparent" BorderThickness="0" Padding="0" Opacity="0.7" Margin="0,8,0,0" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

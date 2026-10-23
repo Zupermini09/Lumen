@@ -1,0 +1,24 @@
+<views:VideoPage xmlns="https://github.com/avaloniaui"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:vm="using:Lumen.UI.ViewModels"
+                 xmlns:views="using:Lumen.UI.Views"
+                 x:Class="Lumen.UI.Views.PlayerView"
+                 x:DataType="vm:PlayerViewModel">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <DockPanel Grid.Row="0" Margin="16,12">
+      <Button x:Name="StartOverButton" DockPanel.Dock="Right" Content="Start over" IsVisible="{Binding IsResuming}"
+              Click="OnStartOverClick" />
+      <StackPanel>
+        <TextBlock Text="{Binding ItemTitle}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+        <TextBlock Text="{Binding ItemSubtitle}" Opacity="0.7" TextTrimming="CharacterEllipsis"
+                   IsVisible="{Binding ItemSubtitle, Converter={x:Static ObjectConverters.IsNotNull}}" />
+      </StackPanel>
+    </DockPanel>
+
+    <Border Grid.Row="1" Background="Black" DoubleTapped="OnVideoDoubleTapped">
+      <ContentControl x:Name="Host" />
+    </Border>
+
+    <views:TransportBar Grid.Row="2" Margin="16,12" />
+  </Grid>
+</views:VideoPage>

@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using FluentAvalonia.UI.Controls;
 using Lumen.UI.ViewModels;
 
@@ -9,28 +10,61 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Navigation.SelectionChanged += OnNavigationSelectionChanged;
+        Navigation.ItemInvoked += OnItemInvoked;
+        Navigation.BackRequested += (_, _) => ViewModel?.GoBack();
+        AddHandler(PointerReleasedEvent, OnPointerReleased, handledEventsToo: true);
     }
 
     private MainWindowViewModel? ViewModel => DataContext as MainWindowViewModel;
 
-    protected override void OnOpened(EventArgs e)
+    /// <summary>Full screen hides the navigation and status bar so only the page (the video) is shown.</summary>
+    public void ToggleFullScreen()
     {
-        base.OnOpened(e);
-        if (ViewModel is { CurrentPageKey: null })
-            Select(PageKey.PlaybackTest);
+        var full = WindowState != WindowState.FullScreen;
+        WindowState = full ? WindowState.FullScreen : WindowState.Normal;
+        Navigation.IsPaneVisible = !full;
+        Navigation.IsBackButtonVisible = !full;
+        StatusBar.IsVisible = !full;
     }
 
-    /// <summary>Selects a page in the navigation pane (which navigates to it).</summary>
-    public void Select(PageKey key)
+    public void ExitFullScreen()
     {
-        var items = Navigation.MenuItems.Concat(Navigation.FooterMenuItems).OfType<NavigationViewItem>();
-        Navigation.SelectedItem = items.FirstOrDefault(i => i.Tag as string == key.ToString());
+        if (WindowState == WindowState.FullScreen)
+            ToggleFullScreen();
     }
 
-    private void OnNavigationSelectionChanged(object? sender, NavigationViewSelectionChangedEventArgs e)
+    protected override void OnKeyDown(KeyEventArgs e)
     {
-        if (e.SelectedItem is NavigationViewItem { Tag: string tag } && Enum.TryParse<PageKey>(tag, out var key))
-            ViewModel?.NavigateTo(key);
+        base.OnKeyDown(e);
+        if (e.Handled)
+            return;
+
+        if (e.Key == Key.Left && e.KeyModifiers == KeyModifiers.Alt)
+        {
+            ExitFullScreen();
+            ViewModel?.GoBack();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape && WindowState == WindowState.FullScreen)
+        {
+            ExitFullScreen();
+            e.Handled = true;
+        }
+    }
+
+    // The mouse "back" button.
+    private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (e.InitialPressMouseButton == MouseButton.XButton1)
+            ViewModel?.GoBack();
+    }
+
+    private async void OnItemInvoked(object? sender, NavigationViewItemInvokedEventArgs e)
+    {
+        if (e.InvokedItemContainer is NavigationViewItem { Tag: string tag } && ViewModel is { } vm)
+        {
+            ExitFullScreen();
+            await vm.OpenMenuAsync(tag);
+        }
     }
 }

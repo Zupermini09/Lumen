@@ -14,5 +14,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Core\Lumen.Core.csproj" />
     <ProjectReference Include="..\..\src\Platform\Lumen.Platform.csproj" />
+    <ProjectReference Include="..\..\src\Jellyfin\Lumen.Jellyfin.csproj" />
+    <ProjectReference Include="..\..\src\Player\Lumen.Player.csproj" />
+    <ProjectReference Include="..\..\src\UI\Lumen.UI.csproj" />
   </ItemGroup>
 </Project>

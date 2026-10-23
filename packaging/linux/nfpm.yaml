@@ -25,6 +25,10 @@ depends:
   - libsm6
   - libfontconfig1
 
+recommends:
+  # Lets Lumen keep the access token in the desktop keyring (GNOME Keyring / KWallet) instead of a private file.
+  - libsecret-tools
+
 contents:
   - src: @PUBLISH_DIR@
     dst: /opt/lumen

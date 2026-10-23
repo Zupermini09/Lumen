@@ -1,0 +1,103 @@
+using System.Text.Json;
+using Lumen.Core.Jellyfin;
+
+namespace Lumen.Jellyfin;
+
+// Jellyfin's JSON field names. Deserialized case-insensitively: some endpoints answer in camelCase, most in PascalCase.
+internal static class Json
+{
+    public static readonly JsonSerializerOptions Options = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString,
+    };
+}
+
+internal sealed class PublicSystemInfoDto
+{
+    public string? Id { get; set; }
+    public string? ServerName { get; set; }
+    public string? Version { get; set; }
+    public string? ProductName { get; set; }
+}
+
+internal sealed class UserDto
+{
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string? PrimaryImageTag { get; set; }
+    public bool HasPassword { get; set; }
+
+    public UserInfo ToModel() => new(Id, Name, PrimaryImageTag, HasPassword);
+}
+
+internal sealed class AuthenticationResultDto
+{
+    public UserDto? User { get; set; }
+    public string? AccessToken { get; set; }
+}
+
+internal sealed class QuickConnectResultDto
+{
+    public string? Secret { get; set; }
+    public string? Code { get; set; }
+    public bool Authenticated { get; set; }
+}
+
+internal sealed class ItemsResultDto
+{
+    public List<BaseItemDto> Items { get; set; } = [];
+    public int TotalRecordCount { get; set; }
+}
+
+internal sealed class UserItemDataDto
+{
+    public long PlaybackPositionTicks { get; set; }
+    public bool Played { get; set; }
+}
+
+internal sealed class BaseItemDto
+{
+    public string Id { get; set; } = "";
+    public string? Name { get; set; }
+    public string? Type { get; set; }
+    public bool IsFolder { get; set; }
+    public string? CollectionType { get; set; }
+    public string? MediaType { get; set; }
+    public int? ProductionYear { get; set; }
+    public string? SeriesName { get; set; }
+    public string? SeriesId { get; set; }
+    public int? IndexNumber { get; set; }
+    public int? ParentIndexNumber { get; set; }
+    public string? AlbumArtist { get; set; }
+    public long? RunTimeTicks { get; set; }
+    public UserItemDataDto? UserData { get; set; }
+    public Dictionary<string, string>? ImageTags { get; set; }
+    public string? SeriesPrimaryImageTag { get; set; }
+    public string? AlbumId { get; set; }
+    public string? AlbumPrimaryImageTag { get; set; }
+
+    public MediaItem ToModel() => new()
+    {
+        Id = Id,
+        Name = Name ?? "",
+        Type = Type ?? "",
+        IsFolder = IsFolder,
+        CollectionType = CollectionType,
+        MediaType = MediaType,
+        ProductionYear = ProductionYear,
+        SeriesName = SeriesName,
+        SeriesId = SeriesId,
+        IndexNumber = IndexNumber,
+        ParentIndexNumber = ParentIndexNumber,
+        AlbumArtist = AlbumArtist,
+        RunTime = RunTimeTicks is { } ticks ? TimeSpan.FromTicks(ticks) : null,
+        PlaybackPosition = TimeSpan.FromTicks(UserData?.PlaybackPositionTicks ?? 0),
+        Played = UserData?.Played ?? false,
+        PrimaryImageTag = ImageTags?.GetValueOrDefault("Primary"),
+        ThumbImageTag = ImageTags?.GetValueOrDefault("Thumb"),
+        SeriesPrimaryImageTag = SeriesPrimaryImageTag,
+        AlbumId = AlbumId,
+        AlbumPrimaryImageTag = AlbumPrimaryImageTag,
+    };
+}

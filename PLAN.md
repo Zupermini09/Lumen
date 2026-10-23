@@ -29,7 +29,8 @@ Only documented exception: **third-party plugin configuration pages** are HTML s
   - Windows: `VideoLAN.LibVLC.Windows` NuGet (bundled)
   - macOS: `VideoLAN.LibVLC.Mac` NuGet (bundled in the .app)
   - Linux: system libvlc for the .deb (declared as a package dependency: `libvlc5`, `vlc-plugin-base`, `vlc-plugin-video-output`; the X11/OpenGL video outputs are in the last one); bundled libvlc + plugins for the AppImage
-- Jellyfin API: official **Jellyfin.Sdk** NuGet package (fall back to plain HttpClient + System.Text.Json for endpoints it lacks); WebSocket for real-time features
+- Jellyfin API: ~~official **Jellyfin.Sdk** NuGet package~~ **plain HttpClient + System.Text.Json** (`src/Jellyfin/JellyfinClient.cs`), using the same endpoints as jellyfin-web/JMP; WebSocket for real-time features
+  - Changed in M1: Jellyfin.Sdk pulls in the Kiota runtime and a very large generated client (startup time and memory, against the memory targets), its versions track one server release, and the app needs a few dozen endpoints. A thin hand-written client parses only the fields it uses, tolerates both JSON casings Jellyfin returns, and falls back to older routes (e.g. `Users/{id}/Views`) so older servers keep working. Revisit if the endpoint count grows large.
 - MVVM: CommunityToolkit.Mvvm; DI via Microsoft.Extensions.DependencyInjection
 - Settings/token storage: JSON in the per-user app data folder (Windows `%LOCALAPPDATA%`, macOS `~/Library/Application Support`, Linux `~/.config`), auth tokens stored in the OS credential store (Windows DPAPI/Credential Manager, macOS Keychain, Linux libsecret) behind an `ISecretStore` interface, with an encrypted-file fallback
 - Logging: Serilog to a rolling file
@@ -87,12 +88,12 @@ Code signing (decide before first public release):
 ## Parity checklist (feature inventory)
 
 **Accounts and connection**
-- [ ] Server connect/validate, multiple saved servers, server discovery on LAN
-- [ ] Login, user selection screen with avatars, Quick Connect (authorize and use), manual login, forgot password flow
-- [ ] Switch user / sign out, per-user saved profiles
+- [ ] Server connect/validate, multiple saved servers, server discovery on LAN — *done: connect/validate (http + https, scheme/port probing like the web client), recent servers. Missing: LAN discovery.*
+- [ ] Login, user selection screen with avatars, Quick Connect (authorize and use), manual login, forgot password flow — *done: manual login, public user list with avatars, Quick Connect (use). Missing: authorizing other devices, forgot password.*
+- [ ] Switch user / sign out, per-user saved profiles — *done: sign out, session restore with the token in the OS credential store. Missing: switching between saved users.*
 
 **Home and navigation**
-- [ ] Home sections: Continue Watching, Next Up, Latest per library, Live TV, My Media; user-customizable section order/visibility
+- [ ] Home sections: Continue Watching, Next Up, Latest per library, Live TV, My Media; user-customizable section order/visibility — *done: My Media, Continue Watching, Next Up.*
 - [ ] Library views and navigation drawer, favourites, search with suggestions
 - [ ] Collections, playlists (create/edit/reorder/add to), genres, studios, tags, years, people (actor/director pages)
 
@@ -105,11 +106,11 @@ Code signing (decide before first public release):
 - [ ] Watched/favourite toggles, rating, play/resume/shuffle, add to playlist/collection, copy stream URL
 
 **Video playback**
-- [ ] Direct play, direct stream and transcoding fallback (HLS), quality/bitrate selection, hardware decoding (D3D11 on Windows, VideoToolbox on macOS, VAAPI on Linux)
+- [ ] Direct play, direct stream and transcoding fallback (HLS), quality/bitrate selection, hardware decoding (D3D11 on Windows, VideoToolbox on macOS, VAAPI on Linux) — *done: direct play (static stream).*
 - [ ] Audio and subtitle track selection (embedded, external, burn-in via server), subtitle delay/size/appearance, remote subtitle search and download
 - [ ] Chapters, trickplay thumbnails on the seek bar, next-episode autoplay with countdown, resume, playback speed
 - [ ] **Skip segments** via the server's Media Segments API (`/MediaSegments/{itemId}`), one on-screen "Skip ..." button per segment type: Intro ("Skip Intro"), Recap ("Skip Recap", i.e. "previously on..."), Outro/Credits ("Skip Credits" / jump to next episode), Preview, Commercial. Per-type setting in Playback settings: Ask / Auto-skip / Off. Button appears when playback enters the segment and hides when it ends. Hide gracefully when the server has no segments for an item or is too old to have the API. Segments are created by server-side providers (e.g. the Intro Skipper plugin); the client only reads them, so document in the README that a provider plugin is needed.
-- [ ] Playback progress reporting, watched marking, fullscreen, picture-in-picture, keyboard shortcuts, media keys, stats overlay
+- [ ] Playback progress reporting, watched marking, fullscreen, picture-in-picture, keyboard shortcuts, media keys, stats overlay — *done: progress reporting (start/10 s/pause/stop), watched on finish, resume, fullscreen, keyboard shortcuts.*
 - [ ] Multiple versions, audio normalization
 
 **Music playback**
@@ -140,6 +141,9 @@ Code signing (decide before first public release):
 
 - **M0 (done, pending manual checks on Windows/macOS, see TESTING.md):** solution layout, Avalonia + FluentAvalonia shell, `IPlayerService` with the LibVLC backend and a playback test page (with an overlay-over-video probe), per-OS paths and libvlc loading in `Platform/`, Serilog logging, CI producing `.exe` + portable `.zip`, `.dmg` (arm64 and x64), `.deb` and `.AppImage`, smoke tests on all three OSes, release job with SHA-256 checksums, download page in `docs/`.
   - Lessons: LibVLCSharp asks for the unversioned `libvlc` on Linux (only present with the `-dev` package), so `Platform/LibVlcLocator` maps it to `libvlc.so.5`; disposing LibVLC from Avalonia's `Exit` event can race the native video surface and crash, so services are disposed after the UI lifetime ends. The AppImage must bundle `libva`/`libvdpau` (Ubuntu's libavcodec links them, so without them VLC has no video decoder); CI fails if the AppImage misses any library other than the host GL/EGL stack and PulseAudio. GitHub's macOS runners have no GPU, so CI cannot check video output on macOS (manual check).
+
+- Memory note from real-server testing: software-decoding 4K HEVC 10-bit takes ~1.2 GB (VLC frame buffers, excluded from the target but worth reducing); hardware decoding and `--avcodec-threads` tuning belong to M3. On Linux the app trims the native heap after playback (`Platform/NativeMemory`).
+- **M1 + early M2/M3 (in progress, pulled forward so the app can be tested against a real server):** connect (http/https), sign in (password, Quick Connect), session restore with OS credential stores (Windows DPAPI, macOS Keychain, Linux Secret Service with a 0600-file fallback), Home (My Media, Continue Watching, Next Up), virtualized library grids with a bounded image cache, folder navigation (library → show → season → episode, album → track), direct play with resume and progress reporting, back-stack navigation, `--smoke-server` end-to-end test.
 
 ## Milestones
 Each milestone ends with: builds clean on all three OSes (via CI), app runs, manual test notes in `TESTING.md`, parity checklist ticked, memory targets verified, a git commit.

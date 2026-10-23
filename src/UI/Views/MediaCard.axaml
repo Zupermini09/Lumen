@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:imaging="using:Lumen.UI.Imaging"
+             x:Class="Lumen.UI.Views.MediaCard"
+             x:DataType="vm:MediaCardViewModel">
+  <Button Classes="card" Padding="0" Background="Transparent" BorderThickness="0" Cursor="Hand"
+          Width="{Binding Width}" HorizontalContentAlignment="Stretch" Click="OnClick"
+          ToolTip.Tip="{Binding Title}">
+    <StackPanel Spacing="4">
+      <Border Height="{Binding ImageHeight}" CornerRadius="6" ClipToBounds="True"
+              Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+        <Panel>
+          <TextBlock Text="{Binding Title}" TextWrapping="Wrap" TextAlignment="Center" Margin="8"
+                     VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5" FontSize="13" />
+          <Image Stretch="UniformToFill" Height="{Binding ImageHeight}" imaging:RemoteImage.Uri="{Binding ImageUri}" />
+          <Border IsVisible="{Binding IsPlayed}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="6"
+                  Background="{DynamicResource AccentFillColorDefaultBrush}" CornerRadius="10" Width="20" Height="20">
+            <TextBlock Text="✓" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+          </Border>
+          <ProgressBar IsVisible="{Binding HasProgress}" Value="{Binding Progress}" Maximum="1" VerticalAlignment="Bottom"
+                       MinHeight="4" Height="4" Margin="0" CornerRadius="0" />
+        </Panel>
+      </Border>
+      <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" FontWeight="SemiBold" FontSize="13" />
+      <TextBlock Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" FontSize="12" Opacity="0.7" />
+    </StackPanel>
+  </Button>
+</UserControl>

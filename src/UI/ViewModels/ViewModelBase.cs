@@ -4,10 +4,16 @@ namespace Lumen.UI.ViewModels;
 
 public abstract class ViewModelBase : ObservableObject;
 
-/// <summary>A page shown in the shell. Disposed when the user navigates away so it releases its resources.</summary>
+/// <summary>A page shown in the shell. Disposed when it leaves the navigation history, so it releases its resources.</summary>
 public abstract class PageViewModel : ViewModelBase, IDisposable
 {
     public abstract string Title { get; }
+
+    /// <summary>False for pages that must not stay alive in the back stack (the player stops when you leave it).</summary>
+    public virtual bool KeepInHistory => true;
+
+    /// <summary>Called when another page is shown on top of this one.</summary>
+    public virtual void OnNavigatedFrom() { }
 
     public virtual void Dispose() => GC.SuppressFinalize(this);
 }

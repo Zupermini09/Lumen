@@ -1,12 +1,15 @@
 namespace Lumen.App;
 
 /// <summary>Command-line options. Only used for automated testing today.</summary>
-public sealed record StartupOptions(bool SmokeTest, string? SmokePlayPath, bool SmokeRequireVideo, TimeSpan SmokeTimeout)
+/// <param name="SmokeServer">End-to-end test against a real server; the account comes from the
+/// LUMEN_SMOKE_USER / LUMEN_SMOKE_PASSWORD environment variables (never the command line).</param>
+public sealed record StartupOptions(bool SmokeTest, string? SmokePlayPath, bool SmokeRequireVideo, TimeSpan SmokeTimeout, string? SmokeServer = null)
 {
     public static StartupOptions Parse(IReadOnlyList<string> args)
     {
         var smoke = false;
         string? play = null;
+        string? server = null;
         var requireVideo = true;
         var timeout = TimeSpan.FromSeconds(30);
 
@@ -20,6 +23,10 @@ public sealed record StartupOptions(bool SmokeTest, string? SmokePlayPath, bool 
                 case "--smoke-play" when i + 1 < args.Count:
                     play = args[++i];
                     break;
+                case "--smoke-server" when i + 1 < args.Count:
+                    smoke = true;
+                    server = args[++i];
+                    break;
                 case "--smoke-no-video":
                     // For runners without a usable display/GPU for video output (playback itself is still checked).
                     requireVideo = false;
@@ -31,6 +38,6 @@ public sealed record StartupOptions(bool SmokeTest, string? SmokePlayPath, bool 
             }
         }
 
-        return new StartupOptions(smoke, play, requireVideo, timeout);
+        return new StartupOptions(smoke, play, requireVideo, timeout, server);
     }
 }

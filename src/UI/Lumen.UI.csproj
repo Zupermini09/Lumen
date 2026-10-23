@@ -4,9 +4,13 @@
     <PackageReference Include="Avalonia" />
     <PackageReference Include="FluentAvaloniaUI" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Serilog" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Lumen.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lumen.Tests" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
