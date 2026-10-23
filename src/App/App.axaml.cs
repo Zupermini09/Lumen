@@ -68,7 +68,10 @@ public sealed class App : Application
         services.AddSingleton(new AppInfo(Program.Version, Program.Paths.LogDirectory));
 
         // Playback: one LibVLC instance for the app lifetime.
-        services.AddSingleton(sp => new LibVlcEngine(LibVlcLocator.PrepareNativeLibraries(typeof(LibVLCSharp.Shared.LibVLC).Assembly), sp.GetRequiredService<ILogger>()));
+        services.AddSingleton(sp => new LibVlcEngine(
+            LibVlcLocator.PrepareNativeLibraries(typeof(LibVLCSharp.Shared.LibVLC).Assembly),
+            sp.GetRequiredService<ILogger>(),
+            verbose: Program.Options.SmokeTest));
         services.AddSingleton<IPlayerService, LibVlcPlayerService>();
         services.AddSingleton<IVideoSurfaceFactory, LibVlcVideoSurfaceFactory>();
 

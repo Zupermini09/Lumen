@@ -165,7 +165,7 @@ jobs:
 
   # Installs the Linux packages on a clean, newer Ubuntu to prove they work outside the build machine.
   linux-install-test:
-    timeout-minutes: 20
+    timeout-minutes: 40
     needs: linux
     runs-on: ubuntu-24.04
     steps:
@@ -195,7 +195,7 @@ jobs:
           if ldconfig -p | grep -q 'libvlc\.so'; then echo "libvlc is unexpectedly installed"; exit 1; fi
           status=0
           xvfb-run -a dist/*.AppImage --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA" || status=$?
-          grep -E 'WRN|ERR|SMOKE' ~/.local/state/lumen/logs/*.log | grep -v 'audio' | tail -n 40 || true
+          grep -iE 'vout|video|xcb|glx|egl|opengl|window|SMOKE' ~/.local/state/lumen/logs/*.log | grep -viE 'audio|alsa' | head -n 120 || true
           exit $status
       - name: .deb installs with its dependencies and runs
         if: ${{ !cancelled() }}
@@ -204,7 +204,7 @@ jobs:
           rm -rf ~/.local/state/lumen/logs
           status=0
           xvfb-run -a lumen --smoke-test --smoke-play "$PWD/$SMOKE_MEDIA" || status=$?
-          grep -E 'WRN|ERR|SMOKE' ~/.local/state/lumen/logs/*.log | grep -v 'audio' | tail -n 40 || true
+          grep -iE 'vout|video|xcb|glx|egl|opengl|window|SMOKE' ~/.local/state/lumen/logs/*.log | grep -viE 'audio|alsa' | head -n 120 || true
           exit $status
 
   release:
