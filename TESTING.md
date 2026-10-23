@@ -17,7 +17,12 @@ Manual test notes per milestone. Automated coverage is listed first so manual te
 
 - The request/response formats were checked against a real Jellyfin 10.11.11 server (sign-in, library views, items, Quick Connect enabled).
 - The UI flow was then driven on a virtual display against a local stand-in that replays those responses: connect (http first for :8096), wrong password message, sign in, Home (libraries, Continue watching with progress bar, Next up), a 120-item library grid (virtualized: only visible posters are downloaded), show → season → episodes, playback with start/stop reports, restart restores the session, sign out removes the token, Quick Connect sign-in.
-- **Not yet verified on a real server with real media**: please run the checklist below.
+- **Real server (Jellyfin 12.1.0 behind an https tunnel, real library):**
+  - `--smoke-server`: PASS (server found over https, signed in, libraries loaded, a movie played with video output, progress reported, signed out).
+  - Driven through the UI: login page with the server's users and avatars, sign in, Home with library images, a 106-movie library with posters (virtualized, smooth scrolling, ~285 MB), playback of a 4K HEVC 10-bit Dolby Vision movie, seek, Back, the movie appeared in Continue watching with its thumbnail and 41 % progress, app restart restored the session, resume continued at the saved position, sign out revoked the token.
+  - Tokens are redacted in the log (`api_key=***`).
+  - Memory on this test machine (no GPU, so 4K HEVC is decoded in software): ~200–400 MB browsing, ~1.2 GB while software-decoding 4K HEVC (VLC frame buffers), back to ~420 MB after stopping. Before the fix below it stayed at ~700 MB after stopping: on Linux, glibc kept libvlc's freed buffers, so the app now calls `malloc_trim` after playback ends. With hardware decoding (a real GPU) playback memory should be far lower: please note the RAM readout in step 10.
+- Plain-http servers were checked against a real Jellyfin 10.11 server during development; the LAN address could not be reached from the cloud test machine, so step 1's LAN check is manual.
 
 ### Manual checklist
 

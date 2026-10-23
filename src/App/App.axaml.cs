@@ -104,7 +104,18 @@ public sealed class App : Application
         RemoteImage.Loader = provider.GetRequiredService<ImageLoader>();
 
         // Load libvlc eagerly so a missing or broken installation is reported at startup, not on first play.
-        _ = provider.GetRequiredService<IPlayerService>();
+        var player = provider.GetRequiredService<IPlayerService>();
+
+        // Give the decoder's frame buffers back to the OS once playback is over (see NativeMemory).
+        player.StateChanged += (_, state) =>
+        {
+            if (state is PlaybackState.Stopped or PlaybackState.Ended)
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1)); // let libvlc finish tearing down its threads
+                    NativeMemory.ReleaseFreedMemory();
+                });
+        };
         return provider;
     }
 }
