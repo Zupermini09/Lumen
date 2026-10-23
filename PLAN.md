@@ -19,13 +19,16 @@ Only documented exception: **third-party plugin configuration pages** are HTML s
 - Same app, same features, on all three operating systems. OS-specific code only where unavoidable (packaging, media keys, window chrome), behind interfaces.
 
 ## Stack (decided)
-- Language: C#, .NET 8 (LTS)
-- UI: **Avalonia UI** (cross-platform, native rendering, no browser engine) with **FluentAvalonia** (or Semi.Avalonia if Fluent is a poor fit) for a modern Fluent look, dark theme.
+- Language: C#, **.NET 10 (LTS)**
+  - Changed from .NET 8 in M0: .NET 8 support ends on 10 Nov 2026, and current FluentAvalonia releases (2.5+) only ship .NET 10 builds. .NET 10 is the current LTS (supported until Nov 2028).
+- UI: **Avalonia UI 11.3** (cross-platform, native rendering, no browser engine) with **FluentAvalonia 2.5** for a modern Fluent look, dark theme.
   - Replaces the earlier WPF choice, because WPF is Windows-only.
+  - Stay on Avalonia 11.3 (not 12) until LibVLCSharp.Avalonia supports Avalonia 12; LibVLCSharp.Avalonia 3.10 targets 11.3.
+  - Package versions are pinned in `Directory.Packages.props`.
 - Playback: **LibVLCSharp** + **LibVLCSharp.Avalonia** (video and audio)
   - Windows: `VideoLAN.LibVLC.Windows` NuGet (bundled)
   - macOS: `VideoLAN.LibVLC.Mac` NuGet (bundled in the .app)
-  - Linux: system libvlc for the .deb (declared as a package dependency); bundled libvlc + plugins for the AppImage
+  - Linux: system libvlc for the .deb (declared as a package dependency: `libvlc5`, `vlc-plugin-base`, `vlc-plugin-video-output`; the X11/OpenGL video outputs are in the last one); bundled libvlc + plugins for the AppImage
 - Jellyfin API: official **Jellyfin.Sdk** NuGet package (fall back to plain HttpClient + System.Text.Json for endpoints it lacks); WebSocket for real-time features
 - MVVM: CommunityToolkit.Mvvm; DI via Microsoft.Extensions.DependencyInjection
 - Settings/token storage: JSON in the per-user app data folder (Windows `%LOCALAPPDATA%`, macOS `~/Library/Application Support`, Linux `~/.config`), auth tokens stored in the OS credential store (Windows DPAPI/Credential Manager, macOS Keychain, Linux libsecret) behind an `ISecretStore` interface, with an encrypted-file fallback
@@ -37,7 +40,7 @@ Only documented exception: **third-party plugin configuration pages** are HTML s
 src/
   App/              Avalonia shell, DI setup, navigation
   Core/             Models, interfaces (IJellyfinService, IPlayerService, IImageCache, ISettings, ISecretStore, ISessionService)
-  Jellyfin/         API wrapper, auth, WebSocket, playback reporting
+  Jellyfin/         API wrapper, auth, WebSocket, playback reporting (added in M1)
   Player/           LibVLC wrapper (video + audio), tracks, queue, state
   UI/               Views + ViewModels per feature area
   Platform/         OS-specific implementations (secret store, media keys, autostart)
@@ -132,6 +135,11 @@ Code signing (decide before first public release):
 - [ ] Playback settings: transcoding, hardware acceleration, trickplay, resume, streaming, subtitles
 - [ ] Networking, scheduled tasks, plugins (catalog, install/uninstall/enable, repositories), logs viewer, activity log, branding, notifications, DLNA, Live TV tuners/guide providers/recording settings, metadata editor, identify/fix match, image editor, subtitle editor
 - [ ] Backup/restore if the server version exposes it
+
+## Progress
+
+- **M0 (done, pending manual checks on Windows/macOS, see TESTING.md):** solution layout, Avalonia + FluentAvalonia shell, `IPlayerService` with the LibVLC backend and a playback test page (with an overlay-over-video probe), per-OS paths and libvlc loading in `Platform/`, Serilog logging, CI producing `.exe` + portable `.zip`, `.dmg` (arm64 and x64), `.deb` and `.AppImage`, smoke tests on all three OSes, release job with SHA-256 checksums, download page in `docs/`.
+  - Lessons: LibVLCSharp asks for the unversioned `libvlc` on Linux (only present with the `-dev` package), so `Platform/LibVlcLocator` maps it to `libvlc.so.5`; disposing LibVLC from Avalonia's `Exit` event can race the native video surface and crash, so services are disposed after the UI lifetime ends. The AppImage must bundle `libva`/`libvdpau` (Ubuntu's libavcodec links them, so without them VLC has no video decoder); CI fails if the AppImage misses any library other than the host GL/EGL stack and PulseAudio. GitHub's macOS runners have no GPU, so CI cannot check video output on macOS (manual check).
 
 ## Milestones
 Each milestone ends with: builds clean on all three OSes (via CI), app runs, manual test notes in `TESTING.md`, parity checklist ticked, memory targets verified, a git commit.

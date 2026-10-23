@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             x:Class="Lumen.UI.Views.AboutView"
+             x:DataType="vm:AboutViewModel">
+  <ScrollViewer>
+    <StackPanel Margin="32" Spacing="12" MaxWidth="720" HorizontalAlignment="Left">
+      <StackPanel Orientation="Horizontal" Spacing="16">
+        <Image Source="avares://Lumen.UI/Assets/lumen-256.png" Width="64" Height="64" />
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Text="Lumen" Theme="{StaticResource TitleTextBlockStyle}" />
+          <TextBlock Text="A desktop client for Jellyfin" Opacity="0.7" />
+        </StackPanel>
+      </StackPanel>
+
+      <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,12,0,0">
+        <TextBlock Grid.Row="0" Text="Version" Opacity="0.7" />
+        <SelectableTextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Version}" />
+        <TextBlock Grid.Row="1" Text="Playback engine" Opacity="0.7" />
+        <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Engine}" />
+        <TextBlock Grid.Row="2" Text="Runtime" Opacity="0.7" />
+        <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Runtime}" TextWrapping="Wrap" />
+        <TextBlock Grid.Row="3" Text="Logs" Opacity="0.7" />
+        <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding LogDirectory}" TextWrapping="Wrap" />
+      </Grid>
+
+      <TextBlock TextWrapping="Wrap" Opacity="0.7" Margin="0,12,0,0"
+                 Text="Lumen is free software, licensed under the GNU General Public License v3. Playback is powered by VLC (LibVLC, LGPL-2.1-or-later). Lumen is not affiliated with the Jellyfin project." />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

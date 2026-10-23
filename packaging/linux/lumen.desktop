@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Lumen
+GenericName=Media Player
+Comment=A desktop client for Jellyfin
+Exec=lumen %U
+Icon=lumen
+Terminal=false
+Categories=AudioVideo;Video;Audio;Player;
+Keywords=jellyfin;media;video;music;movies;tv;
+StartupWMClass=Lumen
