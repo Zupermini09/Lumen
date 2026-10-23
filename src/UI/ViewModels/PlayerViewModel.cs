@@ -11,8 +11,9 @@ namespace Lumen.UI.ViewModels;
 /// choices, resumes from the saved position, and reports progress so "Continue watching" and watched state work like
 /// in the other clients.
 /// </summary>
-public sealed class PlayerViewModel : TransportViewModel
+public sealed partial class PlayerViewModel : TransportViewModel
 {
+    private const int NextEpisodeCountdownSeconds = 10;
     private static readonly TimeSpan ProgressInterval = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan TrackDefaultsTimeout = TimeSpan.FromSeconds(5);
 
@@ -21,6 +22,11 @@ public sealed class PlayerViewModel : TransportViewModel
     private readonly ILogger _log;
     private readonly DispatcherTimer _progressTimer;
     private readonly ISettingsStore _settings;
+    private readonly INavigator _navigator;
+    private readonly IPageFactory _pages;
+    private readonly DispatcherTimer _countdownTimer;
+    private MediaItem? _nextEpisode;
+    private int _countdown;
     private PlaybackDetails _details;
     private SegmentTracker _segments = new([], _ => SegmentAction.Off);
     private MediaSegment? _skipSegment;
@@ -33,16 +39,20 @@ public sealed class PlayerViewModel : TransportViewModel
     private TimeSpan _lastPosition;
 
     public PlayerViewModel(MediaItem item, IJellyfinClient client, IPlayerService player, IVideoSurfaceFactory surfaceFactory,
-        ISettingsStore settings, ILogger log)
+        ISettingsStore settings, INavigator navigator, IPageFactory pages, ILogger log)
         : base(player, surfaceFactory)
     {
         _item = item;
         _client = client;
         _settings = settings;
+        _navigator = navigator;
+        _pages = pages;
+        _countdownTimer = Timers.Create(TimeSpan.FromSeconds(1), DispatcherPriority.Normal, CountdownTick);
         _details = PlaybackDetails.Fallback(item);
         _log = log.ForContext<PlayerViewModel>();
         (ItemTitle, ItemSubtitle) = MediaCardViewModel.Describe(item);
-        _progressTimer = new DispatcherTimer(ProgressInterval, DispatcherPriority.Background, (_, _) => ReportProgress());
+        _isResuming = StartPosition > TimeSpan.Zero;
+        _progressTimer = Timers.Create(ProgressInterval, DispatcherPriority.Background, ReportProgress);
         Player.TracksChanged += OnTracksChanged;
     }
 
@@ -58,7 +68,9 @@ public sealed class PlayerViewModel : TransportViewModel
     public TimeSpan StartPosition =>
         _item.PlaybackPosition > TimeSpan.FromSeconds(5) && !_item.Played ? _item.PlaybackPosition : TimeSpan.Zero;
 
-    public bool IsResuming => StartPosition > TimeSpan.Zero;
+    /// <summary>Shows "Start over" while playback resumed from a saved position.</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private bool _isResuming;
 
     /// <summary>Starts playback; the view calls this once the video surface is attached.</summary>
     public async Task StartAsync()
@@ -78,6 +90,7 @@ public sealed class PlayerViewModel : TransportViewModel
         }
 
         _ = LoadSegmentsAsync();
+        _ = LoadNextEpisodeAsync();
 
         try
         {
@@ -92,10 +105,73 @@ public sealed class PlayerViewModel : TransportViewModel
 
     public async Task StartOverAsync()
     {
+        IsResuming = false;
         await Player.StopAsync();
         _reportedStart = false;
         _tracksPrepared = false;
         await Player.PlayAsync(_client.GetStreamUri(_item, _details.MediaSourceId));
+    }
+
+    // ---- Next episode -------------------------------------------------------------------------------------------
+
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    [CommunityToolkit.Mvvm.ComponentModel.NotifyPropertyChangedFor(nameof(HasNextEpisode))]
+    private string? _nextEpisodeLabel;
+
+    /// <summary>"Next episode in 7 s" while the countdown runs, otherwise null.</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    [CommunityToolkit.Mvvm.ComponentModel.NotifyPropertyChangedFor(nameof(IsCountingDown))]
+    private string? _countdownText;
+
+    public bool HasNextEpisode => NextEpisodeLabel is not null;
+    public bool IsCountingDown => CountdownText is not null;
+
+    private async Task LoadNextEpisodeAsync()
+    {
+        try
+        {
+            _nextEpisode = await _client.GetNextEpisodeAsync(_item);
+            if (_nextEpisode is { } next)
+            {
+                var (_, subtitle) = MediaCardViewModel.Describe(next);
+                NextEpisodeLabel = subtitle ?? next.Name;
+            }
+        }
+        catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException or TaskCanceledException)
+        {
+            _log.Information("Next episode unavailable: {Error}", ex.Message);
+        }
+    }
+
+    private void StartCountdown()
+    {
+        if (_nextEpisode is null || !_settings.Settings.AutoPlayNextEpisode)
+            return;
+        _countdown = NextEpisodeCountdownSeconds;
+        CountdownText = $"Next episode in {_countdown} s";
+        _countdownTimer.Start();
+    }
+
+    private void CountdownTick()
+    {
+        _countdown--;
+        if (_countdown <= 0)
+            PlayNextEpisode();
+        else
+            CountdownText = $"Next episode in {_countdown} s";
+    }
+
+    public void CancelCountdown()
+    {
+        _countdownTimer.Stop();
+        CountdownText = null;
+    }
+
+    public void PlayNextEpisode()
+    {
+        CancelCountdown();
+        if (_nextEpisode is { } next)
+            _navigator.Navigate(_pages.Player(next)); // replaces this player page (players are not kept in history)
     }
 
     // ---- Skip segments ----------------------------------------------------------------------------------------
@@ -263,6 +339,7 @@ public sealed class PlayerViewModel : TransportViewModel
             // Reporting the full runtime marks the item as watched.
             _lastPosition = TimeSpan.FromSeconds(DurationSeconds);
             ReportStopped();
+            StartCountdown();
         }
     }
 
@@ -311,6 +388,7 @@ public sealed class PlayerViewModel : TransportViewModel
     public override void Dispose()
     {
         Player.TracksChanged -= OnTracksChanged;
+        _countdownTimer.Stop();
         ReportStopped();
         _progressTimer.Stop();
         _ = Player.StopAsync();

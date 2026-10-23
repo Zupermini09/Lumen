@@ -17,6 +17,7 @@ internal abstract class StubJellyfinClient : IJellyfinClient
     public virtual Task<IReadOnlyList<MediaItem>> GetLibrariesAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task<IReadOnlyList<MediaItem>> GetResumeItemsAsync(int limit, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task<IReadOnlyList<MediaItem>> GetNextUpAsync(int limit, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<MediaItem?> GetNextEpisodeAsync(MediaItem episode, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Uri GetImageUri(string itemId, ImageKind kind, string? tag, int maxHeight) => throw new NotSupportedException();
     public virtual Uri GetUserImageUri(ServerInfo server, UserInfo user, int maxHeight) => throw new NotSupportedException();

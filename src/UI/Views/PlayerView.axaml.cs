@@ -22,9 +22,16 @@ public partial class PlayerView : VideoPage
 
     private async void OnStartOverClick(object? sender, RoutedEventArgs e)
     {
-        StartOverButton.IsVisible = false;
         if (ViewModel is { } vm)
             await vm.StartOverAsync();
+        Focus();
+    }
+
+    private void OnNextEpisodeClick(object? sender, RoutedEventArgs e) => ViewModel?.PlayNextEpisode();
+
+    private void OnCancelNextClick(object? sender, RoutedEventArgs e)
+    {
+        ViewModel?.CancelCountdown();
         Focus();
     }
 

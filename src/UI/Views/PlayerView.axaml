@@ -6,8 +6,18 @@
                  x:DataType="vm:PlayerViewModel">
   <Grid RowDefinitions="Auto,*,Auto">
     <DockPanel x:Name="Header" Grid.Row="0" Margin="16,12">
-      <Button x:Name="StartOverButton" DockPanel.Dock="Right" Content="Start over" IsVisible="{Binding IsResuming}"
-              Click="OnStartOverClick" />
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+        <Border IsVisible="{Binding IsCountingDown}" Background="{DynamicResource AccentFillColorDefaultBrush}"
+                CornerRadius="4" Padding="10,4">
+          <TextBlock Text="{Binding CountdownText}" Foreground="White" VerticalAlignment="Center" />
+        </Border>
+        <Button Content="Cancel" IsVisible="{Binding IsCountingDown}" Click="OnCancelNextClick" />
+        <Button IsVisible="{Binding HasNextEpisode}" Click="OnNextEpisodeClick" Classes="accent"
+                ToolTip.Tip="{Binding NextEpisodeLabel}">
+          <TextBlock Text="{Binding NextEpisodeLabel, StringFormat='Next: {0}'}" MaxWidth="260" TextTrimming="CharacterEllipsis" />
+        </Button>
+        <Button x:Name="StartOverButton" Content="Start over" IsVisible="{Binding IsResuming}" Click="OnStartOverClick" />
+      </StackPanel>
       <StackPanel>
         <TextBlock Text="{Binding ItemTitle}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
         <TextBlock Text="{Binding ItemSubtitle}" Opacity="0.7" TextTrimming="CharacterEllipsis"

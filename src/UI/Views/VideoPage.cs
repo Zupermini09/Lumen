@@ -27,10 +27,10 @@ public abstract class VideoPage : UserControl
 
     protected VideoPage()
     {
-        _hideTimer = new DispatcherTimer(ChromeTimeout, DispatcherPriority.Normal, (_, _) => HideChromeIfIdle());
+        _hideTimer = Timers.Create(ChromeTimeout, DispatcherPriority.Normal, HideChromeIfIdle);
         // Pointer events over the native video window do not reach Avalonia, so in full screen the mouse position is
         // polled to bring the controls back when the mouse moves.
-        _pointerPoll = new DispatcherTimer(TimeSpan.FromMilliseconds(250), DispatcherPriority.Background, (_, _) => PollPointer());
+        _pointerPoll = Timers.Create(TimeSpan.FromMilliseconds(250), DispatcherPriority.Background, PollPointer);
         // handledEventsToo: the video surface and controls may mark pointer events handled.
         AddHandler(PointerMovedEvent, OnAnyPointerMoved, handledEventsToo: true);
     }
@@ -53,6 +53,8 @@ public abstract class VideoPage : UserControl
     /// <summary>Called once the surface exists (e.g. to start playback).</summary>
     protected virtual void OnSurfaceReady() { }
 
+    private TransportViewModel? _bound;
+
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
@@ -60,17 +62,17 @@ public abstract class VideoPage : UserControl
         _window = TopLevel.GetTopLevel(this) as Window;
         if (_window is not null)
             _window.PropertyChanged += OnWindowPropertyChanged;
-        if (Transport is { } vm)
-        {
-            vm.PropertyChanged += OnTransportPropertyChanged;
-            if (VideoHost.Content is null)
-            {
-                VideoHost.Content = vm.CreateVideoSurface(CreateOverlay());
-                OnSurfaceReady();
-            }
-        }
-        UpdateChrome(show: true);
+        Bind(Transport);
         Focus();
+    }
+
+    // Avalonia reuses this view when one player page replaces another (e.g. the next episode), so the new page
+    // model arrives as a DataContext change, not as a new attach.
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        if (VisualRoot is not null)
+            Bind(Transport);
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -79,13 +81,32 @@ public abstract class VideoPage : UserControl
         _pointerPoll.Stop();
         if (_window is not null)
             _window.PropertyChanged -= OnWindowPropertyChanged;
-        if (Transport is { } vm)
-            vm.PropertyChanged -= OnTransportPropertyChanged;
-        // Drop the native video surface with the page so its window and resources are released.
-        VideoHost.Content = null;
+        Bind(null);
         (_window as MainWindow)?.ExitFullScreen();
         _window = null;
         base.OnDetachedFromVisualTree(e);
+    }
+
+    private void Bind(TransportViewModel? vm)
+    {
+        if (ReferenceEquals(vm, _bound))
+            return;
+        if (_bound is not null)
+            _bound.PropertyChanged -= OnTransportPropertyChanged;
+        _bound = vm;
+        if (vm is null)
+        {
+            // Leaving the page: drop the native video surface so its window and resources are released.
+            VideoHost.Content = null;
+            return;
+        }
+
+        vm.PropertyChanged += OnTransportPropertyChanged;
+        // A reused view (next episode) keeps its surface: it shows the one shared player, and re-creating a native
+        // window in the middle of a layout pass leaves it mispositioned.
+        VideoHost.Content ??= vm.CreateVideoSurface(CreateOverlay());
+        OnSurfaceReady();
+        UpdateChrome(show: true);
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
@@ -112,10 +133,17 @@ public abstract class VideoPage : UserControl
 
     private void OnTransportPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(TransportViewModel.State))
-            UpdateChrome(show: Transport?.State != PlaybackState.Playing);
-        else if (e.PropertyName == nameof(TransportViewModel.HasSkip) && Transport?.HasSkip == true)
-            UpdateChrome(show: true); // a skip button must be seen, even in full screen
+        switch (e.PropertyName)
+        {
+            case nameof(TransportViewModel.State):
+                UpdateChrome(show: Transport?.State != PlaybackState.Playing);
+                break;
+            // A skip button or the next-episode countdown must be seen, even in full screen.
+            case nameof(TransportViewModel.HasSkip) when Transport?.HasSkip == true:
+            case nameof(PlayerViewModel.IsCountingDown):
+                UpdateChrome(show: true);
+                break;
+        }
     }
 
     private void OnAnyPointerMoved(object? sender, PointerEventArgs e)
@@ -158,7 +186,7 @@ public abstract class VideoPage : UserControl
     {
         _hideTimer.Stop();
         // Keep the controls up while paused or stopped; hide them only during playback.
-        if (TransportBar.IsMenuOpen || Transport?.HasSkip == true)
+        if (TransportBar.IsMenuOpen || Transport?.HasSkip == true || (Transport as PlayerViewModel)?.IsCountingDown == true)
         {
             _hideTimer.Start();
             return;

@@ -12,6 +12,9 @@ public sealed class AppSettings
     public List<SavedServer> Servers { get; set; } = [];
     public int Volume { get; set; } = 100;
 
+    /// <summary>Play the next episode automatically (after a countdown) when one ends.</summary>
+    public bool AutoPlayNextEpisode { get; set; } = true;
+
     /// <summary>Per segment type: show a skip button (default), skip automatically, or ignore.</summary>
     public Dictionary<Playback.SegmentType, Playback.SegmentAction> SegmentActions { get; set; } = new();
 

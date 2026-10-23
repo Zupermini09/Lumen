@@ -185,6 +185,18 @@ public sealed class JellyfinClient : IJellyfinClient
         return ToModels(result);
     }
 
+    public async Task<MediaItem?> GetNextEpisodeAsync(MediaItem episode, CancellationToken cancellationToken = default)
+    {
+        if (episode.Type != "Episode" || episode.SeriesId is not { } seriesId)
+            return null;
+        var session = _session.Require();
+        // Same call as the web client: the episode list starting at this one; the second entry is the next episode.
+        var result = await SendAsync<ItemsResultDto>(HttpMethod.Get, session.Server.Address,
+            $"Shows/{seriesId}/Episodes?userId={session.User.Id}&startItemId={episode.Id}&limit=2&fields={ItemFields}&enableImageTypes=Primary,Thumb&imageTypeLimit=1",
+            session.AccessToken, null, cancellationToken);
+        return ToModels(result).SkipWhile(i => i.Id == episode.Id).FirstOrDefault();
+    }
+
     public async Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, CancellationToken cancellationToken = default)
     {
         var session = _session.Require();

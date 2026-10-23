@@ -27,6 +27,9 @@ public interface IJellyfinClient
     Task<IReadOnlyList<MediaItem>> GetLibrariesAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<MediaItem>> GetResumeItemsAsync(int limit, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<MediaItem>> GetNextUpAsync(int limit, CancellationToken cancellationToken = default);
+    /// <summary>The episode after this one in the series (across seasons), or null for the last one.</summary>
+    Task<MediaItem?> GetNextEpisodeAsync(MediaItem episode, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, CancellationToken cancellationToken = default);
 
     Uri GetImageUri(string itemId, ImageKind kind, string? tag, int maxHeight);
