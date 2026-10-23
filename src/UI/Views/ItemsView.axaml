@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:views="using:Lumen.UI.Views"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Lumen.UI.Views.ItemsView"
+             x:DataType="vm:ItemsViewModel">
+  <DockPanel Margin="24,24,8,0">
+    <DockPanel DockPanel.Dock="Top" Margin="0,0,16,12">
+      <Button DockPanel.Dock="Right" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh">
+        <ui:SymbolIcon Symbol="Refresh" />
+      </Button>
+      <StackPanel>
+        <TextBlock Text="{Binding Title}" Theme="{StaticResource TitleTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+        <TextBlock Text="{Binding Summary}" Opacity="0.7" />
+      </StackPanel>
+    </DockPanel>
+
+    <Panel>
+      <ui:ProgressRing IsIndeterminate="True" Width="40" Height="40" IsVisible="{Binding IsLoading}"
+                       HorizontalAlignment="Left" VerticalAlignment="Top" />
+      <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
+                 TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+      <TextBlock Text="Nothing here yet." IsVisible="{Binding IsEmpty}" Opacity="0.7" />
+
+      <!-- Virtualized: only the rows on screen (plus a small buffer) are created, so large libraries stay light. -->
+      <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Disabled">
+        <ItemsControl ItemsSource="{Binding Rows}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><VirtualizingStackPanel /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:CardRow">
+              <ItemsControl ItemsSource="{Binding Cards}" Margin="0,0,0,20">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="16" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="vm:MediaCardViewModel"><views:MediaCard /></DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Panel>
+  </DockPanel>
+</UserControl>

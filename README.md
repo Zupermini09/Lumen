@@ -6,7 +6,18 @@
 
 Lumen is a native app (Avalonia UI, no embedded browser) that plays your Jellyfin library with VLC. The goal is everything the Jellyfin web client can do, with smooth playback and a fraction of the memory a web-view client needs.
 
-> **Status: early development (milestone M0).** The app shell, playback engine and installers are in place; connecting to a server arrives in M1. See [PLAN.md](PLAN.md) for the roadmap and feature checklist.
+> **Status: early development.** You can connect to your server (http or https), sign in with a password or Quick Connect, browse your libraries and play movies, episodes and music with resume and watch-progress sync. Search, filters, subtitles/track selection, transcoding and everything else are still to come: see [PLAN.md](PLAN.md) for the roadmap and feature checklist.
+
+## Using Lumen
+
+1. Start Lumen and enter your server address: `192.168.1.10:8096`, `jellyfin.example.com` or a full `http://` / `https://` URL. Without `http(s)://`, Lumen tries https first, then http on Jellyfin's port 8096 (like the web client).
+2. Sign in with your user name and password, or press **Use Quick Connect** and approve the code from a device where you are already signed in (Settings → Quick Connect).
+3. Lumen remembers the server and keeps you signed in. The access token is stored in the OS credential store (Windows: encrypted with your Windows account; macOS: Keychain; Linux: the desktop keyring through `secret-tool`, or a file only your user can read).
+4. Home shows your libraries, Continue watching and Next up. Click a library, show or season to open it, and a movie, episode or track to play it. Playback resumes where you left off and reports progress to the server.
+
+Player keys: **Space** pause, **←/→** back 10 s / forward 30 s, **↑/↓** volume, **M** mute, **F** or double-click full screen, **Esc** leave full screen, **Alt+←** or the mouse back button to go back.
+
+Playback is direct play only for now (the server sends the original file and VLC plays it), which covers almost every format. HTTPS servers need a certificate the OS trusts (e.g. Let's Encrypt).
 
 Lumen is not affiliated with the Jellyfin project.
 
@@ -54,9 +65,10 @@ Installers are built by CI (`.github/workflows/build.yml`); every push produces 
 src/
   App/        Composition root: startup, DI, logging, smoke-test mode
   Core/       Models and interfaces shared by all layers (no UI or native dependencies)
+  Jellyfin/   Jellyfin API client, session persistence, image downloads
   Player/     LibVLC playback backend (behind IPlayerService)
   UI/         Views and ViewModels
-  Platform/   OS-specific code (paths, native library setup)
+  Platform/   OS-specific code (paths, native library setup, credential stores, settings)
 tests/        Unit tests and smoke-test media
 packaging/    Installer scripts (Windows Inno Setup, macOS .app/.dmg, Linux .deb/AppImage)
 docs/         Download page (GitHub Pages)

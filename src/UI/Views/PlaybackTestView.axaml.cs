@@ -1,43 +1,26 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Data.Converters;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
-using FluentAvalonia.UI.Controls;
 using Lumen.UI.ViewModels;
 
 namespace Lumen.UI.Views;
 
-public partial class PlaybackTestView : UserControl
+public partial class PlaybackTestView : VideoPage
 {
-    public static readonly IValueConverter PlayPauseSymbol =
-        new FuncValueConverter<bool, Symbol>(playing => playing ? Symbol.Pause : Symbol.Play);
-
     public PlaybackTestView() => InitializeComponent();
 
+    protected override ContentControl VideoHost => Host;
+
     private PlaybackTestViewModel? ViewModel => DataContext as PlaybackTestViewModel;
-
-    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
-    {
-        base.OnAttachedToVisualTree(e);
-        if (VideoHost.Content is null && ViewModel is { } vm)
-            VideoHost.Content = vm.CreateVideoSurface(CreateOverlayProbe());
-    }
-
-    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
-    {
-        // Drop the native video surface with the page so its window and resources are released.
-        VideoHost.Content = null;
-        base.OnDetachedFromVisualTree(e);
-    }
 
     /// <summary>
     /// A label drawn on top of the video. If it is visible while a video plays, overlays work on this OS
     /// (the native video window would otherwise hide it).
     /// </summary>
-    private static Control CreateOverlayProbe() => new Border
+    protected override Control CreateOverlay() => new Border
     {
         Background = new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)),
         CornerRadius = new CornerRadius(4),

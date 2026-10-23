@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Core\Lumen.Core.csproj" />
+    <ProjectReference Include="..\Jellyfin\Lumen.Jellyfin.csproj" />
     <ProjectReference Include="..\Platform\Lumen.Platform.csproj" />
     <ProjectReference Include="..\Player\Lumen.Player.csproj" />
     <ProjectReference Include="..\UI\Lumen.UI.csproj" />

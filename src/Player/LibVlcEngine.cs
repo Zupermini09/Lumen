@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using LibVLCSharp.Shared;
 using Serilog;
 
@@ -14,6 +15,9 @@ public sealed class LibVlcEngine : IDisposable
         "--no-snapshot-preview",
         "--no-stats",
     ];
+
+    // Stream URLs carry the access token (the player cannot send auth headers); never let it reach the logs.
+    private static readonly Regex TokenPattern = new(@"(api_key|ApiKey|Token)=[^&\s""']+", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private readonly ILogger _log;
     private readonly bool _verbose;
@@ -37,14 +41,17 @@ public sealed class LibVlcEngine : IDisposable
 
     private void OnLibVlcLog(object? sender, LogEventArgs e)
     {
+        var message = Redact(e.Message);
         if (_verbose)
-            _log.Information("libvlc {Level} [{Module}] {Message}", e.Level, e.Module, e.Message);
+            _log.Information("libvlc {Level} [{Module}] {Message}", e.Level, e.Module, message);
         // libvlc is very chatty at debug level; keep warnings and errors only.
         else if (e.Level == LogLevel.Error)
-            _log.Warning("libvlc [{Module}] {Message}", e.Module, e.Message);
+            _log.Warning("libvlc [{Module}] {Message}", e.Module, message);
         else if (e.Level == LogLevel.Warning)
-            _log.Debug("libvlc [{Module}] {Message}", e.Module, e.Message);
+            _log.Debug("libvlc [{Module}] {Message}", e.Module, message);
     }
+
+    internal static string Redact(string message) => TokenPattern.Replace(message, "$1=***");
 
     public void Dispose()
     {

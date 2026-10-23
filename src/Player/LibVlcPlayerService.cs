@@ -56,7 +56,7 @@ public sealed class LibVlcPlayerService : IPlayerService
     public event EventHandler<TimeSpan>? DurationChanged;
     public event EventHandler<string>? ErrorOccurred;
 
-    public async Task PlayAsync(Uri source, CancellationToken cancellationToken = default)
+    public async Task PlayAsync(Uri source, TimeSpan? startAt = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(source);
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -66,7 +66,9 @@ public sealed class LibVlcPlayerService : IPlayerService
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 StopAndReleaseMedia();
-                _media = new Media(_engine.LibVlc, source);
+                _media = startAt is { TotalSeconds: > 0 } start
+                    ? new Media(_engine.LibVlc, source, $":start-time={start.TotalSeconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}")
+                    : new Media(_engine.LibVlc, source);
                 _log.Information("Playing {Source}", source.IsFile ? "<local file>" : source.GetLeftPart(UriPartial.Path));
                 if (!_engine.MediaPlayer.Play(_media))
                     ReportError("Playback could not be started.");

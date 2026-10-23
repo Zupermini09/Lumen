@@ -28,7 +28,8 @@ public interface IPlayerService : IDisposable
     event EventHandler<TimeSpan>? DurationChanged;
     event EventHandler<string>? ErrorOccurred;
 
-    Task PlayAsync(Uri source, CancellationToken cancellationToken = default);
+    /// <param name="startAt">Position to start from (resume), or null/zero for the beginning.</param>
+    Task PlayAsync(Uri source, TimeSpan? startAt = null, CancellationToken cancellationToken = default);
     void TogglePause();
     Task StopAsync();
     void Seek(TimeSpan position);

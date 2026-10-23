@@ -7,6 +7,9 @@
     <PackageReference Include="Serilog" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Lumen.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Core\Lumen.Core.csproj" />
   </ItemGroup>
 </Project>

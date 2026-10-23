@@ -2,6 +2,36 @@
 
 Manual test notes per milestone. Automated coverage is listed first so manual testing can focus on what CI cannot see.
 
+## M1 (first part): connect, sign in, browse, play
+
+### Automated
+
+- Unit tests: server address candidates (scheme/port rules), Authorization header, JSON mapping in both PascalCase and camelCase (Jellyfin uses both), library queries, session persistence and restore, revoked tokens, secret file store (DPAPI on Windows, 0600 elsewhere), settings recovery from a corrupt file, LRU cache, token redaction in player logs.
+- End-to-end smoke test against a real server (not in CI, it needs a server and an account):
+  ```
+  LUMEN_SMOKE_USER=name LUMEN_SMOKE_PASSWORD=secret Lumen --smoke-server https://your.server
+  ```
+  Connects, signs in (without replacing your saved session), loads Home and a library, plays the first video it finds through the real player page for a few seconds, reports progress and signs out. Prints `SMOKE: PASS ...` or `SMOKE: FAIL ...`.
+
+### What was verified while building it
+
+- The request/response formats were checked against a real Jellyfin 10.11.11 server (sign-in, library views, items, Quick Connect enabled).
+- The UI flow was then driven on a virtual display against a local stand-in that replays those responses: connect (http first for :8096), wrong password message, sign in, Home (libraries, Continue watching with progress bar, Next up), a 120-item library grid (virtualized: only visible posters are downloaded), show → season → episodes, playback with start/stop reports, restart restores the session, sign out removes the token, Quick Connect sign-in.
+- **Not yet verified on a real server with real media**: please run the checklist below.
+
+### Manual checklist
+
+1. Connect with `https://your.domain` and, at home, with the LAN address (`http://192.168.x.x:8096`). Both should reach the sign-in page showing the server name and version.
+2. Sign in with a wrong password (clear error), then the right one. Try Quick Connect once.
+3. Home: libraries, Continue watching and Next up match the web client. Posters load.
+4. Open a movie library with many items and scroll fast: smooth, posters fill in, RAM readout stays reasonable.
+5. Open a show → season → episode and play. Check picture, sound, seek, pause, volume, full screen (F / double-click), Esc.
+6. Stop halfway (Back). The item shows in Continue watching in Lumen *and* in the web client at about the same position. Play it again: it resumes there; "Start over" restarts.
+7. Play an episode to the end: it is marked watched (check mark) in Lumen and the web client.
+8. Play a music track.
+9. Close and reopen Lumen: it opens straight on Home without signing in. Sign out: back to the connect screen; reopening asks to sign in.
+10. Note the RAM readout idle on Home and while playing 1080p / 4K.
+
 ## M0: Foundations + packaging
 
 ### Automated (CI, every push)

@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- All OS-specific code lives here (paths, native library setup, later: secret store, media keys). -->
+  <!-- All OS-specific code lives here (paths, native library setup, secret store, settings; later: media keys). -->
+  <ItemGroup>
+    <PackageReference Include="Serilog" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Lumen.Core.csproj" />
   </ItemGroup>

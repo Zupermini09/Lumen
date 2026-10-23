@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:views="using:Lumen.UI.Views"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Lumen.UI.Views.HomeView"
+             x:DataType="vm:HomeViewModel">
+  <UserControl.Resources>
+    <ItemsPanelTemplate x:Key="HorizontalPanel">
+      <StackPanel Orientation="Horizontal" Spacing="16" />
+    </ItemsPanelTemplate>
+    <DataTemplate x:Key="Card" DataType="vm:MediaCardViewModel">
+      <views:MediaCard />
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <ScrollViewer>
+    <StackPanel Margin="24" Spacing="12">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh">
+          <ui:SymbolIcon Symbol="Refresh" />
+        </Button>
+        <StackPanel>
+          <TextBlock Text="Home" Theme="{StaticResource TitleTextBlockStyle}" />
+          <TextBlock Text="{Binding Greeting}" Opacity="0.7" />
+        </StackPanel>
+      </DockPanel>
+
+      <ui:ProgressRing IsIndeterminate="True" Width="40" Height="40" IsVisible="{Binding IsLoading}" HorizontalAlignment="Left" />
+      <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
+                 TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+
+      <TextBlock Text="My media" Theme="{StaticResource SubtitleTextBlockStyle}" />
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,12">
+        <ItemsControl ItemsSource="{Binding Libraries}" ItemsPanel="{StaticResource HorizontalPanel}"
+                      ItemTemplate="{StaticResource Card}" />
+      </ScrollViewer>
+
+      <StackPanel Spacing="8" IsVisible="{Binding HasContinueWatching}">
+        <TextBlock Text="Continue watching" Theme="{StaticResource SubtitleTextBlockStyle}" />
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,12">
+          <ItemsControl ItemsSource="{Binding ContinueWatching}" ItemsPanel="{StaticResource HorizontalPanel}"
+                        ItemTemplate="{StaticResource Card}" />
+        </ScrollViewer>
+      </StackPanel>
+
+      <StackPanel Spacing="8" IsVisible="{Binding HasNextUp}">
+        <TextBlock Text="Next up" Theme="{StaticResource SubtitleTextBlockStyle}" />
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,12">
+          <ItemsControl ItemsSource="{Binding NextUp}" ItemsPanel="{StaticResource HorizontalPanel}"
+                        ItemTemplate="{StaticResource Card}" />
+        </ScrollViewer>
+      </StackPanel>
+
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
