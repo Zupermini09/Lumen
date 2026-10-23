@@ -10,6 +10,7 @@ public partial class ItemsView : UserControl
     public ItemsView()
     {
         InitializeComponent();
+        ScrollMemory.Attach(Scroller);
         Scroller.SizeChanged += (_, _) => UpdateColumns();
     }
 

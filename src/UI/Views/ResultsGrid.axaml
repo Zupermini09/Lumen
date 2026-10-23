@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:views="using:Lumen.UI.Views"
+             x:Class="Lumen.UI.Views.ResultsGrid"
+             x:DataType="vm:GroupedCardGrid">
+  <!-- Groups of cards under headings, virtualized by row (search results, favourites). -->
+  <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Disabled">
+    <ItemsControl ItemsSource="{Binding Rows}">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate><VirtualizingStackPanel /></ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.DataTemplates>
+        <DataTemplate DataType="vm:GroupHeaderRow">
+          <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,12">
+            <TextBlock Text="{Binding Title}" Theme="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Text="{Binding Count}" Opacity="0.6" VerticalAlignment="Bottom" Margin="0,0,0,2" />
+          </StackPanel>
+        </DataTemplate>
+        <DataTemplate DataType="vm:CardRow"><views:CardRowView /></DataTemplate>
+      </ItemsControl.DataTemplates>
+    </ItemsControl>
+  </ScrollViewer>
+</UserControl>

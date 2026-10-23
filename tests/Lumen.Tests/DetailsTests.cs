@@ -301,6 +301,8 @@ internal sealed class FakePages : IPageFactory
     public PageViewModel Connect(string? error = null) => throw new NotSupportedException();
     public PageViewModel Login(ServerInfo server) => throw new NotSupportedException();
     public PageViewModel Home() => throw new NotSupportedException();
+    public PageViewModel Search() => throw new NotSupportedException();
+    public PageViewModel Favorites() => throw new NotSupportedException();
     public PageViewModel Items(MediaItem parent) => new FakePage("Items", parent);
     public PageViewModel Player(MediaItem item) => new FakePage("Player", item);
     public PageViewModel Details(MediaItem item) => new FakePage("Details", item);

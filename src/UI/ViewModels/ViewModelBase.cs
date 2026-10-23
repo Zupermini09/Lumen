@@ -5,9 +5,12 @@ namespace Lumen.UI.ViewModels;
 public abstract class ViewModelBase : ObservableObject;
 
 /// <summary>A page shown in the shell. Disposed when it leaves the navigation history, so it releases its resources.</summary>
-public abstract class PageViewModel : ViewModelBase, IDisposable
+public abstract class PageViewModel : ViewModelBase, IScrollMemory, IDisposable
 {
     public abstract string Title { get; }
+
+    /// <summary>Where the page was scrolled to, so coming Back to it lands on the same spot (the view is created anew).</summary>
+    public double ScrollOffset { get; set; }
 
     /// <summary>False for pages that must not stay alive in the back stack (the player stops when you leave it).</summary>
     public virtual bool KeepInHistory => true;
@@ -19,4 +22,10 @@ public abstract class PageViewModel : ViewModelBase, IDisposable
     public virtual void OnNavigatedTo() { }
 
     public virtual void Dispose() => GC.SuppressFinalize(this);
+}
+
+/// <summary>Something whose scroll position survives its view being recreated (see <c>ScrollMemory</c>).</summary>
+public interface IScrollMemory
+{
+    double ScrollOffset { get; set; }
 }

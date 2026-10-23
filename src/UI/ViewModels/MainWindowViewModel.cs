@@ -118,13 +118,34 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigator, IDi
         previous.OnNavigatedTo();
     }
 
-    /// <summary>Handles the navigation pane: Home, Play a file, About, Sign out.</summary>
+    /// <summary>
+    /// Ctrl+F / Ctrl+K: opens the search page (Back returns to where you were), or puts the cursor into its box when it
+    /// is already open. Returns false where search does not apply (not signed in, or while a video plays).
+    /// </summary>
+    public bool OpenSearch()
+    {
+        if (!IsSignedIn || CurrentPage is PlayerViewModel)
+            return false;
+        if (CurrentPage is SearchViewModel search)
+            search.RequestFocus();
+        else
+            Navigate(Pages.Search());
+        return true;
+    }
+
+    /// <summary>Handles the navigation pane: Home, Search, Favourites, Play a file, About, Sign out.</summary>
     public async Task OpenMenuAsync(string key)
     {
         switch (key)
         {
             case "Home":
                 NavigateRoot(_sessions.Current is null ? Pages.Connect() : Pages.Home());
+                break;
+            case "Search":
+                NavigateRoot(Pages.Search());
+                break;
+            case "Favorites":
+                NavigateRoot(Pages.Favorites());
                 break;
             case "PlayFile":
                 Navigate(Pages.PlaybackTest());

@@ -18,6 +18,9 @@ public sealed class AppSettings
     /// <summary>Per segment type: show a skip button (default), skip automatically, or ignore.</summary>
     public Dictionary<Playback.SegmentType, Playback.SegmentAction> SegmentActions { get; set; } = new();
 
+    /// <summary>The sort and filter last chosen on each library page, by library id.</summary>
+    public Dictionary<string, ItemListOptions> LibraryViews { get; set; } = new();
+
     public Playback.SegmentAction ActionFor(Playback.SegmentType type) =>
         SegmentActions.TryGetValue(type, out var action) ? action
         : type == Playback.SegmentType.Unknown ? Playback.SegmentAction.Off

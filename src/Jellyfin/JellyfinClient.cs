@@ -199,11 +199,46 @@ public sealed class JellyfinClient : IJellyfinClient
         return ToModels(result).SkipWhile(i => i.Id == episode.Id).FirstOrDefault();
     }
 
-    public async Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, ItemListOptions? options = null, CancellationToken cancellationToken = default)
     {
         var session = _session.Require();
         var result = await SendAsync<ItemsResultDto>(HttpMethod.Get, session.Server.Address,
-            "Items?" + ChildrenQuery(parent, session.User.Id), session.AccessToken, null, cancellationToken);
+            "Items?" + ChildrenQuery(parent, session.User.Id, options), session.AccessToken, null, cancellationToken);
+        return ToModels(result);
+    }
+
+    public async Task<IReadOnlyList<string>> GetGenresAsync(MediaItem library, CancellationToken cancellationToken = default)
+    {
+        var session = _session.Require();
+        var result = await SendAsync<ItemsResultDto>(HttpMethod.Get, session.Server.Address,
+            "Genres?" + GenresQuery(library, session.User.Id), session.AccessToken, null, cancellationToken);
+        return result?.Items.Select(g => g.Name).OfType<string>().Where(n => n.Length > 0).ToList() ?? [];
+    }
+
+    public async Task<IReadOnlyList<MediaItem>> GetLatestAsync(MediaItem library, int limit, CancellationToken cancellationToken = default)
+    {
+        var session = _session.Require();
+        // Unlike the other lists, this answers with a bare array. Older servers have it under the user.
+        var query = LatestQuery(library, limit);
+        var items = await GetWithFallbackAsync<List<BaseItemDto>>(session,
+            $"Items/Latest?userId={session.User.Id}&{query}",
+            $"Users/{session.User.Id}/Items/Latest?{query}", cancellationToken);
+        return items?.Select(i => i.ToModel()).ToList() ?? [];
+    }
+
+    public async Task<IReadOnlyList<MediaItem>> SearchAsync(string term, IReadOnlyList<string> itemTypes, int limit, CancellationToken cancellationToken = default)
+    {
+        var session = _session.Require();
+        var result = await SendAsync<ItemsResultDto>(HttpMethod.Get, session.Server.Address,
+            "Items?" + SearchQuery(term, itemTypes, limit, session.User.Id), session.AccessToken, null, cancellationToken);
+        return ToModels(result);
+    }
+
+    public async Task<IReadOnlyList<MediaItem>> GetFavoritesAsync(IReadOnlyList<string> itemTypes, CancellationToken cancellationToken = default)
+    {
+        var session = _session.Require();
+        var result = await SendAsync<ItemsResultDto>(HttpMethod.Get, session.Server.Address,
+            "Items?" + FavoritesQuery(itemTypes, session.User.Id), session.AccessToken, null, cancellationToken);
         return ToModels(result);
     }
 
@@ -268,12 +303,29 @@ public sealed class JellyfinClient : IJellyfinClient
 
     /// <summary>
     /// Library roots list their main item type recursively (like the web client), so folder layouts on disk do not matter;
-    /// everything else lists its direct children in episode/track order.
+    /// everything else lists its direct children in episode/track order, unless the options ask for another order.
     /// </summary>
-    internal static string ChildrenQuery(MediaItem parent, string userId)
+    internal static string ChildrenQuery(MediaItem parent, string userId, ItemListOptions? options = null)
     {
         var query = $"userId={userId}&parentId={parent.Id}&fields={ItemFields}&enableImageTypes=Primary,Thumb&imageTypeLimit=1";
-        var recursiveType = parent.Type == "CollectionFolder" || parent.Type == "UserView"
+        var recursiveType = RecursiveTypeOf(parent);
+        if (recursiveType is not null)
+            query += $"&recursive=true&includeItemTypes={recursiveType}";
+
+        if (options is not null && (recursiveType is not null || !options.IsDefault))
+            query += $"&sortBy={SortBy(options.Sort)}&sortOrder={(options.Descending ? "Descending" : "Ascending")}";
+        else if (recursiveType is not null)
+            query += "&sortBy=SortName&sortOrder=Ascending";
+        else
+            query += "&sortBy=ParentIndexNumber,IndexNumber,SortName&sortOrder=Ascending";
+
+        if (options is not null)
+            query += FilterQuery(options);
+        return query;
+    }
+
+    private static string? RecursiveTypeOf(MediaItem parent) =>
+        parent.Type == "CollectionFolder" || parent.Type == "UserView"
             ? parent.CollectionType switch
             {
                 "movies" => "Movie",
@@ -284,10 +336,49 @@ public sealed class JellyfinClient : IJellyfinClient
             }
             : null;
 
-        return recursiveType is not null
-            ? $"{query}&recursive=true&includeItemTypes={recursiveType}&sortBy=SortName&sortOrder=Ascending"
-            : $"{query}&sortBy=ParentIndexNumber,IndexNumber,SortName&sortOrder=Ascending";
+    // Ties (and items without the value) fall back to the name, like the web client.
+    internal static string SortBy(ItemSort sort) => sort switch
+    {
+        ItemSort.DateAdded => "DateCreated,SortName",
+        ItemSort.ReleaseDate => "PremiereDate,ProductionYear,SortName",
+        ItemSort.CommunityRating => "CommunityRating,SortName",
+        ItemSort.Runtime => "Runtime,SortName",
+        _ => "SortName",
+    };
+
+    internal static string FilterQuery(ItemListOptions options)
+    {
+        var filters = new List<string>();
+        if (options.Played == PlayedFilter.Played)
+            filters.Add("IsPlayed");
+        else if (options.Played == PlayedFilter.Unplayed)
+            filters.Add("IsUnplayed");
+        if (options.FavoritesOnly)
+            filters.Add("IsFavorite");
+
+        var query = filters.Count > 0 ? $"&filters={string.Join(',', filters)}" : "";
+        // Genre names are separated by "|" (names can contain commas).
+        if (options.Genres.Count > 0)
+            query += $"&genres={Uri.EscapeDataString(string.Join('|', options.Genres))}";
+        return query;
     }
+
+    internal static string GenresQuery(MediaItem library, string userId)
+    {
+        var query = $"userId={userId}&parentId={library.Id}&sortBy=SortName&sortOrder=Ascending";
+        return RecursiveTypeOf(library) is { } type ? $"{query}&includeItemTypes={type}" : query;
+    }
+
+    internal static string LatestQuery(MediaItem library, int limit) =>
+        $"parentId={library.Id}&limit={limit}&fields={ItemFields}&enableImageTypes=Primary,Thumb&imageTypeLimit=1";
+
+    internal static string SearchQuery(string term, IReadOnlyList<string> itemTypes, int limit, string userId) =>
+        $"userId={userId}&searchTerm={Uri.EscapeDataString(term)}&recursive=true&includeItemTypes={string.Join(',', itemTypes)}&limit={limit}" +
+        $"&sortBy=SortName&sortOrder=Ascending&fields={ItemFields}&enableImageTypes=Primary,Thumb&imageTypeLimit=1";
+
+    internal static string FavoritesQuery(IReadOnlyList<string> itemTypes, string userId) =>
+        $"userId={userId}&filters=IsFavorite&recursive=true&includeItemTypes={string.Join(',', itemTypes)}" +
+        $"&sortBy=SortName&sortOrder=Ascending&fields={ItemFields}&enableImageTypes=Primary,Thumb&imageTypeLimit=1";
 
     // ---- URLs ------------------------------------------------------------------------------------------------
 

@@ -93,13 +93,13 @@ Code signing (decide before first public release):
 - [ ] Switch user / sign out, per-user saved profiles — *done: sign out, session restore with the token in the OS credential store. Missing: switching between saved users.*
 
 **Home and navigation**
-- [ ] Home sections: Continue Watching, Next Up, Latest per library, Live TV, My Media; user-customizable section order/visibility — *done: My Media, Continue Watching, Next Up.*
-- [ ] Library views and navigation drawer, favourites, search with suggestions
+- [ ] Home sections: Continue Watching, Next Up, Latest per library, Live TV, My Media; user-customizable section order/visibility — *done: My Media, Continue Watching, Next Up, Latest in each library; Home refreshes in place when navigated back to, and keeps its scroll position. Missing: Live TV row, section order/visibility.*
+- [ ] Library views and navigation drawer, favourites, search with suggestions — *done: navigation items for Search and Favourites; search as you type (300 ms pause, one request per kind, Ctrl+F/Ctrl+K), results grouped by kind; favourites grouped by kind, refreshed on Back. Missing: search suggestions, people/artist results.*
 - [ ] Collections, playlists (create/edit/reorder/add to), genres, studios, tags, years, people (actor/director pages)
 
 **Library types**
 - [ ] Movies, TV shows (seasons/episodes), Music (albums, artists, genres), Music videos, Home videos, Books/audiobooks, Photos, Mixed content, Live TV
-- [ ] Sorting, filtering (unwatched, favourites, genre, year, rating, HD/4K/HDR, etc.), alphabet jump, view modes (poster, thumb, list), grouping
+- [ ] Sorting, filtering (unwatched, favourites, genre, year, rating, HD/4K/HDR, etc.), alphabet jump, view modes (poster, thumb, list), grouping — *done: library sort (name, date added, release date, rating, runtime; both directions) and filters (played/unplayed, favourites, genres), remembered per library in the settings. Missing: year, HD/4K/HDR filters, alphabet jump, view modes, grouping.*
 
 **Item details**
 - [ ] Metadata, cast and crew, trailers/special features, similar items, chapters, external links, media info (streams), versions picker — *done: movie, episode and series/season pages with metadata, cast, director/writers, media info (streams); seasons and episode lists; Missing: trailers/special features, similar items, chapters list, external links, versions picker.*

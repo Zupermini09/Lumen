@@ -30,7 +30,20 @@ public interface IJellyfinClient
     /// <summary>The episode after this one in the series (across seasons), or null for the last one.</summary>
     Task<MediaItem?> GetNextEpisodeAsync(MediaItem episode, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, CancellationToken cancellationToken = default);
+    /// <summary>The contents of a library, folder, show or album; <paramref name="options"/> sorts and filters it (library pages).</summary>
+    Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, ItemListOptions? options = null, CancellationToken cancellationToken = default);
+
+    /// <summary>The genres used by the items of a library, for its filter list.</summary>
+    Task<IReadOnlyList<string>> GetGenresAsync(MediaItem library, CancellationToken cancellationToken = default);
+
+    /// <summary>The most recently added items of a library (episodes are grouped by series, like the web client's Home).</summary>
+    Task<IReadOnlyList<MediaItem>> GetLatestAsync(MediaItem library, int limit, CancellationToken cancellationToken = default);
+
+    /// <summary>Items of the given types whose name matches the text, by name.</summary>
+    Task<IReadOnlyList<MediaItem>> SearchAsync(string term, IReadOnlyList<string> itemTypes, int limit, CancellationToken cancellationToken = default);
+
+    /// <summary>All of the user's favourites of the given types, by name.</summary>
+    Task<IReadOnlyList<MediaItem>> GetFavoritesAsync(IReadOnlyList<string> itemTypes, CancellationToken cancellationToken = default);
 
     /// <summary>One item with overview, genres, cast, streams... (the details pages).</summary>
     Task<ItemDetails> GetItemDetailsAsync(string itemId, CancellationToken cancellationToken = default);

@@ -14,7 +14,7 @@
     </DataTemplate>
   </UserControl.Resources>
 
-  <ScrollViewer>
+  <ScrollViewer x:Name="Scroller">
     <StackPanel Margin="24" Spacing="12">
       <DockPanel>
         <Button DockPanel.Dock="Right" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh">
@@ -30,29 +30,20 @@
       <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
                  TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
 
-      <TextBlock Text="My media" Theme="{StaticResource SubtitleTextBlockStyle}" />
-      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,12">
-        <ItemsControl ItemsSource="{Binding Libraries}" ItemsPanel="{StaticResource HorizontalPanel}"
-                      ItemTemplate="{StaticResource Card}" />
-      </ScrollViewer>
-
-      <StackPanel Spacing="8" IsVisible="{Binding HasContinueWatching}">
-        <TextBlock Text="Continue watching" Theme="{StaticResource SubtitleTextBlockStyle}" />
-        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,12">
-          <ItemsControl ItemsSource="{Binding ContinueWatching}" ItemsPanel="{StaticResource HorizontalPanel}"
-                        ItemTemplate="{StaticResource Card}" />
-        </ScrollViewer>
-      </StackPanel>
-
-      <StackPanel Spacing="8" IsVisible="{Binding HasNextUp}">
-        <TextBlock Text="Next up" Theme="{StaticResource SubtitleTextBlockStyle}" />
-        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,12">
-          <ItemsControl ItemsSource="{Binding NextUp}" ItemsPanel="{StaticResource HorizontalPanel}"
-                        ItemTemplate="{StaticResource Card}" />
-        </ScrollViewer>
-      </StackPanel>
-
-
+      <!-- My media, Continue watching, Next up, then Latest in each library; rows without cards are hidden. -->
+      <ItemsControl ItemsSource="{Binding Rows}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="vm:HomeRow">
+            <StackPanel Spacing="8" Margin="0,0,0,12" IsVisible="{Binding HasCards}">
+              <TextBlock Text="{Binding Title}" Theme="{StaticResource SubtitleTextBlockStyle}" />
+              <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,12">
+                <ItemsControl ItemsSource="{Binding Cards}" ItemsPanel="{StaticResource HorizontalPanel}"
+                              ItemTemplate="{StaticResource Card}" />
+              </ScrollViewer>
+            </StackPanel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

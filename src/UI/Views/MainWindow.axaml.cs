@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using FluentAvalonia.UI.Controls;
 using Lumen.UI.ViewModels;
 
@@ -13,6 +14,8 @@ public partial class MainWindow : Window
         Navigation.ItemInvoked += OnItemInvoked;
         Navigation.BackRequested += (_, _) => ViewModel?.GoBack();
         AddHandler(PointerReleasedEvent, OnPointerReleased, handledEventsToo: true);
+        // Tunnelling, so a text box (the search box) does not swallow it as "move the cursor left".
+        AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
     }
 
     private MainWindowViewModel? ViewModel => DataContext as MainWindowViewModel;
@@ -33,16 +36,24 @@ public partial class MainWindow : Window
             ToggleFullScreen();
     }
 
+    private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Left && e.KeyModifiers == KeyModifiers.Alt)
+        {
+            ExitFullScreen();
+            ViewModel?.GoBack();
+            e.Handled = true;
+        }
+    }
+
     protected override void OnKeyDown(KeyEventArgs e)
     {
         base.OnKeyDown(e);
         if (e.Handled)
             return;
 
-        if (e.Key == Key.Left && e.KeyModifiers == KeyModifiers.Alt)
+        if (e.KeyModifiers == KeyModifiers.Control && e.Key is (Key.F or Key.K) && ViewModel?.OpenSearch() == true)
         {
-            ExitFullScreen();
-            ViewModel?.GoBack();
             e.Handled = true;
         }
         else if (e.Key == Key.Escape && WindowState == WindowState.FullScreen)

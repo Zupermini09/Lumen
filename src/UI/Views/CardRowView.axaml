@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:views="using:Lumen.UI.Views"
+             x:Class="Lumen.UI.Views.CardRowView"
+             x:DataType="vm:CardRow">
+  <!-- One row of a virtualized card grid. -->
+  <ItemsControl ItemsSource="{Binding Cards}" Margin="0,0,0,20">
+    <ItemsControl.ItemsPanel>
+      <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="16" /></ItemsPanelTemplate>
+    </ItemsControl.ItemsPanel>
+    <ItemsControl.ItemTemplate>
+      <DataTemplate DataType="vm:MediaCardViewModel"><views:MediaCard /></DataTemplate>
+    </ItemsControl.ItemTemplate>
+  </ItemsControl>
+</UserControl>

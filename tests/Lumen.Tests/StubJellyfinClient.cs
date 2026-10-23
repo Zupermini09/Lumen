@@ -18,7 +18,11 @@ internal abstract class StubJellyfinClient : IJellyfinClient
     public virtual Task<IReadOnlyList<MediaItem>> GetResumeItemsAsync(int limit, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task<IReadOnlyList<MediaItem>> GetNextUpAsync(int limit, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task<MediaItem?> GetNextEpisodeAsync(MediaItem episode, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-    public virtual Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<IReadOnlyList<MediaItem>> GetChildrenAsync(MediaItem parent, ItemListOptions? options = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<IReadOnlyList<string>> GetGenresAsync(MediaItem library, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<IReadOnlyList<MediaItem>> GetLatestAsync(MediaItem library, int limit, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<IReadOnlyList<MediaItem>> SearchAsync(string term, IReadOnlyList<string> itemTypes, int limit, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<IReadOnlyList<MediaItem>> GetFavoritesAsync(IReadOnlyList<string> itemTypes, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task<ItemDetails> GetItemDetailsAsync(string itemId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task<IReadOnlyList<MediaItem>> GetSeasonsAsync(MediaItem series, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task<IReadOnlyList<MediaItem>> GetEpisodesAsync(MediaItem series, MediaItem? season, CancellationToken cancellationToken = default) => throw new NotSupportedException();

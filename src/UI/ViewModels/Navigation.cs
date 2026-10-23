@@ -21,6 +21,8 @@ public interface IPageFactory
     PageViewModel Connect(string? error = null);
     PageViewModel Login(ServerInfo server);
     PageViewModel Home();
+    PageViewModel Search();
+    PageViewModel Favorites();
     PageViewModel Items(MediaItem parent);
     PageViewModel Player(MediaItem item);
 
