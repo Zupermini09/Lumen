@@ -6,25 +6,28 @@
   <ScrollViewer>
     <StackPanel Margin="32" Spacing="12" MaxWidth="720" HorizontalAlignment="Left">
       <StackPanel Orientation="Horizontal" Spacing="16">
-        <Image Source="avares://Lumen.UI/Assets/lumen-256.png" Width="64" Height="64" />
-        <StackPanel VerticalAlignment="Center">
-          <TextBlock Text="Lumen" Theme="{StaticResource TitleTextBlockStyle}" />
-          <TextBlock Text="A desktop client for Jellyfin" Opacity="0.7" />
+        <Image Source="avares://Lumen.UI/Assets/lumen-256.png" Width="72" Height="72" />
+        <StackPanel VerticalAlignment="Center" Spacing="6">
+          <Path Data="{StaticResource LumenWordmarkGeometry}" Fill="{DynamicResource LumenLogoBrush}" Stretch="Uniform"
+                Height="30" HorizontalAlignment="Left" />
+          <TextBlock Text="A desktop client for Jellyfin" Classes="secondary" />
         </StackPanel>
       </StackPanel>
 
-      <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,12,0,0">
-        <TextBlock Grid.Row="0" Text="Version" Opacity="0.7" />
-        <SelectableTextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Version}" />
-        <TextBlock Grid.Row="1" Text="Playback engine" Opacity="0.7" />
-        <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Engine}" />
-        <TextBlock Grid.Row="2" Text="Runtime" Opacity="0.7" />
-        <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Runtime}" TextWrapping="Wrap" />
-        <TextBlock Grid.Row="3" Text="Logs" Opacity="0.7" />
-        <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding LogDirectory}" TextWrapping="Wrap" />
-      </Grid>
+      <Border Classes="card" Margin="0,12,0,0">
+        <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
+          <TextBlock Grid.Row="0" Text="Version" Classes="secondary" />
+          <SelectableTextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Version}" />
+          <TextBlock Grid.Row="1" Text="Playback engine" Classes="secondary" />
+          <SelectableTextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Engine}" />
+          <TextBlock Grid.Row="2" Text="Runtime" Classes="secondary" />
+          <SelectableTextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Runtime}" TextWrapping="Wrap" />
+          <TextBlock Grid.Row="3" Text="Logs" Classes="secondary" />
+          <SelectableTextBlock Grid.Row="3" Grid.Column="1" Text="{Binding LogDirectory}" TextWrapping="Wrap" />
+        </Grid>
+      </Border>
 
-      <TextBlock TextWrapping="Wrap" Opacity="0.7" Margin="0,12,0,0"
+      <TextBlock TextWrapping="Wrap" Classes="secondary" Margin="0,12,0,0"
                  Text="Lumen is free software, licensed under the GNU General Public License v3. Playback is powered by VLC (LibVLC, LGPL-2.1-or-later). Lumen is not affiliated with the Jellyfin project." />
     </StackPanel>
   </ScrollViewer>

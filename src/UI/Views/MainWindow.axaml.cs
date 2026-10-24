@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -11,12 +12,35 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        ConfigureBackdrop();
         Navigation.ItemInvoked += OnItemInvoked;
-        Navigation.BackRequested += (_, _) => ViewModel?.GoBack();
         AddHandler(PointerReleasedEvent, OnPointerReleased, handledEventsToo: true);
         // Tunnelling, so a text box (the search box) does not swallow it as "move the cursor left".
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
     }
+
+    /// <summary>
+    /// Asks the OS to blur the window background where it can do so cheaply: Mica on Windows 11, vibrancy on macOS.
+    /// Linux (and anything that cannot) stays on the solid colour. The page is only made see-through when the OS
+    /// confirms the effect is active.
+    /// </summary>
+    private void ConfigureBackdrop()
+    {
+        if (OperatingSystem.IsWindows())
+            TransparencyLevelHint = [WindowTransparencyLevel.Mica];
+        else if (OperatingSystem.IsMacOS())
+            TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.Blur];
+        else
+            return;
+
+        PropertyChanged += (_, e) =>
+        {
+            if (e.Property == ActualTransparencyLevelProperty)
+                Classes.Set("backdrop", ActualTransparencyLevel != WindowTransparencyLevel.None);
+        };
+    }
+
+    private void OnBackClick(object? sender, RoutedEventArgs e) => ViewModel?.GoBack();
 
     private MainWindowViewModel? ViewModel => DataContext as MainWindowViewModel;
 
@@ -26,7 +50,7 @@ public partial class MainWindow : Window
         var full = WindowState != WindowState.FullScreen;
         WindowState = full ? WindowState.FullScreen : WindowState.Normal;
         Navigation.IsPaneVisible = !full;
-        Navigation.IsBackButtonVisible = !full;
+        TopBar.IsVisible = !full;
         StatusBar.IsVisible = !full;
     }
 
