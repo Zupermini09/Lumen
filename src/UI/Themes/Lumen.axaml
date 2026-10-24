@@ -16,8 +16,28 @@
       <SolidColorBrush x:Key="LumenGlassBrush" Color="#B815112A" />
       <SolidColorBrush x:Key="LumenGlassStrongBrush" Color="#E61C1733" />
       <SolidColorBrush x:Key="LumenScrimBrush" Color="#99000000" />
+      <SolidColorBrush x:Key="LumenHoverShadeBrush" Color="#12FFFFFF" />
+      <!-- Details backdrop: fades into the window colour from the bottom and from the left (behind the title). -->
+      <LinearGradientBrush x:Key="LumenBackdropFadeBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#000E0B1A" />
+        <GradientStop Offset="0.55" Color="#660E0B1A" />
+        <GradientStop Offset="1" Color="#FF0E0B1A" />
+      </LinearGradientBrush>
+      <LinearGradientBrush x:Key="LumenBackdropSideBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Offset="0" Color="#E60E0B1A" />
+        <GradientStop Offset="0.6" Color="#800E0B1A" />
+        <GradientStop Offset="1" Color="#000E0B1A" />
+      </LinearGradientBrush>
+      <!-- A faint brand glow behind the sign-in pages. -->
+      <RadialGradientBrush x:Key="LumenGlowBrush" Center="50%,0%" GradientOrigin="50%,0%" RadiusX="75%" RadiusY="85%">
+        <GradientStop Offset="0" Color="#336D3AE8" />
+        <GradientStop Offset="1" Color="#006D3AE8" />
+      </RadialGradientBrush>
+      <BoxShadows x:Key="LumenShadowPoster">0 14 36 0 #8C000000</BoxShadows>
+      <BoxShadows x:Key="LumenShadowSoft">0 6 20 0 #59000000</BoxShadows>
       <!-- Text -->
       <SolidColorBrush x:Key="LumenTextBrush" Color="#F4F0EA" />
+      <SolidColorBrush x:Key="LumenOnScrimBrush" Color="#F4F0EA" />
       <SolidColorBrush x:Key="LumenTextSecondaryBrush" Color="#B9B3C9" />
       <SolidColorBrush x:Key="LumenTextTertiaryBrush" Color="#7D7791" />
       <!-- Lines -->
@@ -30,6 +50,9 @@
       </LinearGradientBrush>
       <SolidColorBrush x:Key="LumenFocusBrush" Color="#998B5CF6" />
       <!-- Accent -->
+      <Color x:Key="LumenAccentColor">#8B5CF6</Color>
+      <Color x:Key="LumenTextColor">#F4F0EA</Color>
+      <Color x:Key="LumenTrackColor">#38FFFFFF</Color>
       <SolidColorBrush x:Key="LumenAccentBrush" Color="#8B5CF6" />
       <SolidColorBrush x:Key="LumenAccentSoftBrush" Color="#2E8B5CF6" />
       <SolidColorBrush x:Key="LumenAccentTextBrush" Color="#B79CFA" />
@@ -60,8 +83,25 @@
       <SolidColorBrush x:Key="LumenGlassBrush" Color="#CCFFFFFF" />
       <SolidColorBrush x:Key="LumenGlassStrongBrush" Color="#F2FFFFFF" />
       <SolidColorBrush x:Key="LumenScrimBrush" Color="#99000000" />
+      <LinearGradientBrush x:Key="LumenBackdropFadeBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#00F6F4FB" />
+        <GradientStop Offset="0.55" Color="#80F6F4FB" />
+        <GradientStop Offset="1" Color="#FFF6F4FB" />
+      </LinearGradientBrush>
+      <LinearGradientBrush x:Key="LumenBackdropSideBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Offset="0" Color="#F2F6F4FB" />
+        <GradientStop Offset="0.6" Color="#99F6F4FB" />
+        <GradientStop Offset="1" Color="#00F6F4FB" />
+      </LinearGradientBrush>
+      <RadialGradientBrush x:Key="LumenGlowBrush" Center="50%,0%" GradientOrigin="50%,0%" RadiusX="75%" RadiusY="85%">
+        <GradientStop Offset="0" Color="#266D3AE8" />
+        <GradientStop Offset="1" Color="#006D3AE8" />
+      </RadialGradientBrush>
+      <BoxShadows x:Key="LumenShadowPoster">0 14 32 0 #38201050</BoxShadows>
+      <BoxShadows x:Key="LumenShadowSoft">0 6 18 0 #26201050</BoxShadows>
       <SolidColorBrush x:Key="LumenHoverShadeBrush" Color="#10FFFFFF" />
       <SolidColorBrush x:Key="LumenTextBrush" Color="#1A1530" />
+      <SolidColorBrush x:Key="LumenOnScrimBrush" Color="#F4F0EA" />
       <SolidColorBrush x:Key="LumenTextSecondaryBrush" Color="#5F5979" />
       <SolidColorBrush x:Key="LumenTextTertiaryBrush" Color="#8A849E" />
       <SolidColorBrush x:Key="LumenHairlineBrush" Color="#14000000" />
@@ -71,6 +111,9 @@
         <GradientStop Offset="1" Color="#10000000" />
       </LinearGradientBrush>
       <SolidColorBrush x:Key="LumenFocusBrush" Color="#996D3AE8" />
+      <Color x:Key="LumenAccentColor">#6D3AE8</Color>
+      <Color x:Key="LumenTextColor">#1A1530</Color>
+      <Color x:Key="LumenTrackColor">#33000000</Color>
       <SolidColorBrush x:Key="LumenAccentBrush" Color="#6D3AE8" />
       <SolidColorBrush x:Key="LumenAccentSoftBrush" Color="#1F6D3AE8" />
       <SolidColorBrush x:Key="LumenAccentTextBrush" Color="#6D3AE8" />
@@ -89,6 +132,9 @@
       <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="#14000000" />
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
+
+  <!-- The video letterbox: black in both themes. -->
+  <SolidColorBrush x:Key="LumenVideoBrush" Color="#000000" />
 
   <!-- Brand gradient (the icon tile); the same in both themes. -->
   <LinearGradientBrush x:Key="LumenBrandGradientBrush" StartPoint="0%,0%" EndPoint="0%,100%">

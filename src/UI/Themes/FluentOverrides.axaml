@@ -60,6 +60,17 @@
       <SolidColorBrush x:Key="SystemFillColorCautionBrush" Color="#F5B84B" />
       <Color x:Key="SystemFillColorCritical">#F2577A</Color>
       <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#F2577A" />
+          <!-- Menus, drop-downs and tooltips: popups are opaque (nothing to blur), tinted like the raised surface. -->
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#1C1733" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#2EFFFFFF" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#2E8B5CF6" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#408B5CF6" />
+      <SolidColorBrush x:Key="MenuFlyoutSeparatorBackground" Color="#14FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#1C1733" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#2EFFFFFF" />
+      <SolidColorBrush x:Key="ToolTipBackground" Color="#231D3E" />
+      <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#2EFFFFFF" />
+      <SolidColorBrush x:Key="ToolTipForeground" Color="#F4F0EA" />
     </ResourceDictionary>
     <ResourceDictionary x:Key="Light">
       <Color x:Key="SystemAccentColor">#6D3AE8</Color>
@@ -117,6 +128,16 @@
       <SolidColorBrush x:Key="SystemFillColorCautionBrush" Color="#B7791F" />
       <Color x:Key="SystemFillColorCritical">#D6336C</Color>
       <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#D6336C" />
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#2E000000" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#1F6D3AE8" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#2E6D3AE8" />
+      <SolidColorBrush x:Key="MenuFlyoutSeparatorBackground" Color="#14000000" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#2E000000" />
+      <SolidColorBrush x:Key="ToolTipBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#2E000000" />
+      <SolidColorBrush x:Key="ToolTipForeground" Color="#1A1530" />
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

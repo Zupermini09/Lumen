@@ -39,8 +39,8 @@ public sealed partial class ItemDetailsViewModel : DetailsViewModelBase
         }
     }
 
-    public override double PosterWidth => IsEpisode ? 400 : 220;
-    public override double PosterHeight => IsEpisode ? 225 : 330;
+    public override double PosterWidth => IsEpisode ? 320 : 220;
+    public override double PosterHeight => IsEpisode ? 180 : 330;
 
     public override Uri? PosterUri
     {

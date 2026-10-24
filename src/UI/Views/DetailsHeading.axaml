@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             x:Class="Lumen.UI.Views.DetailsHeading"
+             x:DataType="vm:DetailsViewModelBase">
+  <!-- Title, tagline and the facts under it: runtime and year as a caption, rating and score as pills, genres. -->
+  <StackPanel Spacing="10">
+    <TextBlock Text="{Binding Title}" Classes="display" TextWrapping="Wrap" />
+    <TextBlock Text="{Binding Tagline}" FontStyle="Italic" Classes="secondary" TextWrapping="Wrap"
+               IsVisible="{Binding Tagline, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+    <StackPanel Orientation="Horizontal" Spacing="10">
+      <TextBlock Text="{Binding MetaLine}" Classes="secondary" VerticalAlignment="Center"
+                 IsVisible="{Binding MetaLine, Converter={x:Static ObjectConverters.IsNotNull}}" />
+      <Border Classes="pill" VerticalAlignment="Center"
+              IsVisible="{Binding OfficialRating, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <TextBlock Text="{Binding OfficialRating}" />
+      </Border>
+      <Border Classes="pill accent" VerticalAlignment="Center"
+              IsVisible="{Binding CommunityRating, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <TextBlock Text="{Binding CommunityRating}" />
+      </Border>
+      <Border Classes="pill mint" VerticalAlignment="Center" IsVisible="{Binding IsPlayed}">
+        <TextBlock Text="Watched" />
+      </Border>
+    </StackPanel>
+    <TextBlock Text="{Binding Genres}" Classes="caption" TextWrapping="Wrap"
+               IsVisible="{Binding Genres, Converter={x:Static ObjectConverters.IsNotNull}}" />
+  </StackPanel>
+</UserControl>

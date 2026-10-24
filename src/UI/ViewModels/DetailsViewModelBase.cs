@@ -69,7 +69,7 @@ public abstract partial class DetailsViewModelBase : PageViewModel
     public IReadOnlyList<PersonCardViewModel> Cast { get; private set; } = [];
     public bool HasCast => Cast.Count > 0;
 
-    public Uri? BackdropUri => Details is { BackdropItemId: { } id, BackdropTag: { } tag } ? Client.GetImageUri(id, ImageKind.Backdrop, tag, 720) : null;
+    public Uri? BackdropUri => Details is { BackdropItemId: { } id, BackdropTag: { } tag } ? Client.GetImageUri(id, ImageKind.Backdrop, tag, 1280) : null;
 
     /// <summary>Year, runtime... under the title; each page decides what it shows.</summary>
     public abstract string? MetaLine { get; }

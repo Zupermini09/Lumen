@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:Lumen.UI.Views">
   <!--
     Reusable Lumen styles. Classes:
       TextBlock.title / .section / .secondary / .tertiary / .caption
@@ -8,6 +9,11 @@
       Button.accent (stock FluentAvalonia accent button, semibold), Button.card (borderless card button, lifts on hover)
       Border.hoverShade (inside Button.card: a light veil that fades in on hover),
       TextBox.hero (large rounded search field), Button.link (text-only "See all" style link)
+    Pass 3:
+      TextBlock.display (details page title), Button.quiet (hairline button for secondary actions and menus),
+      Button.icon / ToggleButton.icon (borderless round icon buttons), Button.accent.round (round primary button),
+      Border.avatar (round picture with hairline), Border.bar / ContentControl.glass.bar (player header and controls),
+      Slider.seek / Slider.volume, views:SettingRow (settings list row), Border.pill.mint (watched)
   -->
 
   <!-- Typography -->
@@ -15,6 +21,12 @@
     <Setter Property="FontSize" Value="{DynamicResource LumenFontSizePageTitle}" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="LetterSpacing" Value="-0.3" />
+    <Setter Property="Foreground" Value="{DynamicResource LumenTextBrush}" />
+  </Style>
+  <Style Selector=":is(TextBlock).display">
+    <Setter Property="FontSize" Value="38" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="-0.5" />
     <Setter Property="Foreground" Value="{DynamicResource LumenTextBrush}" />
   </Style>
   <Style Selector=":is(TextBlock).section">
@@ -144,7 +156,7 @@
       </Transitions>
     </Setter>
   </Style>
-  <Style Selector="Button.card:pointerover Border.hoverShade, Button.card:focus-visible Border.hoverShade">
+  <Style Selector="Button.card:pointerover Border.hoverShade, Button.card:focus-visible Border.hoverShade, Button.flat:pointerover Border.hoverShade, Button.flat:focus-visible Border.hoverShade">
     <Setter Property="Opacity" Value="1" />
   </Style>
 
@@ -182,5 +194,169 @@
   </Style>
   <Style Selector="Button.link:pressed /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <!-- Flat button: only wraps content (a clickable row) and shows no chrome of its own. -->
+  <Style Selector="Button.flat">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+  </Style>
+  <Style Selector="Button.flat /template/ ContentPresenter#PART_ContentPresenter, Button.flat:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.flat:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <!-- Quiet button: hairline outline, no fill until hovered. Secondary actions, player menus. -->
+  <Style Selector="Button.quiet">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineStrongBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource LumenTextSecondaryBrush}" />
+    <Setter Property="Padding" Value="14,7" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button.quiet:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource LumenSurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineStrongBrush}" />
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource LumenTextBrush}" />
+  </Style>
+  <Style Selector="Button.quiet:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource LumenAccentSoftBrush}" />
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource LumenTextBrush}" />
+  </Style>
+  <Style Selector="Button.quiet:disabled /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Opacity" Value="0.45" />
+  </Style>
+
+  <!-- Icon buttons: no outline, a soft round highlight on hover. -->
+  <Style Selector="Button.icon, ToggleButton.icon">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource LumenTextSecondaryBrush}" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinWidth" Value="36" />
+    <Setter Property="Height" Value="36" />
+    <Setter Property="CornerRadius" Value="18" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.icon:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource LumenSurfaceRaisedBrush}" />
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource LumenTextBrush}" />
+  </Style>
+  <Style Selector="Button.icon:pressed /template/ ContentPresenter#PART_ContentPresenter, ToggleButton.icon:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource LumenAccentSoftBrush}" />
+  </Style>
+  <Style Selector="ToggleButton.icon:checked /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource LumenAccentTextBrush}" />
+  </Style>
+  <Style Selector="Button.icon:disabled /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Opacity" Value="0.4" />
+  </Style>
+
+  <!-- Round primary button (play / pause). -->
+  <Style Selector="Button.accent.round">
+    <Setter Property="Width" Value="44" />
+    <Setter Property="Height" Value="44" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="22" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
+  <!-- Round picture with a hairline (cast, users). -->
+  <Style Selector="Border.avatar">
+    <Setter Property="Background" Value="{DynamicResource LumenSurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineStrongBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+
+  <!-- Mint pill: "watched". -->
+  <Style Selector="Border.pill.mint">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenSuccessBrush}" />
+  </Style>
+  <Style Selector="Border.pill.mint > TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource LumenSuccessBrush}" />
+  </Style>
+
+  <!-- Player header and controls: a glass bar with the grain, separate from the video. -->
+  <Style Selector="ContentControl.glass.bar">
+    <Setter Property="CornerRadius" Value="{DynamicResource LumenRadiusLarge}" />
+    <Setter Property="Padding" Value="16,10" />
+  </Style>
+
+  <!-- Seek bar: thin track, accent fill, a small round thumb that grows while hovered or dragged. -->
+  <Style Selector="Slider.seek, Slider.volume">
+    <Style.Resources>
+      <x:Double x:Key="SliderTrackThemeHeight">4</x:Double>
+      <x:Double x:Key="SliderHorizontalThumbWidth">14</x:Double>
+      <x:Double x:Key="SliderHorizontalThumbHeight">14</x:Double>
+      <CornerRadius x:Key="SliderTrackCornerRadius">2</CornerRadius>
+      <CornerRadius x:Key="SliderThumbCornerRadius">7</CornerRadius>
+      <SolidColorBrush x:Key="SliderTrackFill" Color="{DynamicResource LumenTrackColor}" />
+      <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="{DynamicResource LumenTrackColor}" />
+      <SolidColorBrush x:Key="SliderTrackFillPressed" Color="{DynamicResource LumenTrackColor}" />
+      <SolidColorBrush x:Key="SliderTrackValueFill" Color="{DynamicResource LumenAccentColor}" />
+      <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="{DynamicResource LumenAccentColor}" />
+      <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="{DynamicResource LumenAccentColor}" />
+      <SolidColorBrush x:Key="SliderThumbBackground" Color="{DynamicResource LumenTextColor}" />
+      <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="{DynamicResource LumenTextColor}" />
+      <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="{DynamicResource LumenTextColor}" />
+    </Style.Resources>
+    <Setter Property="MinHeight" Value="24" />
+  </Style>
+  <Style Selector="Slider.seek /template/ Thumb, Slider.volume /template/ Thumb">
+    <Setter Property="RenderTransform" Value="scale(0.65)" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Slider.seek:pointerover /template/ Thumb, Slider.volume:pointerover /template/ Thumb, Slider.seek:pressed /template/ Thumb, Slider.volume:pressed /template/ Thumb">
+    <Setter Property="RenderTransform" Value="scale(1)" />
+  </Style>
+
+  <!-- Settings: a row inside a Border.card. -->
+  <Style Selector="views|SettingRow">
+    <Setter Property="Padding" Value="20,14" />
+    <Setter Property="HorizontalContentAlignment" Value="Right" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border x:Name="RowBorder" BorderBrush="{DynamicResource LumenHairlineBrush}" BorderThickness="0,0,0,1"
+                Padding="{TemplateBinding Padding}">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="24">
+            <StackPanel VerticalAlignment="Center" Spacing="2">
+              <TextBlock Text="{TemplateBinding Header}" FontSize="{DynamicResource LumenFontSizeBody}" FontWeight="Medium"
+                         Foreground="{DynamicResource LumenTextBrush}" TextWrapping="Wrap" />
+              <TextBlock Text="{TemplateBinding Description}" Classes="caption" TextWrapping="Wrap"
+                         IsVisible="{TemplateBinding Description, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            </StackPanel>
+            <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                              VerticalAlignment="Center" HorizontalAlignment="Right" />
+          </Grid>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="views|SettingRow:nth-last-child(1) /template/ Border#RowBorder, ContentPresenter:nth-last-child(1) > views|SettingRow /template/ Border#RowBorder">
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="views|SettingRow:disabled">
+    <Setter Property="Opacity" Value="0.5" />
+  </Style>
+  <Style Selector="views|SettingRow.sub">
+    <Setter Property="Padding" Value="44,10,20,10" />
+  </Style>
+  <Style Selector="views|SettingRow.sub TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource LumenFontSizeCaption}" />
   </Style>
 </Styles>
