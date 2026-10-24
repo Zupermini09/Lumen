@@ -60,6 +60,14 @@ public sealed record MediaItem
     /// <summary>For episodes without their own image: the series' primary image.</summary>
     public string? SeriesPrimaryImageTag { get; init; }
 
+    /// <summary>For episodes: the series' Thumb image (the item that owns it, and its tag).</summary>
+    public string? SeriesThumbItemId { get; init; }
+    public string? SeriesThumbTag { get; init; }
+
+    /// <summary>For episodes: the series' backdrop, even when the episode has one of its own.</summary>
+    public string? SeriesBackdropItemId { get; init; }
+    public string? SeriesBackdropTag { get; init; }
+
     /// <summary>For tracks without their own image: the album's primary image.</summary>
     public string? AlbumId { get; init; }
     public string? AlbumPrimaryImageTag { get; init; }

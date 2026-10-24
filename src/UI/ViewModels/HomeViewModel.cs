@@ -38,7 +38,7 @@ public sealed partial class HomeRow : ObservableObject
     public bool HasCards => Cards.Count > 0;
 
     /// <summary>Shows new items; false (and nothing touched, so no flicker) when they are the ones already shown.</summary>
-    public bool Update(IReadOnlyList<MediaItem> items, IJellyfinClient client, CardShape? shape = null)
+    public bool Update(IReadOnlyList<MediaItem> items, IJellyfinClient client, CardShape? shape = null, bool seriesArt = false)
     {
         if (items.SequenceEqual(_items))
             return false;
@@ -46,7 +46,7 @@ public sealed partial class HomeRow : ObservableObject
         var cardShape = shape ?? (items.Count == 0
             ? CardShape.Poster
             : items.GroupBy(MediaCardViewModel.ShapeFor).OrderByDescending(g => g.Count()).First().Key);
-        Cards = items.Select(i => MediaCardViewModel.Create(i, client, cardShape)).ToList();
+        Cards = items.Select(i => MediaCardViewModel.Create(i, client, cardShape, seriesArt)).ToList();
         return true;
     }
 }
@@ -82,7 +82,7 @@ public sealed class FeaturedViewModel
         var (title, subtitle) = MediaCardViewModel.Describe(item);
         var resume = item.ResumePosition;
         const int height = 640; // shown 320 high, at 2x for high-DPI screens
-        var image = item switch
+        var image = MediaCardViewModel.SeriesArtFor(item, client, height, backdropFirst: true) ?? item switch
         {
             { BackdropItemId: { } id, BackdropTag: { } tag } => client.GetImageUri(id, ImageKind.Backdrop, tag, height),
             { ThumbImageTag: { } thumb } => client.GetImageUri(item.Id, ImageKind.Thumb, thumb, height),
@@ -290,8 +290,8 @@ public sealed partial class HomeViewModel : PageViewModel, ICardHost
             Featured = FeaturedViewModel.Create(chosen.Value.Item, chosen.Value.Kicker, _client);
 
         var shownInResume = Featured is { Kicker: "Continue watching" } ? _resume.Skip(1).ToList() : _resume;
-        Row("resume", "Continue watching", 0).Update(shownInResume, _client, CardShape.Wide);
-        Row("nextup", "Next up", 1).Update(_nextUp, _client, CardShape.Wide);
+        Row("resume", "Continue watching", 0).Update(shownInResume, _client, CardShape.Wide, seriesArt: true);
+        Row("nextup", "Next up", 1).Update(_nextUp, _client, CardShape.Wide, seriesArt: true);
     }
 
     // The row with this key, created at its place if it is new. Fixed rows come first (index), then the latest rows.
