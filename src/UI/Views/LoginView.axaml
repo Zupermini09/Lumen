@@ -5,72 +5,78 @@
              xmlns:imaging="using:Lumen.UI.Imaging"
              x:Class="Lumen.UI.Views.LoginView"
              x:DataType="vm:LoginViewModel">
-  <ScrollViewer>
-    <StackPanel Margin="32" Spacing="14" MaxWidth="560" HorizontalAlignment="Center" VerticalAlignment="Center">
-      <StackPanel>
-        <TextBlock Text="{Binding ServerName, StringFormat='Sign in to {0}'}" Classes="title" />
-        <TextBlock Text="{Binding ServerDescription}" Classes="secondary" TextWrapping="Wrap" />
-      </StackPanel>
-
-      <!-- Users the server shows on its login screen -->
-      <ItemsControl ItemsSource="{Binding Users}" IsVisible="{Binding HasUsers}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate DataType="vm:UserCardViewModel">
-            <Button Margin="0,0,12,12" Padding="8" Background="Transparent" BorderThickness="0" Width="96"
-                    Command="{Binding $parent[UserControl].((vm:LoginViewModel)DataContext).SelectUserCommand}"
-                    CommandParameter="{Binding}">
-              <StackPanel Spacing="6" HorizontalAlignment="Center">
-                <Border Width="64" Height="64" CornerRadius="32" ClipToBounds="True"
-                        Background="{DynamicResource AccentFillColorDefaultBrush}">
-                  <Panel>
-                    <TextBlock Text="{Binding Initial}" FontSize="26" Foreground="{DynamicResource LumenOnAccentBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    <Image Width="64" Height="64" Stretch="UniformToFill" imaging:RemoteImage.Uri="{Binding ImageUri}" />
-                  </Panel>
-                </Border>
-                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" />
-              </StackPanel>
-            </Button>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-
-      <TextBlock Text="User name" />
-      <TextBox x:Name="UserBox" Text="{Binding UserName}" />
-      <TextBlock Text="Password" />
-      <TextBox x:Name="PasswordBox" Text="{Binding Password}" PasswordChar="●" RevealPassword="False">
-        <TextBox.KeyBindings>
-          <KeyBinding Gesture="Enter" Command="{Binding SignInCommand}" />
-        </TextBox.KeyBindings>
-      </TextBox>
-
-      <StackPanel Orientation="Horizontal" Spacing="12">
-        <Button Content="Sign in" Classes="accent" Command="{Binding SignInCommand}" MinWidth="120" />
-        <Button Content="Use Quick Connect" Command="{Binding StartQuickConnectCommand}"
-                IsVisible="{Binding IsQuickConnectAvailable}" />
-        <ui:ProgressRing IsIndeterminate="True" Width="24" Height="24" IsVisible="{Binding IsBusy}" />
-      </StackPanel>
-
-      <Border IsVisible="{Binding IsQuickConnectActive}" Padding="16" CornerRadius="8"
-              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+  <Panel>
+    <Border Background="{DynamicResource LumenGlowBrush}" IsHitTestVisible="False" />
+    <ScrollViewer>
+      <ContentControl Classes="glass strong" Padding="36,32" Margin="24" Width="480" MaxWidth="480"
+                      HorizontalAlignment="Center" VerticalAlignment="Center">
         <StackPanel Spacing="8">
-          <TextBlock Text="Quick Connect code" FontWeight="SemiBold" />
-          <SelectableTextBlock Text="{Binding QuickConnectCode}" FontSize="36" FontFamily="Consolas,Menlo,monospace"
-                               LetterSpacing="6" />
-          <TextBlock TextWrapping="Wrap" Classes="secondary"
-                     Text="On a device where you are already signed in, open Settings → Quick Connect and enter this code. Lumen signs in automatically once you approve it." />
-          <Button Content="Cancel" Command="{Binding CancelQuickConnectCommand}" />
+          <Image Source="avares://Lumen.UI/Assets/lumen-256.png" Width="72" Height="72" HorizontalAlignment="Center" />
+          <TextBlock Text="{Binding ServerName, StringFormat='Sign in to {0}'}" Classes="title" FontSize="24" TextAlignment="Center"
+                     TextWrapping="Wrap" HorizontalAlignment="Center" Margin="0,10,0,0" />
+          <TextBlock Text="{Binding ServerDescription}" Classes="caption" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
+
+          <!-- Users the server shows on its login screen -->
+          <ItemsControl ItemsSource="{Binding Users}" IsVisible="{Binding HasUsers}" HorizontalAlignment="Center" Margin="0,14,0,0">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate><WrapPanel HorizontalAlignment="Center" /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:UserCardViewModel">
+                <Button Classes="card" Margin="2,0,2,8" Padding="8" Width="92" HorizontalContentAlignment="Center"
+                        Command="{Binding $parent[UserControl].((vm:LoginViewModel)DataContext).SelectUserCommand}"
+                        CommandParameter="{Binding}">
+                  <StackPanel Spacing="8" HorizontalAlignment="Center">
+                    <Border Classes="avatar" Width="64" Height="64" CornerRadius="32" Background="{DynamicResource LumenAccentBrush}">
+                      <Panel>
+                        <TextBlock Text="{Binding Initial}" FontSize="26" FontWeight="Medium" Foreground="{DynamicResource LumenOnAccentBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Image Stretch="UniformToFill" imaging:RemoteImage.Uri="{Binding ImageUri}" />
+                      </Panel>
+                    </Border>
+                    <TextBlock Text="{Binding Name}" FontSize="13" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource LumenTextBrush}" />
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <TextBlock Text="User name" Classes="caption" Margin="2,16,0,0" />
+          <TextBox x:Name="UserBox" Text="{Binding UserName}" />
+          <TextBlock Text="Password" Classes="caption" Margin="2,8,0,0" />
+          <TextBox x:Name="PasswordBox" Text="{Binding Password}" PasswordChar="●" RevealPassword="False">
+            <TextBox.KeyBindings>
+              <KeyBinding Gesture="Enter" Command="{Binding SignInCommand}" />
+            </TextBox.KeyBindings>
+          </TextBox>
+
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,16,0,0">
+            <Button Content="Sign in" Classes="accent" Command="{Binding SignInCommand}" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center" Padding="16,10" />
+            <ui:ProgressRing Grid.Column="1" IsIndeterminate="True" Width="24" Height="24" IsVisible="{Binding IsBusy}" />
+          </Grid>
+          <Button Content="Use Quick Connect" Classes="quiet" Command="{Binding StartQuickConnectCommand}" Padding="16,9"
+                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" IsVisible="{Binding IsQuickConnectAvailable}" />
+
+          <Border Classes="card" IsVisible="{Binding IsQuickConnectActive}" Margin="0,8,0,0" Padding="18">
+            <StackPanel Spacing="8">
+              <TextBlock Text="Quick Connect code" Classes="section" />
+              <SelectableTextBlock Text="{Binding QuickConnectCode}" FontSize="36" FontWeight="SemiBold" FontFamily="Consolas,Menlo,monospace"
+                                   LetterSpacing="6" Foreground="{DynamicResource LumenAccentTextBrush}" />
+              <TextBlock TextWrapping="Wrap" Classes="caption"
+                         Text="On a device where you are already signed in, open Settings → Quick Connect and enter this code. Lumen signs in automatically once you approve it." />
+              <Button Content="Cancel" Classes="quiet" Command="{Binding CancelQuickConnectCommand}" HorizontalAlignment="Left" />
+            </StackPanel>
+          </Border>
+
+          <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
+                     TextWrapping="Wrap" Foreground="{DynamicResource LumenErrorBrush}" />
+
+          <Button Content="Use a different server" Classes="link" Command="{Binding ChangeServerCommand}"
+                  HorizontalAlignment="Center" Margin="0,10,0,0" />
         </StackPanel>
-      </Border>
-
-      <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
-                 TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
-
-      <Button Content="Use a different server" Command="{Binding ChangeServerCommand}"
-              Background="Transparent" BorderThickness="0" Padding="0" Foreground="{DynamicResource LumenTextSecondaryBrush}" Margin="0,8,0,0" />
-    </StackPanel>
-  </ScrollViewer>
+      </ContentControl>
+    </ScrollViewer>
+  </Panel>
 </UserControl>

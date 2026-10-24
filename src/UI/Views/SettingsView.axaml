@@ -1,110 +1,101 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Lumen.UI.ViewModels"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:views="using:Lumen.UI.Views"
              x:Class="Lumen.UI.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
   <UserControl.Styles>
     <Style Selector="TextBlock.section">
-      <Setter Property="Margin" Value="0,16,0,2" />
+      <Setter Property="Margin" Value="0,18,0,0" />
     </Style>
     <Style Selector="ComboBox.value">
       <Setter Property="MinWidth" Value="230" />
     </Style>
+    <!-- A settings card holds its rows edge to edge; the rows draw the hairlines between them. -->
+    <Style Selector="Border.card.settings">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <Style Selector="Border.card.settings:pointerover">
+      <Setter Property="Background" Value="{DynamicResource LumenSurfaceBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineBrush}" />
+    </Style>
   </UserControl.Styles>
 
   <ScrollViewer>
-    <StackPanel Margin="32,24,32,32" Spacing="6" MaxWidth="820" HorizontalAlignment="Left">
+    <StackPanel Margin="32,24,32,36" Spacing="10" MaxWidth="820" HorizontalAlignment="Left">
       <TextBlock Text="Settings" Classes="title" />
       <TextBlock Text="Changes are saved and applied straight away. Playback settings take effect with the next video you play." Classes="secondary" TextWrapping="Wrap" />
 
       <TextBlock Classes="section" Text="Playback" />
-
-      <ui:SettingsExpander Header="Skip intro, recap, credits..."
-                           Description="What to do when playback reaches a segment marked by the server (needs a segment provider such as the Intro Skipper plugin).">
-        <ui:SettingsExpander.Items>
-          <ItemsControl ItemsSource="{Binding SegmentRows}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate DataType="vm:SegmentRow">
-                <ui:SettingsExpanderItem Content="{Binding Name}">
-                  <ui:SettingsExpanderItem.Footer>
-                    <ComboBox Classes="value" ItemsSource="{Binding Choices}" SelectedItem="{Binding Selected}" />
-                  </ui:SettingsExpanderItem.Footer>
-                </ui:SettingsExpanderItem>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-        </ui:SettingsExpander.Items>
-      </ui:SettingsExpander>
-
-      <ui:SettingsExpander Header="Play the next episode automatically"
-                           Description="When an episode ends, start the next one after a short countdown.">
-        <ui:SettingsExpander.Footer>
+      <Border Classes="card settings">
+      <StackPanel>
+        <views:SettingRow Header="Play the next episode automatically" Description="When an episode ends, start the next one after a short countdown.">
           <ToggleSwitch IsChecked="{Binding AutoPlayNextEpisode}" OnContent="On" OffContent="Off" />
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
-      <ui:SettingsExpander Header="Countdown" Description="How long the next-episode countdown runs."
-                           IsEnabled="{Binding AutoPlayNextEpisode}">
-        <ui:SettingsExpander.Footer>
+        </views:SettingRow>
+        <views:SettingRow Header="Countdown" Description="How long the next-episode countdown runs." IsEnabled="{Binding AutoPlayNextEpisode}">
           <ComboBox Classes="value" ItemsSource="{Binding CountdownChoices}" SelectedItem="{Binding Countdown}" />
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
-
-      <ui:SettingsExpander Header="Skip back" Description="Used by the back button and the Left arrow key.">
-        <ui:SettingsExpander.Footer>
+        </views:SettingRow>
+        <views:SettingRow Header="Skip back" Description="Used by the back button and the Left arrow key.">
           <ComboBox Classes="value" ItemsSource="{Binding SkipBackChoices}" SelectedItem="{Binding SkipBack}" />
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
-      <ui:SettingsExpander Header="Skip forward" Description="Used by the forward button and the Right arrow key.">
-        <ui:SettingsExpander.Footer>
+        </views:SettingRow>
+        <views:SettingRow Header="Skip forward" Description="Used by the forward button and the Right arrow key.">
           <ComboBox Classes="value" ItemsSource="{Binding SkipForwardChoices}" SelectedItem="{Binding SkipForward}" />
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
+        </views:SettingRow>
+      </StackPanel>
+      </Border>
+
+      <TextBlock Classes="section" Text="Skip intro, recap, credits" />
+      <TextBlock Classes="caption" Text="What to do when playback reaches a segment marked by the server (needs a segment provider such as the Intro Skipper plugin)." TextWrapping="Wrap" Margin="0,-6,0,0" />
+      <Border Classes="card settings">
+      <StackPanel>
+        <ItemsControl ItemsSource="{Binding SegmentRows}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:SegmentRow">
+              <views:SettingRow Header="{Binding Name}">
+                <ComboBox Classes="value" ItemsSource="{Binding Choices}" SelectedItem="{Binding Selected}" />
+              </views:SettingRow>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+      </Border>
 
       <TextBlock Classes="section" Text="Audio and subtitles" />
-
-      <ui:SettingsExpander Header="Preferred audio language"
-                           Description="Start with an audio track in this language when the video has one. Otherwise the server's choice is used.">
-        <ui:SettingsExpander.Footer>
+      <Border Classes="card settings">
+      <StackPanel>
+        <views:SettingRow Header="Preferred audio language" Description="Start with an audio track in this language when the video has one. Otherwise the server's choice is used.">
           <ComboBox Classes="value" ItemsSource="{Binding AudioLanguageChoices}" SelectedItem="{Binding AudioLanguage}" />
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
-      <ui:SettingsExpander Header="Subtitle mode" Description="When subtitles are turned on by themselves.">
-        <ui:SettingsExpander.Footer>
+        </views:SettingRow>
+        <views:SettingRow Header="Subtitle mode" Description="When subtitles are turned on by themselves.">
           <ComboBox Classes="value" ItemsSource="{Binding SubtitleModeChoices}" SelectedItem="{Binding SelectedSubtitleMode}" />
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
-      <ui:SettingsExpander Header="Preferred subtitle language"
-                           Description="Used by the modes that pick a subtitle track. Not used with the server default or when subtitles are off."
-                           IsEnabled="{Binding UsesSubtitleLanguage}">
-        <ui:SettingsExpander.Footer>
+        </views:SettingRow>
+        <views:SettingRow Header="Preferred subtitle language" Description="Used by the modes that pick a subtitle track. Not used with the server default or when subtitles are off." IsEnabled="{Binding UsesSubtitleLanguage}">
           <ComboBox Classes="value" ItemsSource="{Binding SubtitleLanguageChoices}" SelectedItem="{Binding SubtitleLanguage}" />
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
+        </views:SettingRow>
+      </StackPanel>
+      </Border>
 
       <TextBlock Classes="section" Text="Video" />
-
-      <ui:SettingsExpander Header="Hardware decoding"
-                           Description="Let the graphics card decode video where the system supports it. Turn off if video shows glitches or playback fails.">
-        <ui:SettingsExpander.Footer>
+      <Border Classes="card settings">
+      <StackPanel>
+        <views:SettingRow Header="Hardware decoding" Description="Let the graphics card decode video where the system supports it. Turn off if video shows glitches or playback fails.">
           <ToggleSwitch IsChecked="{Binding HardwareDecoding}" OnContent="On" OffContent="Off" />
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
-
-      <ui:SettingsExpander Header="Streaming quality"
-                           Description="The most video data the server sends. Original plays the file as it is (direct play); lower qualities are converted by the server, which also happens when a file cannot be played directly. Can also be changed while playing.">
-        <ui:SettingsExpander.Footer>
+        </views:SettingRow>
+        <views:SettingRow Header="Streaming quality" Description="The most video data the server sends. Original plays the file as it is (direct play); lower qualities are converted by the server, which also happens when a file cannot be played directly. Can also be changed while playing.">
           <ComboBox Classes="value" ItemsSource="{Binding StreamingQualityChoices}" SelectedItem="{Binding StreamingQuality}" />
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
+        </views:SettingRow>
+      </StackPanel>
+      </Border>
 
       <TextBlock Classes="section" Text="Interface" />
-
-      <ui:SettingsExpander Header="Theme" Description="Light or dark colours.">
-        <ui:SettingsExpander.Footer>
+      <Border Classes="card settings">
+      <StackPanel>
+        <views:SettingRow Header="Theme" Description="Light or dark colours.">
           <ComboBox Classes="value" ItemsSource="{Binding ThemeChoices}" SelectedItem="{Binding Theme}" />
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
+        </views:SettingRow>
+      </StackPanel>
+      </Border>
     </StackPanel>
   </ScrollViewer>
 </UserControl>
