@@ -1,5 +1,30 @@
 # Testing notes
 
+## Features since M1: manual checks
+
+Most of this was only driven on Linux (virtual display and a real server). Items marked **[Win/macOS]** have never run on those systems and need a hands-on check. Report OK / not OK, the OS version and what you saw.
+
+### Windows and macOS only
+
+1. **[Win/macOS] Backdrop.** Windows 11: the window background shows Mica; Windows 10 and macOS: acrylic / vibrancy blur or a plain solid background, never a see-through or black window. Check dark and light theme (Settings), and that text stays readable.
+2. **[Win/macOS] Icons.** After installing, check the new violet monogram in the installer, Start menu / Applications, taskbar / Dock, window title bar, and `.ico` / `.icns` in Explorer / Finder at small and large sizes. The 16-32 px versions should still read clearly.
+3. **[Win/macOS] Click-to-pause and play button.** Click the video once: it pauses/resumes (not twice, not on a drag). Double-click: full screen toggles and the video does not pause/resume again. While paused, the round play button shows in the centre and clicking it resumes. Try with the primary mouse button swapped to the right (Windows) and with a trackpad tap (macOS). Video clicks use polled button state (`GetAsyncKeyState` / `CGEventSourceButtonState`) because the video is a native window.
+4. **[Win/macOS] Overlay and glass.** Header, controls and menus stay visible over/next to the video, also after resize, maximise and full screen. Controls appear on mouse move in full screen and hide after a pause; Esc leaves full screen.
+5. **[Win/macOS] Hardware decoding.** Settings → Video: on, play a 4K HEVC / H.264 file and check CPU/GPU use (Task Manager / Activity Monitor) and RAM. Turn it off, play again: the picture is the same and CPU use goes up. Note any green or corrupt frames.
+
+### All systems
+
+6. **Transcoding and quality.** In the player, pick a lower quality (e.g. 4 Mbps): playback restarts at the same position, the state reads "Transcoding ...", picture and sound are fine. Back to Original: "Direct play". Set a limit in Settings and play something new. With transcoding disallowed for the user on the server, a clear message appears.
+7. **HLS seeking.** While transcoding, seek forward, backward, to the very start and near the end (click the bar and use ← / →). Playback resumes at the right place each time, no long freeze.
+8. **Subtitle sync while transcoding.** Transcode a video with text subtitles. The subtitles must match the speech (the HLS timeline starts about 10 s off, Lumen compensates). Change the subtitle delay with G / H, switch tracks, seek, and re-check. Picture subtitles (PGS, DVD) are burned in by the server and should also match.
+9. **Tracks.** Audio and subtitle menus list the right tracks; the preferred languages in Settings are picked on start. Switching audio while transcoding restarts the stream at the same position.
+10. **Speed, chapters, skip.** `[` / `]` change speed; the chapter list jumps; ± step keys use the Settings value. With a segment provider on the server: the "Skip ..." button shows during the segment, S skips it, auto-skip works per type.
+11. **Next episode.** Near the end of an episode the countdown shows; Cancel keeps you on the credits, Next plays the next episode immediately; auto-play can be turned off.
+12. **Details, search, favourites.** Open a movie, an episode and a series (season selector, episode cards). Toggle watched and favourite and check the web client. Ctrl+F / Ctrl+K opens Search; results group by kind. Favourites refresh on Back. Home "Latest in" rows match the web client.
+13. **Library sort and filter.** Change sort and filters, leave and return: they are remembered per library.
+14. **Settings.** Every option applies without restart and survives a restart. Theme dark / light / system switches live.
+15. **Mouse and keys.** Alt+← and the mouse back button go back (and leave full screen first); all shortcuts in the README work.
+
 Manual test notes per milestone. Automated coverage is listed first so manual testing can focus on what CI cannot see.
 
 ## M1 (first part): connect, sign in, browse, play
