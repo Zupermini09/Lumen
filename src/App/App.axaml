@@ -4,7 +4,18 @@
              x:Class="Lumen.App.App"
              Name="Lumen"
              RequestedThemeVariant="Dark">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Lumen.UI/Themes/FluentOverrides.axaml" />
+        <ResourceInclude Source="avares://Lumen.UI/Themes/Lumen.axaml" />
+        <ResourceInclude Source="avares://Lumen.UI/Themes/Brand.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
   <Application.Styles>
-    <sty:FluentAvaloniaTheme PreferSystemTheme="False" PreferUserAccentColor="False" />
+    <!-- The Lumen violet (palette in Lumen.UI/Themes); the accent colour of the OS is ignored on purpose. -->
+    <sty:FluentAvaloniaTheme PreferSystemTheme="False" PreferUserAccentColor="False" CustomAccentColor="#8B5CF6" />
+    <StyleInclude Source="avares://Lumen.UI/Themes/Styles.axaml" />
   </Application.Styles>
 </Application>

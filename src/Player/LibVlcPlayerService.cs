@@ -1,4 +1,5 @@
 using LibVLCSharp.Shared;
+using Lumen.Core;
 using Lumen.Core.Playback;
 using Serilog;
 
@@ -7,6 +8,7 @@ namespace Lumen.Player;
 public sealed class LibVlcPlayerService : IPlayerService
 {
     private readonly LibVlcEngine _engine;
+    private readonly ISettingsStore _settings;
     private readonly ILogger _log;
 
     // LibVLC's Play/Stop block while threads start or join, and must never run on the UI thread
@@ -16,9 +18,10 @@ public sealed class LibVlcPlayerService : IPlayerService
     private PlaybackState _state = PlaybackState.Idle;
     private bool _disposed;
 
-    public LibVlcPlayerService(LibVlcEngine engine, ILogger log)
+    public LibVlcPlayerService(LibVlcEngine engine, ISettingsStore settings, ILogger log)
     {
         _engine = engine;
+        _settings = settings;
         _log = log.ForContext<LibVlcPlayerService>();
 
         var player = engine.MediaPlayer;
@@ -31,6 +34,9 @@ public sealed class LibVlcPlayerService : IPlayerService
         player.EncounteredError += OnError;
         player.TimeChanged += (_, e) => PositionChanged?.Invoke(this, TimeSpan.FromMilliseconds(e.Time));
         player.LengthChanged += (_, e) => DurationChanged?.Invoke(this, TimeSpan.FromMilliseconds(e.Length));
+        player.ESAdded += (_, _) => TracksChanged?.Invoke(this, EventArgs.Empty);
+        player.ESDeleted += (_, _) => TracksChanged?.Invoke(this, EventArgs.Empty);
+        player.ESSelected += (_, _) => TracksChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public PlaybackState State => _state;
@@ -51,6 +57,36 @@ public sealed class LibVlcPlayerService : IPlayerService
         set => _engine.MediaPlayer.Mute = value;
     }
 
+    public IReadOnlyList<TrackInfo> AudioTracks => Tracks(_engine.MediaPlayer.AudioTrackDescription);
+    public IReadOnlyList<TrackInfo> SubtitleTracks => Tracks(_engine.MediaPlayer.SpuDescription);
+    public int AudioTrackId => _engine.MediaPlayer.AudioTrack;
+    public int SubtitleTrackId => _engine.MediaPlayer.Spu;
+
+    public void SelectAudioTrack(int id) => _engine.MediaPlayer.SetAudioTrack(id);
+
+    public void SelectSubtitleTrack(int id) => _engine.MediaPlayer.SetSpu(id);
+
+    public void AddExternalSubtitle(Uri uri, bool select) =>
+        _engine.MediaPlayer.AddSlave(MediaSlaveType.Subtitle, uri.AbsoluteUri, select);
+
+    public TimeSpan SubtitleDelay
+    {
+        // LibVLC uses microseconds.
+        get => TimeSpan.FromMicroseconds(_engine.MediaPlayer.SpuDelay);
+        set => _engine.MediaPlayer.SetSpuDelay((long)value.TotalMicroseconds);
+    }
+
+    public double Rate
+    {
+        get => _engine.MediaPlayer.Rate;
+        set => _engine.MediaPlayer.SetRate((float)Math.Clamp(value, 0.25, 4));
+    }
+
+    // LibVLC lists a "Disable" pseudo-track with id -1 first; callers use -1 explicitly instead.
+    private static IReadOnlyList<TrackInfo> Tracks(LibVLCSharp.Shared.Structures.TrackDescription[]? descriptions) =>
+        descriptions?.Where(d => d.Id >= 0).Select(d => new TrackInfo(d.Id, d.Name ?? $"Track {d.Id}")).ToList() ?? [];
+
+    public event EventHandler? TracksChanged;
     public event EventHandler<PlaybackState>? StateChanged;
     public event EventHandler<TimeSpan>? PositionChanged;
     public event EventHandler<TimeSpan>? DurationChanged;
@@ -66,10 +102,17 @@ public sealed class LibVlcPlayerService : IPlayerService
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 StopAndReleaseMedia();
-                _media = startAt is { TotalSeconds: > 0 } start
-                    ? new Media(_engine.LibVlc, source, $":start-time={start.TotalSeconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}")
-                    : new Media(_engine.LibVlc, source);
-                _log.Information("Playing {Source}", source.IsFile ? "<local file>" : source.GetLeftPart(UriPartial.Path));
+                // Speed and subtitle delay are per-media choices; start each item at the defaults.
+                _engine.MediaPlayer.SetRate(1);
+                _engine.MediaPlayer.SetSpuDelay(0);
+                // Per-media options, so the settings apply to the next item without restarting the app.
+                var hardware = _settings.Settings.HardwareDecoding;
+                var options = new List<string> { hardware ? ":avcodec-hw=any" : ":avcodec-hw=none" };
+                if (startAt is { TotalSeconds: > 0 } start)
+                    options.Add($":start-time={start.TotalSeconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}");
+                _media = new Media(_engine.LibVlc, source, [.. options]);
+                _log.Information("Playing {Source} (hardware decoding {Mode})",
+                    source.IsFile ? "<local file>" : source.GetLeftPart(UriPartial.Path), hardware ? "allowed" : "off");
                 if (!_engine.MediaPlayer.Play(_media))
                     ReportError("Playback could not be started.");
             }, cancellationToken).ConfigureAwait(false);

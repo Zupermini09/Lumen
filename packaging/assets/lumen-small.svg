@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>Lumen</title>
+  <defs>
+    <linearGradient id="tile" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6D3AE8"/>
+      <stop offset="1" stop-color="#3B1F8F"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#tile)"/>
+  <path fill="#FFF1D6" d="M294.87 183.64A24.99 24.99 0 0 0 257.39 205.28L257.39 818.72A24.99 24.99 0 0 0 294.87 840.36L826.12 533.64A24.99 24.99 0 0 0 826.12 490.36L730.61 435.21L390.39 631.64L390.39 238.79ZM474.39 287.29L474.39 442.86A24.99 24.99 0 0 0 511.87 464.5L609.12 408.36A24.99 24.99 0 0 0 609.12 365.07Z"/>
+</svg>

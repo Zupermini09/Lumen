@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:views="using:Lumen.UI.Views"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Lumen.UI.Views.SearchView"
+             x:DataType="vm:SearchViewModel">
+  <DockPanel Margin="28,24,12,0">
+    <StackPanel DockPanel.Dock="Top" Spacing="14" Margin="0,0,16,16">
+      <TextBlock Text="Search" Classes="title" />
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Width="560" HorizontalAlignment="Left">
+        <TextBox x:Name="Box" Classes="hero" Text="{Binding Query}" Watermark="Search movies, shows, episodes…">
+          <TextBox.InnerLeftContent>
+            <ui:SymbolIcon Symbol="Find" FontSize="18" Margin="16,0,10,0" Foreground="{DynamicResource LumenTextTertiaryBrush}" />
+          </TextBox.InnerLeftContent>
+        </TextBox>
+        <ui:ProgressRing Grid.Column="1" IsIndeterminate="True" Width="24" Height="24" IsVisible="{Binding IsSearching}" />
+      </Grid>
+    </StackPanel>
+
+    <Panel>
+      <TextBlock Text="Type to search your libraries. Ctrl+F or Ctrl+K brings you here from any page." Classes="secondary"
+                 TextWrapping="Wrap" IsVisible="{Binding IsIdle}" />
+      <TextBlock Text="{Binding NoResultsText}" Classes="secondary" TextWrapping="Wrap" IsVisible="{Binding HasNoResults}" />
+      <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
+                 TextWrapping="Wrap" Foreground="{DynamicResource LumenErrorBrush}" />
+      <views:ResultsGrid DataContext="{Binding Results}" />
+    </Panel>
+  </DockPanel>
+</UserControl>

@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:imaging="using:Lumen.UI.Imaging"
+             x:Class="Lumen.UI.Views.DetailsPoster"
+             x:DataType="vm:DetailsViewModelBase">
+  <!-- The shadow sits on the outer border: the inner one clips the picture to the rounded corners. -->
+  <Border Width="{Binding PosterWidth}" Height="{Binding PosterHeight}" VerticalAlignment="Top"
+          CornerRadius="{DynamicResource LumenRadiusCard}" BoxShadow="{DynamicResource LumenShadowPoster}">
+    <Border Classes="poster">
+      <Panel>
+        <TextBlock Text="{Binding Title}" TextWrapping="Wrap" TextAlignment="Center" Margin="12"
+                   VerticalAlignment="Center" HorizontalAlignment="Center" Classes="tertiary" />
+        <Image Stretch="UniformToFill" imaging:RemoteImage.Uri="{Binding PosterUri}" />
+      </Panel>
+    </Border>
+  </Border>
+</UserControl>

@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:views="using:Lumen.UI.Views"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Lumen.UI.Views.ItemDetailsView"
+             x:DataType="vm:ItemDetailsViewModel">
+  <ScrollViewer>
+    <Panel>
+      <views:DetailsBackdrop />
+
+      <StackPanel Margin="32,28,32,36" Spacing="32" MaxWidth="1400">
+        <ui:ProgressRing IsIndeterminate="True" Width="32" Height="32" IsVisible="{Binding IsLoading}" HorizontalAlignment="Left" />
+        <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
+                   TextWrapping="Wrap" Foreground="{DynamicResource LumenErrorBrush}" />
+
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="36">
+          <views:DetailsPoster />
+
+          <StackPanel Grid.Column="1" Spacing="14">
+            <Button Classes="link" Padding="0" HorizontalAlignment="Left" IsVisible="{Binding HasSeriesLink}"
+                    Command="{Binding OpenSeriesCommand}" ToolTip.Tip="Go to the series">
+              <TextBlock Text="{Binding SeriesName}" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource LumenAccentTextBrush}" />
+            </Button>
+            <views:DetailsHeading />
+
+            <WrapPanel ItemSpacing="8" LineSpacing="8" Margin="0,8,0,0">
+              <Button Classes="accent" Padding="20,9" Command="{Binding PlayCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="PlayFilled" FontSize="16" />
+                  <TextBlock Text="{Binding PlayLabel}" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Classes="quiet" Command="{Binding StartOverCommand}" IsVisible="{Binding CanResume}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="Undo" FontSize="16" />
+                  <TextBlock Text="Start over" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Classes="quiet" Command="{Binding ToggleWatchedCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="Accept" FontSize="16" Foreground="{DynamicResource LumenSuccessBrush}" IsVisible="{Binding IsPlayed}" />
+                  <ui:SymbolIcon Symbol="Accept" FontSize="16" IsVisible="{Binding !IsPlayed}" />
+                  <TextBlock Text="{Binding WatchedLabel}" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Classes="quiet" Command="{Binding ToggleFavoriteCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="StarFilled" FontSize="16" Foreground="{DynamicResource LumenAccentTextBrush}" IsVisible="{Binding IsFavorite}" />
+                  <ui:SymbolIcon Symbol="Star" FontSize="16" IsVisible="{Binding !IsFavorite}" />
+                  <TextBlock Text="{Binding FavoriteLabel}" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </WrapPanel>
+            <TextBlock Text="{Binding ActionError}" IsVisible="{Binding ActionError, Converter={x:Static ObjectConverters.IsNotNull}}"
+                       TextWrapping="Wrap" Foreground="{DynamicResource LumenErrorBrush}" />
+
+            <TextBlock Text="{Binding Overview}" TextWrapping="Wrap" MaxWidth="760" HorizontalAlignment="Left" LineHeight="23"
+                       Margin="0,10,0,0" Foreground="{DynamicResource LumenTextBrush}"
+                       IsVisible="{Binding Overview, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            <TextBlock Text="{Binding Directors}" TextWrapping="Wrap" Classes="caption"
+                       IsVisible="{Binding Directors, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            <TextBlock Text="{Binding Writers}" TextWrapping="Wrap" Classes="caption"
+                       IsVisible="{Binding Writers, Converter={x:Static ObjectConverters.IsNotNull}}" />
+          </StackPanel>
+        </Grid>
+
+        <StackPanel Spacing="12" IsVisible="{Binding HasStreams}">
+          <TextBlock Text="Media info" Classes="section" />
+          <Border Classes="card" Padding="20,16" MaxWidth="760" HorizontalAlignment="Left">
+            <ItemsControl ItemsSource="{Binding StreamRows}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:StreamRow">
+                  <Grid ColumnDefinitions="110,*" Margin="0,3">
+                    <TextBlock Text="{Binding Label}" Classes="caption" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap" FontSize="13" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Border>
+        </StackPanel>
+
+        <views:CastRow />
+      </StackPanel>
+    </Panel>
+  </ScrollViewer>
+</UserControl>

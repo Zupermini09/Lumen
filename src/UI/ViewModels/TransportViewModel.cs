@@ -1,6 +1,7 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Lumen.Core;
 using Lumen.Core.Formatting;
 using Lumen.Core.Playback;
 
@@ -12,6 +13,9 @@ namespace Lumen.UI.ViewModels;
 public abstract partial class TransportViewModel : PageViewModel
 {
     private readonly IVideoSurfaceFactory _surfaceFactory;
+    private readonly ISettingsStore _appSettings;
+    private static readonly TimeSpan NoticeDuration = TimeSpan.FromSeconds(10);
+    private readonly DispatcherTimer _noticeTimer;
     private int _positionUpdatePending;
     private bool _updatingFromPlayer;
 
@@ -39,13 +43,46 @@ public abstract partial class TransportViewModel : PageViewModel
     [ObservableProperty]
     private bool _isMuted;
 
-    protected TransportViewModel(IPlayerService player, IVideoSurfaceFactory surfaceFactory)
+    /// <summary>Speeds offered in the speed menu (like the web client).</summary>
+    public static readonly double[] Speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
+    [ObservableProperty]
+    private string _speedText = "1×";
+
+    /// <summary>How the video reaches the player ("Direct play", "Transcoding 4 Mbps"), or null where that does not apply.</summary>
+    [ObservableProperty]
+    private string? _modeText;
+
+    /// <summary>The quality button's text.</summary>
+    [ObservableProperty]
+    private string _qualityText = "Original";
+
+    /// <summary>A short message about something the player did by itself ("Transcoding: ..."); it clears after a few seconds.</summary>
+    [ObservableProperty]
+    private string? _notice;
+
+    /// <summary>Text of the skip button ("Skip Intro"...), or null when there is nothing to skip right now.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSkip))]
+    private string? _skipLabel;
+
+    public bool HasSkip => SkipLabel is not null;
+
+    /// <summary>Skips the current segment (button or S key).</summary>
+    public virtual void Skip() { }
+
+    /// <summary>Called on the UI thread whenever the displayed position changes.</summary>
+    protected virtual void OnPositionUpdated(TimeSpan position) { }
+
+    protected TransportViewModel(IPlayerService player, IVideoSurfaceFactory surfaceFactory, ISettingsStore settings)
     {
         Player = player;
         _surfaceFactory = surfaceFactory;
+        _appSettings = settings;
         _state = player.State;
         _volume = player.Volume;
         _isMuted = player.IsMuted;
+        _noticeTimer = Timers.Create(NoticeDuration, DispatcherPriority.Background, ClearNotice);
 
         Player.StateChanged += OnPlayerStateChanged;
         Player.PositionChanged += OnPositionChanged;
@@ -68,7 +105,90 @@ public abstract partial class TransportViewModel : PageViewModel
     [RelayCommand]
     private Task StopAsync() => Player.StopAsync();
 
+    // The skip steps are read when the controls are built; the settings page cannot be open during playback.
+    private int SkipBackSeconds => Math.Clamp(_appSettings.Settings.SkipBackSeconds, 1, 600);
+    private int SkipForwardSeconds => Math.Clamp(_appSettings.Settings.SkipForwardSeconds, 1, 600);
+
+    public string SkipBackLabel => $"−{SkipBackSeconds}";
+    public string SkipForwardLabel => $"+{SkipForwardSeconds}";
+    public string SkipBackTip => $"Back {SkipBackSeconds} seconds (Left)";
+    public string SkipForwardTip => $"Forward {SkipForwardSeconds} seconds (Right)";
+
+    public void SkipBack() => SeekBy(TimeSpan.FromSeconds(-SkipBackSeconds));
+
+    public void SkipForward() => SeekBy(TimeSpan.FromSeconds(SkipForwardSeconds));
+
     public void SeekBy(TimeSpan offset) => Player.Seek(Player.Position + offset);
+
+    public void SeekTo(TimeSpan position) => Player.Seek(position);
+
+    // ---- Tracks, subtitle delay, speed (menus are built when opened, so they always show the current state) ----
+
+    public virtual IReadOnlyList<MenuOption> AudioOptions() =>
+        Player.AudioTracks.Select(t => new MenuOption(t.Name, t.Id == Player.AudioTrackId, () => Player.SelectAudioTrack(t.Id))).ToList();
+
+    public virtual IReadOnlyList<MenuOption> SubtitleOptions() =>
+        Player.SubtitleTracks
+            .Select(t => new MenuOption(t.Name, t.Id == Player.SubtitleTrackId, () => Player.SelectSubtitleTrack(t.Id)))
+            .Prepend(new MenuOption("Off", Player.SubtitleTrackId < 0, () => Player.SelectSubtitleTrack(-1)))
+            .ToList();
+
+    /// <summary>Chapter list (empty when the item has none).</summary>
+    public virtual IReadOnlyList<MenuOption> ChapterOptions() => [];
+
+    /// <summary>Whether the page offers a streaming quality (video from the server).</summary>
+    public virtual bool CanChooseQuality => false;
+
+    /// <summary>The quality menu: original and the bitrate limits.</summary>
+    public virtual IReadOnlyList<MenuOption> QualityOptions() => [];
+
+    private void ClearNotice()
+    {
+        _noticeTimer.Stop();
+        Notice = null;
+    }
+
+    /// <summary>Shows a message next to the controls for a few seconds.</summary>
+    protected void ShowNotice(string text)
+    {
+        Notice = text;
+        _noticeTimer.Stop();
+        _noticeTimer.Start();
+    }
+
+    public IReadOnlyList<MenuOption> SpeedOptions() =>
+        Speeds.Select(s => new MenuOption(FormatSpeed(s), Math.Abs(Player.Rate - s) < 0.01, () => SetSpeed(s))).ToList();
+
+    /// <summary>The player delay that counts as "no delay" (a converted video needs its subtitles shifted to line up).</summary>
+    protected virtual TimeSpan SubtitleBaseDelay => TimeSpan.Zero;
+
+    public string SubtitleDelayText => $"Subtitle delay: {(Player.SubtitleDelay - SubtitleBaseDelay).TotalSeconds:+0.0;-0.0;0.0} s";
+
+    public void AdjustSubtitleDelay(TimeSpan change)
+    {
+        Player.SubtitleDelay += change;
+        OnPropertyChanged(nameof(SubtitleDelayText));
+    }
+
+    public void ResetSubtitleDelay()
+    {
+        Player.SubtitleDelay = SubtitleBaseDelay;
+        OnPropertyChanged(nameof(SubtitleDelayText));
+    }
+
+    public void SetSpeed(double speed)
+    {
+        Player.Rate = speed;
+        SpeedText = FormatSpeed(speed);
+    }
+
+    public void ChangeSpeed(int steps)
+    {
+        var index = Array.FindIndex(Speeds, s => Math.Abs(s - Player.Rate) < 0.01);
+        SetSpeed(Speeds[Math.Clamp((index < 0 ? Array.IndexOf(Speeds, 1d) : index) + steps, 0, Speeds.Length - 1)]);
+    }
+
+    private static string FormatSpeed(double speed) => $"{speed:0.##}×";
 
     partial void OnPositionSecondsChanged(double value)
     {
@@ -96,6 +216,8 @@ public abstract partial class TransportViewModel : PageViewModel
             State = state;
             if (state is PlaybackState.Stopped or PlaybackState.Idle)
                 ApplyPosition(TimeSpan.Zero);
+            if (state == PlaybackState.Opening)
+                SpeedText = FormatSpeed(1); // the player resets speed for each item
         });
 
     private void OnPositionChanged(object? sender, TimeSpan position)
@@ -111,12 +233,21 @@ public abstract partial class TransportViewModel : PageViewModel
         }, DispatcherPriority.Background);
     }
 
+    /// <summary>What to show as the length when the player does not know it (a streamed video may report 0).</summary>
+    protected virtual TimeSpan? KnownDuration => null;
+
     private void OnDurationChanged(object? sender, TimeSpan duration) =>
-        Dispatcher.UIThread.Post(() =>
-        {
-            DurationSeconds = duration.TotalSeconds;
-            DurationText = TimeFormat.Playback(duration);
-        });
+        Dispatcher.UIThread.Post(() => ApplyDuration(duration));
+
+    /// <summary>Shows the player's length, or the one the server gave for the item while the player reports none.</summary>
+    protected void ApplyDuration(TimeSpan reported)
+    {
+        var duration = reported > TimeSpan.Zero ? reported : KnownDuration ?? TimeSpan.Zero;
+        if (duration == TimeSpan.Zero && DurationSeconds > 0)
+            return; // keep what is shown rather than blanking it between streams
+        DurationSeconds = duration.TotalSeconds;
+        DurationText = TimeFormat.Playback(duration);
+    }
 
     private void OnError(object? sender, string message) => Dispatcher.UIThread.Post(() => ErrorMessage = message);
 
@@ -127,6 +258,7 @@ public abstract partial class TransportViewModel : PageViewModel
         {
             PositionSeconds = position.TotalSeconds;
             PositionText = TimeFormat.Playback(position, TimeSpan.FromSeconds(DurationSeconds));
+            OnPositionUpdated(position);
         }
         finally
         {
@@ -140,6 +272,10 @@ public abstract partial class TransportViewModel : PageViewModel
         Player.PositionChanged -= OnPositionChanged;
         Player.DurationChanged -= OnDurationChanged;
         Player.ErrorOccurred -= OnError;
+        _noticeTimer.Stop();
         base.Dispose();
     }
 }
+
+/// <summary>An entry in a player menu (audio track, subtitle track, speed...).</summary>
+public sealed record MenuOption(string Label, bool IsSelected, Action Select);

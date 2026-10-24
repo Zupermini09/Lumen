@@ -42,6 +42,7 @@ public sealed class App : Application
             try
             {
                 _services = ConfigureServices();
+                _services.GetRequiredService<IThemeService>().Apply(_services.GetRequiredService<ISettingsStore>().Settings.Theme);
                 var shell = _services.GetRequiredService<MainWindowViewModel>();
                 var window = new MainWindow { DataContext = shell };
                 desktop.MainWindow = window;
@@ -74,6 +75,7 @@ public sealed class App : Application
         services.AddSingleton<IAppPaths>(Program.Paths);
         services.AddSingleton(new AppInfo(Program.Version, Program.Paths.LogDirectory, Program.Options.SmokeTest));
         services.AddSingleton<ISettingsStore>(sp => new JsonSettingsStore(Program.Paths.DataDirectory, sp.GetRequiredService<ILogger>()));
+        services.AddSingleton<IThemeService, AvaloniaThemeService>();
         services.AddSingleton(sp => SecretStoreFactory.Create(Program.Paths.DataDirectory, sp.GetRequiredService<ILogger>()));
 
         // Jellyfin
@@ -90,7 +92,7 @@ public sealed class App : Application
         services.AddSingleton(sp => new LibVlcEngine(
             LibVlcLocator.PrepareNativeLibraries(typeof(LibVLCSharp.Shared.LibVLC).Assembly),
             sp.GetRequiredService<ILogger>(),
-            verbose: Program.Options.SmokeTest));
+            verbose: Program.Options.SmokeTest || Program.Options.VlcVerbose));
         services.AddSingleton<IPlayerService, LibVlcPlayerService>();
         services.AddSingleton<IVideoSurfaceFactory, LibVlcVideoSurfaceFactory>();
 
@@ -102,6 +104,7 @@ public sealed class App : Application
 
         var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
         RemoteImage.Loader = provider.GetRequiredService<ImageLoader>();
+        VideoPage.PointerPosition = new PointerPosition();
 
         // Load libvlc eagerly so a missing or broken installation is reported at startup, not on first play.
         var player = provider.GetRequiredService<IPlayerService>();

@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using Lumen.Core;
 using Lumen.Core.Jellyfin;
 using Lumen.Core.Playback;
 using Serilog;
@@ -6,30 +7,55 @@ using Serilog;
 namespace Lumen.UI.ViewModels;
 
 /// <summary>
-/// Plays a Jellyfin item (direct play), resumes from the saved position and reports progress to the server so
-/// "Continue watching" and watched state work like in the other clients.
+/// Plays a Jellyfin item: asks the server for the file version, tracks and the user's default track choices and how
+/// to stream it (the original file, or an HLS conversion when a quality limit is set or direct play fails; see
+/// PlayerViewModel.Streaming.cs), resumes from the saved position, and reports progress so "Continue watching" and
+/// watched state work like in the other clients.
 /// </summary>
-public sealed class PlayerViewModel : TransportViewModel
+public sealed partial class PlayerViewModel : TransportViewModel
 {
     private static readonly TimeSpan ProgressInterval = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan TrackDefaultsTimeout = TimeSpan.FromSeconds(5);
 
     private readonly MediaItem _item;
     private readonly IJellyfinClient _client;
     private readonly ILogger _log;
-    private readonly string _playSessionId = Guid.NewGuid().ToString("N");
     private readonly DispatcherTimer _progressTimer;
+    private readonly ISettingsStore _settings;
+    private readonly INavigator _navigator;
+    private readonly IPageFactory _pages;
+    private readonly DispatcherTimer _countdownTimer;
+    private MediaItem? _nextEpisode;
+    private int _countdown;
+    private PlaybackDetails _details;
+    private SegmentTracker _segments = new([], _ => SegmentAction.Off);
+    private MediaSegment? _skipSegment;
+    private string _playSessionId = Guid.NewGuid().ToString("N");
     private bool _reportedStart;
     private bool _stopped;
+    private bool _tracksPrepared;
+    private int? _pendingSubtitlePosition;
+    private int _pendingSubtitleCount;
+    private DateTime _pendingSubtitleDeadline;
     private TimeSpan _lastPosition;
+    private TimeSpan _streamStart;
 
-    public PlayerViewModel(MediaItem item, IJellyfinClient client, IPlayerService player, IVideoSurfaceFactory surfaceFactory, ILogger log)
-        : base(player, surfaceFactory)
+    public PlayerViewModel(MediaItem item, IJellyfinClient client, IPlayerService player, IVideoSurfaceFactory surfaceFactory,
+        ISettingsStore settings, INavigator navigator, IPageFactory pages, ILogger log)
+        : base(player, surfaceFactory, settings)
     {
         _item = item;
         _client = client;
+        _settings = settings;
+        _navigator = navigator;
+        _pages = pages;
+        _countdownTimer = Timers.Create(TimeSpan.FromSeconds(1), DispatcherPriority.Normal, CountdownTick);
+        _details = PlaybackDetails.Fallback(item);
         _log = log.ForContext<PlayerViewModel>();
         (ItemTitle, ItemSubtitle) = MediaCardViewModel.Describe(item);
-        _progressTimer = new DispatcherTimer(ProgressInterval, DispatcherPriority.Background, (_, _) => ReportProgress());
+        _isResuming = StartPosition > TimeSpan.Zero;
+        _progressTimer = Timers.Create(ProgressInterval, DispatcherPriority.Background, ReportProgress);
+        Player.TracksChanged += OnTracksChanged;
     }
 
     public override string Title => ItemTitle;
@@ -38,40 +64,292 @@ public sealed class PlayerViewModel : TransportViewModel
     public string ItemTitle { get; }
     public string? ItemSubtitle { get; }
     public MediaItem Item => _item;
+    public IReadOnlyList<ChapterInfo> Chapters => _details.Chapters;
+
+    protected override TimeSpan? KnownDuration => _item.RunTime;
 
     /// <summary>Resume where the user left off, unless they (nearly) finished it.</summary>
-    public TimeSpan StartPosition =>
-        _item.PlaybackPosition > TimeSpan.FromSeconds(5) && !_item.Played ? _item.PlaybackPosition : TimeSpan.Zero;
+    public TimeSpan StartPosition => _item.ResumePosition;
 
-    public bool IsResuming => StartPosition > TimeSpan.Zero;
+    /// <summary>Shows "Start over" while playback resumed from a saved position.</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private bool _isResuming;
 
     /// <summary>Starts playback; the view calls this once the video surface is attached.</summary>
     public async Task StartAsync()
     {
         ErrorMessage = null;
-        try
-        {
-            await Player.PlayAsync(_client.GetStreamUri(_item), StartPosition);
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Could not start playback");
-            ErrorMessage = "Playback could not be started.";
-        }
+        await StartStreamAsync();
+        _ = LoadSegmentsAsync();
+        _ = LoadNextEpisodeAsync();
     }
 
     public async Task StartOverAsync()
     {
+        IsResuming = false;
         await Player.StopAsync();
         _reportedStart = false;
-        await Player.PlayAsync(_client.GetStreamUri(_item));
+        _stopped = false;
+        _tracksPrepared = false;
+        _pendingSubtitlePosition = null;
+        _subtitleFiles.Clear();
+        _streamStart = TimeSpan.Zero;
+        _lastPosition = TimeSpan.Zero;
+        _openedAt = DateTime.UtcNow;
+        await Player.PlayAsync(StreamUri(_details));
     }
+
+    // ---- Next episode -------------------------------------------------------------------------------------------
+
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    [CommunityToolkit.Mvvm.ComponentModel.NotifyPropertyChangedFor(nameof(HasNextEpisode))]
+    private string? _nextEpisodeLabel;
+
+    /// <summary>"Next episode in 7 s" while the countdown runs, otherwise null.</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    [CommunityToolkit.Mvvm.ComponentModel.NotifyPropertyChangedFor(nameof(IsCountingDown))]
+    private string? _countdownText;
+
+    public bool HasNextEpisode => NextEpisodeLabel is not null;
+    public bool IsCountingDown => CountdownText is not null;
+
+    private async Task LoadNextEpisodeAsync()
+    {
+        try
+        {
+            _nextEpisode = await _client.GetNextEpisodeAsync(_item);
+            if (_nextEpisode is { } next)
+            {
+                var (_, subtitle) = MediaCardViewModel.Describe(next);
+                NextEpisodeLabel = subtitle ?? next.Name;
+            }
+        }
+        catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException or TaskCanceledException)
+        {
+            _log.Information("Next episode unavailable: {Error}", ex.Message);
+        }
+    }
+
+    private void StartCountdown()
+    {
+        if (_nextEpisode is null || !_settings.Settings.AutoPlayNextEpisode)
+            return;
+        _countdown = Math.Max(1, _settings.Settings.NextEpisodeCountdownSeconds);
+        CountdownText = $"Next episode in {_countdown} s";
+        _countdownTimer.Start();
+    }
+
+    private void CountdownTick()
+    {
+        _countdown--;
+        if (_countdown <= 0)
+            PlayNextEpisode();
+        else
+            CountdownText = $"Next episode in {_countdown} s";
+    }
+
+    public void CancelCountdown()
+    {
+        _countdownTimer.Stop();
+        CountdownText = null;
+    }
+
+    public void PlayNextEpisode()
+    {
+        CancelCountdown();
+        if (_nextEpisode is { } next)
+            _navigator.Navigate(_pages.Player(next)); // replaces this player page (players are not kept in history)
+    }
+
+    // ---- Skip segments ----------------------------------------------------------------------------------------
+
+    private async Task LoadSegmentsAsync()
+    {
+        try
+        {
+            var segments = await _client.GetMediaSegmentsAsync(_item);
+            _segments = new SegmentTracker(segments, type => _settings.Settings.ActionFor(type));
+            if (segments.Count > 0)
+                _log.Information("{Count} media segments for this item", segments.Count);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException or TaskCanceledException)
+        {
+            _log.Information("Media segments unavailable: {Error}", ex.Message); // optional feature
+        }
+    }
+
+    protected override void OnPositionUpdated(TimeSpan position)
+    {
+        if (!_segments.HasSegments || State is not (PlaybackState.Playing or PlaybackState.Paused))
+            return;
+
+        var decision = _segments.Update(position);
+        if (decision.SeekTo is { } target)
+        {
+            SeekTo(target);
+            return;
+        }
+
+        _skipSegment = decision.ButtonFor;
+        SkipLabel = _skipSegment?.SkipLabel;
+    }
+
+    public override void Skip()
+    {
+        if (_skipSegment is not { } segment)
+            return;
+        SeekTo(_segments.Skip(segment));
+        _skipSegment = null;
+        SkipLabel = null;
+    }
+
+    // ---- Tracks -----------------------------------------------------------------------------------------------
+
+    /// <summary>Server subtitle streams in the order the player lists them: embedded ones, then external files.</summary>
+    private IReadOnlyList<MediaStreamInfo> ServerSubtitles =>
+        _details.SubtitleStreams.Where(s => !s.IsExternal).OrderBy(s => s.Index)
+            .Concat(_details.SubtitleStreams.Where(s => s.IsExternal).OrderBy(s => s.Index))
+            .ToList();
+
+    private IReadOnlyList<MediaStreamInfo> ServerAudio => _details.AudioStreams.OrderBy(s => s.Index).ToList();
+
+    public override IReadOnlyList<MenuOption> AudioOptions()
+    {
+        if (IsTranscoding)
+            return TranscodeAudioOptions();
+
+        var tracks = Player.AudioTracks;
+        var server = ServerAudio;
+        // Server names are nicer ("English - Dolby TrueHD + Atmos 7.1"); use them when the lists line up.
+        var lined = tracks.Count == server.Count;
+        return tracks.Select((t, i) => new MenuOption(
+                lined ? server[i].DisplayTitle : t.Name,
+                t.Id == Player.AudioTrackId,
+                () =>
+                {
+                    Player.SelectAudioTrack(t.Id);
+                    if (lined)
+                        _audioIndex = server[i].Index;
+                }))
+            .ToList();
+    }
+
+    public override IReadOnlyList<MenuOption> SubtitleOptions()
+    {
+        if (IsTranscoding)
+            return TranscodeSubtitleOptions();
+
+        var tracks = Player.SubtitleTracks;
+        var server = ServerSubtitles;
+        var lined = tracks.Count == server.Count;
+        return tracks.Select((t, i) => new MenuOption(
+                lined ? SubtitleLabel(server[i]) : t.Name,
+                t.Id == Player.SubtitleTrackId,
+                () =>
+                {
+                    Player.SelectSubtitleTrack(t.Id);
+                    _subtitleIndex = lined ? server[i].Index : null;
+                }))
+            .Prepend(new MenuOption("Off", Player.SubtitleTrackId < 0, () =>
+            {
+                Player.SelectSubtitleTrack(-1);
+                _subtitleIndex = null;
+            }))
+            .ToList();
+    }
+
+    public override IReadOnlyList<MenuOption> ChapterOptions()
+    {
+        var position = Player.Position;
+        var current = _details.Chapters.LastOrDefault(c => c.Start <= position);
+        return _details.Chapters
+            .Select(c => new MenuOption($"{Core.Formatting.TimeFormat.Playback(c.Start, TimeSpan.FromSeconds(DurationSeconds))}  {c.Name}",
+                c == current, () => SeekTo(c.Start)))
+            .ToList();
+    }
+
+    private static string SubtitleLabel(MediaStreamInfo stream) =>
+        stream.IsExternal && !stream.DisplayTitle.Contains("External", StringComparison.OrdinalIgnoreCase)
+            ? $"{stream.DisplayTitle} (external)"
+            : stream.DisplayTitle;
+
+    /// <summary>
+    /// Once playback runs: add the server's external subtitle files and apply the audio and subtitle tracks to start
+    /// with. They follow the language preferences in the settings; where those do not apply, the defaults the server
+    /// chose from the user's server-side preferences (like the web client) are used. A converted video carries one
+    /// audio track and no subtitles of its own, so there the tracks were chosen when it was requested.
+    /// </summary>
+    private void PrepareTracks()
+    {
+        if (_tracksPrepared)
+            return;
+        _tracksPrepared = true;
+        ChooseTracks(_details);
+
+        if (IsTranscoding)
+        {
+            PrepareTranscodeSubtitles();
+            return;
+        }
+
+        foreach (var external in _details.SubtitleStreams.Where(s => s.IsExternal).OrderBy(s => s.Index))
+            Player.AddExternalSubtitle(_client.GetSubtitleUri(_item, _details.MediaSourceId, external), select: false);
+
+        var audio = ServerAudio;
+        if (_audioIndex is { } audioIndex && Player.AudioTracks is { } tracks && tracks.Count == audio.Count)
+        {
+            var position = audio.ToList().FindIndex(s => s.Index == audioIndex);
+            if (position >= 0)
+                Player.SelectAudioTrack(tracks[position].Id);
+        }
+
+        var subtitles = ServerSubtitles.ToList();
+        var subtitlePosition = _subtitleIndex is { } subIndex ? subtitles.FindIndex(s => s.Index == subIndex) : -1;
+        if (subtitlePosition < 0)
+        {
+            if (_details.Streams.Count > 0)
+                Player.SelectSubtitleTrack(-1); // no subtitles for this item
+            return;
+        }
+
+        // External files are added asynchronously; select once the player lists all subtitle tracks.
+        SelectWhenListed(subtitlePosition, subtitles.Count);
+    }
+
+    private void SelectWhenListed(int position, int expectedCount)
+    {
+        _pendingSubtitlePosition = position;
+        _pendingSubtitleCount = expectedCount;
+        _pendingSubtitleDeadline = DateTime.UtcNow + TrackDefaultsTimeout;
+        ApplyPendingSubtitle();
+    }
+
+    private void ApplyPendingSubtitle()
+    {
+        if (_pendingSubtitlePosition is not { } position)
+            return;
+        var tracks = Player.SubtitleTracks;
+        if (tracks.Count == _pendingSubtitleCount)
+        {
+            Player.SelectSubtitleTrack(tracks[position].Id);
+            _pendingSubtitlePosition = null;
+        }
+        else if (DateTime.UtcNow > _pendingSubtitleDeadline)
+        {
+            _pendingSubtitlePosition = null; // the lists never lined up; keep the player's own choice
+        }
+    }
+
+    private void OnTracksChanged(object? sender, EventArgs e) => Dispatcher.UIThread.Post(ApplyPendingSubtitle);
+
+    // ---- Progress reporting ------------------------------------------------------------------------------------
 
     protected override void OnPlaybackStateChanged(PlaybackState state)
     {
         if (state == PlaybackState.Playing && !_reportedStart)
         {
             _reportedStart = true;
+            PrepareTracks();
             _progressTimer.Start();
             Report(_client.ReportPlaybackStartAsync, "start");
         }
@@ -84,7 +362,16 @@ public sealed class PlayerViewModel : TransportViewModel
             // Reporting the full runtime marks the item as watched.
             _lastPosition = TimeSpan.FromSeconds(DurationSeconds);
             ReportStopped();
+            EndTranscode(Task.CompletedTask);
+            StartCountdown();
         }
+        else if (state == PlaybackState.Error)
+        {
+            OnStreamFailed();
+        }
+
+        if (state == PlaybackState.Playing && DurationSeconds <= 0)
+            ApplyDuration(Player.Duration);
     }
 
     private void ReportProgress()
@@ -107,13 +394,13 @@ public sealed class PlayerViewModel : TransportViewModel
     {
         if (State != PlaybackState.Ended)
         {
-            // Right after starting, the player may not have reported time yet: use the resume point.
-            var position = Player.Position > TimeSpan.Zero ? Player.Position : StartPosition;
+            // Right after starting, the player may not have reported time yet: use where the stream began.
+            var position = Player.Position > TimeSpan.Zero ? Player.Position : _streamStart;
             if (position > TimeSpan.Zero)
                 _lastPosition = position;
         }
 
-        var report = new PlaybackReport(_item.Id, _playSessionId, _lastPosition, State == PlaybackState.Paused);
+        var report = new PlaybackReport(_item.Id, _details.MediaSourceId, _playSessionId, _lastPosition, State == PlaybackState.Paused, _details.Method);
         _ = Task.Run(async () =>
         {
             try
@@ -131,9 +418,12 @@ public sealed class PlayerViewModel : TransportViewModel
 
     public override void Dispose()
     {
+        Player.TracksChanged -= OnTracksChanged;
+        _countdownTimer.Stop();
         ReportStopped();
         _progressTimer.Stop();
-        _ = Player.StopAsync();
+        var stopping = Player.StopAsync();
+        EndTranscode(stopping); // the server's conversion keeps running until told to stop
         base.Dispose();
     }
 }

@@ -10,6 +10,7 @@ public partial class PlayerView : VideoPage
     public PlayerView() => InitializeComponent();
 
     protected override ContentControl VideoHost => Host;
+    protected override IReadOnlyList<Control> Chrome => [Header, Controls];
 
     private PlayerViewModel? ViewModel => DataContext as PlayerViewModel;
 
@@ -21,12 +22,16 @@ public partial class PlayerView : VideoPage
 
     private async void OnStartOverClick(object? sender, RoutedEventArgs e)
     {
-        StartOverButton.IsVisible = false;
         if (ViewModel is { } vm)
             await vm.StartOverAsync();
         Focus();
     }
 
-    private void OnVideoDoubleTapped(object? sender, TappedEventArgs e) =>
-        (TopLevel.GetTopLevel(this) as MainWindow)?.ToggleFullScreen();
+    private void OnNextEpisodeClick(object? sender, RoutedEventArgs e) => ViewModel?.PlayNextEpisode();
+
+    private void OnCancelNextClick(object? sender, RoutedEventArgs e)
+    {
+        ViewModel?.CancelCountdown();
+        Focus();
+    }
 }

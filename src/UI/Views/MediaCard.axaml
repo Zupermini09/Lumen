@@ -7,23 +7,25 @@
   <Button Classes="card" Padding="0" Background="Transparent" BorderThickness="0" Cursor="Hand"
           Width="{Binding Width}" HorizontalContentAlignment="Stretch" Click="OnClick"
           ToolTip.Tip="{Binding Title}">
-    <StackPanel Spacing="4">
-      <Border Height="{Binding ImageHeight}" CornerRadius="6" ClipToBounds="True"
-              Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+    <StackPanel Spacing="3">
+      <Border Classes="poster" Height="{Binding ImageHeight}" Margin="0,0,0,5">
         <Panel>
-          <TextBlock Text="{Binding Title}" TextWrapping="Wrap" TextAlignment="Center" Margin="8"
-                     VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5" FontSize="13" />
+          <TextBlock Text="{Binding Title}" TextWrapping="Wrap" TextAlignment="Center" Margin="10"
+                     VerticalAlignment="Center" HorizontalAlignment="Center" Classes="tertiary" FontSize="13" />
           <Image Stretch="UniformToFill" Height="{Binding ImageHeight}" imaging:RemoteImage.Uri="{Binding ImageUri}" />
-          <Border IsVisible="{Binding IsPlayed}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="6"
-                  Background="{DynamicResource AccentFillColorDefaultBrush}" CornerRadius="10" Width="20" Height="20">
-            <TextBlock Text="✓" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+          <Border Classes="hoverShade" />
+          <Border IsVisible="{Binding IsPlayed}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8"
+                  Background="{DynamicResource LumenSuccessBrush}" CornerRadius="10" Width="20" Height="20">
+            <TextBlock Text="✓" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="{DynamicResource LumenOnSuccessBrush}" />
           </Border>
           <ProgressBar IsVisible="{Binding HasProgress}" Value="{Binding Progress}" Maximum="1" VerticalAlignment="Bottom"
-                       MinHeight="4" Height="4" Margin="0" CornerRadius="0" />
+                       MinHeight="3" Height="3" Margin="0" CornerRadius="0"
+                       Background="{DynamicResource LumenScrimBrush}" Foreground="{DynamicResource LumenAccentBrush}" />
         </Panel>
       </Border>
       <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" FontWeight="SemiBold" FontSize="13" />
-      <TextBlock Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" FontSize="12" Opacity="0.7" />
+      <TextBlock Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" Classes="caption" />
     </StackPanel>
   </Button>
 </UserControl>

@@ -1,0 +1,158 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!--
+    The Lumen palette. This and FluentOverrides.axaml are the only places colours are written down;
+    views use the Lumen* brushes (or the Fluent brushes re-pointed in FluentOverrides.axaml).
+  -->
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Dark">
+      <!-- Surfaces -->
+      <SolidColorBrush x:Key="LumenBackgroundBrush" Color="#0E0B1A" />
+      <SolidColorBrush x:Key="LumenSurfaceBrush" Color="#15112A" />
+      <SolidColorBrush x:Key="LumenSurfaceRaisedBrush" Color="#1C1733" />
+      <!-- The window background when the OS blurs what is behind it (Mica / acrylic): the base colour, mostly opaque. -->
+      <SolidColorBrush x:Key="LumenBackdropBrush" Color="#C70E0B1A" />
+      <!-- Glass: translucent tinted fill. Over the plain window it reads as a tinted surface, so there is no separate fallback. -->
+      <SolidColorBrush x:Key="LumenGlassBrush" Color="#B815112A" />
+      <SolidColorBrush x:Key="LumenGlassStrongBrush" Color="#E61C1733" />
+      <SolidColorBrush x:Key="LumenScrimBrush" Color="#99000000" />
+      <SolidColorBrush x:Key="LumenHoverShadeBrush" Color="#12FFFFFF" />
+      <!-- Details backdrop: fades into the window colour from the bottom and from the left (behind the title). -->
+      <LinearGradientBrush x:Key="LumenBackdropFadeBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#000E0B1A" />
+        <GradientStop Offset="0.55" Color="#660E0B1A" />
+        <GradientStop Offset="1" Color="#FF0E0B1A" />
+      </LinearGradientBrush>
+      <LinearGradientBrush x:Key="LumenBackdropSideBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Offset="0" Color="#E60E0B1A" />
+        <GradientStop Offset="0.6" Color="#800E0B1A" />
+        <GradientStop Offset="1" Color="#000E0B1A" />
+      </LinearGradientBrush>
+      <!-- A faint brand glow behind the sign-in pages. -->
+      <RadialGradientBrush x:Key="LumenGlowBrush" Center="50%,0%" GradientOrigin="50%,0%" RadiusX="75%" RadiusY="85%">
+        <GradientStop Offset="0" Color="#336D3AE8" />
+        <GradientStop Offset="1" Color="#006D3AE8" />
+      </RadialGradientBrush>
+      <BoxShadows x:Key="LumenShadowPoster">0 14 36 0 #8C000000</BoxShadows>
+      <BoxShadows x:Key="LumenShadowSoft">0 6 20 0 #59000000</BoxShadows>
+      <!-- Text -->
+      <SolidColorBrush x:Key="LumenTextBrush" Color="#F4F0EA" />
+      <SolidColorBrush x:Key="LumenOnScrimBrush" Color="#F4F0EA" />
+      <SolidColorBrush x:Key="LumenTextSecondaryBrush" Color="#B9B3C9" />
+      <SolidColorBrush x:Key="LumenTextTertiaryBrush" Color="#7D7791" />
+      <!-- Lines -->
+      <SolidColorBrush x:Key="LumenHairlineBrush" Color="#14FFFFFF" />
+      <SolidColorBrush x:Key="LumenHairlineStrongBrush" Color="#2EFFFFFF" />
+      <LinearGradientBrush x:Key="LumenGlassBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#33FFFFFF" />
+        <GradientStop Offset="0.35" Color="#16FFFFFF" />
+        <GradientStop Offset="1" Color="#0DFFFFFF" />
+      </LinearGradientBrush>
+      <SolidColorBrush x:Key="LumenFocusBrush" Color="#998B5CF6" />
+      <!-- Accent -->
+      <Color x:Key="LumenAccentColor">#8B5CF6</Color>
+      <Color x:Key="LumenTextColor">#F4F0EA</Color>
+      <Color x:Key="LumenTrackColor">#38FFFFFF</Color>
+      <SolidColorBrush x:Key="LumenAccentBrush" Color="#8B5CF6" />
+      <SolidColorBrush x:Key="LumenAccentSoftBrush" Color="#2E8B5CF6" />
+      <SolidColorBrush x:Key="LumenAccentTextBrush" Color="#B79CFA" />
+      <SolidColorBrush x:Key="LumenOnAccentBrush" Color="#FFFFFF" />
+      <!-- Logo colour (the cream of the icon) -->
+      <SolidColorBrush x:Key="LumenLogoBrush" Color="#FFF1D6" />
+      <!-- Status -->
+      <SolidColorBrush x:Key="LumenSuccessBrush" Color="#2EE59D" />
+      <SolidColorBrush x:Key="LumenOnSuccessBrush" Color="#0E0B1A" />
+      <SolidColorBrush x:Key="LumenWarningBrush" Color="#F5B84B" />
+      <SolidColorBrush x:Key="LumenErrorBrush" Color="#F2577A" />
+      <!-- Grain: black and white noise at a few percent -->
+      <ImageBrush x:Key="LumenNoiseBrush" Source="avares://Lumen.UI/Assets/noise.png" TileMode="Tile"
+                  DestinationRect="0,0,128,128" Opacity="0.035" />
+
+      <!-- FluentAvalonia NavigationView -->
+      <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#8C15112A" />
+      <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#F2150F2A" />
+      <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="#14FFFFFF" />
+    </ResourceDictionary>
+
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="LumenBackgroundBrush" Color="#F6F4FB" />
+      <SolidColorBrush x:Key="LumenSurfaceBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="LumenSurfaceRaisedBrush" Color="#F1EEF9" />
+      <SolidColorBrush x:Key="LumenBackdropBrush" Color="#BFF6F4FB" />
+      <SolidColorBrush x:Key="LumenGlassBrush" Color="#CCFFFFFF" />
+      <SolidColorBrush x:Key="LumenGlassStrongBrush" Color="#F2FFFFFF" />
+      <SolidColorBrush x:Key="LumenScrimBrush" Color="#99000000" />
+      <LinearGradientBrush x:Key="LumenBackdropFadeBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#00F6F4FB" />
+        <GradientStop Offset="0.55" Color="#80F6F4FB" />
+        <GradientStop Offset="1" Color="#FFF6F4FB" />
+      </LinearGradientBrush>
+      <LinearGradientBrush x:Key="LumenBackdropSideBrush" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Offset="0" Color="#F2F6F4FB" />
+        <GradientStop Offset="0.6" Color="#99F6F4FB" />
+        <GradientStop Offset="1" Color="#00F6F4FB" />
+      </LinearGradientBrush>
+      <RadialGradientBrush x:Key="LumenGlowBrush" Center="50%,0%" GradientOrigin="50%,0%" RadiusX="75%" RadiusY="85%">
+        <GradientStop Offset="0" Color="#266D3AE8" />
+        <GradientStop Offset="1" Color="#006D3AE8" />
+      </RadialGradientBrush>
+      <BoxShadows x:Key="LumenShadowPoster">0 14 32 0 #38201050</BoxShadows>
+      <BoxShadows x:Key="LumenShadowSoft">0 6 18 0 #26201050</BoxShadows>
+      <SolidColorBrush x:Key="LumenHoverShadeBrush" Color="#10FFFFFF" />
+      <SolidColorBrush x:Key="LumenTextBrush" Color="#1A1530" />
+      <SolidColorBrush x:Key="LumenOnScrimBrush" Color="#F4F0EA" />
+      <SolidColorBrush x:Key="LumenTextSecondaryBrush" Color="#5F5979" />
+      <SolidColorBrush x:Key="LumenTextTertiaryBrush" Color="#8A849E" />
+      <SolidColorBrush x:Key="LumenHairlineBrush" Color="#14000000" />
+      <SolidColorBrush x:Key="LumenHairlineStrongBrush" Color="#2E000000" />
+      <LinearGradientBrush x:Key="LumenGlassBorderBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#1F000000" />
+        <GradientStop Offset="1" Color="#10000000" />
+      </LinearGradientBrush>
+      <SolidColorBrush x:Key="LumenFocusBrush" Color="#996D3AE8" />
+      <Color x:Key="LumenAccentColor">#6D3AE8</Color>
+      <Color x:Key="LumenTextColor">#1A1530</Color>
+      <Color x:Key="LumenTrackColor">#33000000</Color>
+      <SolidColorBrush x:Key="LumenAccentBrush" Color="#6D3AE8" />
+      <SolidColorBrush x:Key="LumenAccentSoftBrush" Color="#1F6D3AE8" />
+      <SolidColorBrush x:Key="LumenAccentTextBrush" Color="#6D3AE8" />
+      <SolidColorBrush x:Key="LumenOnAccentBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="LumenLogoBrush" Color="#3B1F8F" />
+      <SolidColorBrush x:Key="LumenSuccessBrush" Color="#0E9F6E" />
+      <SolidColorBrush x:Key="LumenOnSuccessBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="LumenWarningBrush" Color="#B7791F" />
+      <SolidColorBrush x:Key="LumenErrorBrush" Color="#D6336C" />
+      <ImageBrush x:Key="LumenNoiseBrush" Source="avares://Lumen.UI/Assets/noise.png" TileMode="Tile"
+                  DestinationRect="0,0,128,128" Opacity="0.03" />
+
+      <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="#CCFFFFFF" />
+      <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="#F2FFFFFF" />
+      <SolidColorBrush x:Key="NavigationViewContentBackground" Color="Transparent" />
+      <SolidColorBrush x:Key="NavigationViewContentGridBorderBrush" Color="#14000000" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+
+  <!-- The video letterbox: black in both themes. -->
+  <SolidColorBrush x:Key="LumenVideoBrush" Color="#000000" />
+
+  <!-- Brand gradient (the icon tile); the same in both themes. -->
+  <LinearGradientBrush x:Key="LumenBrandGradientBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+    <GradientStop Offset="0" Color="#6D3AE8" />
+    <GradientStop Offset="1" Color="#3B1F8F" />
+  </LinearGradientBrush>
+
+  <!-- Shape and type -->
+  <Thickness x:Key="NavigationViewContentGridBorderThickness">1,0,0,0</Thickness>
+  <CornerRadius x:Key="NavigationViewContentGridCornerRadius">0</CornerRadius>
+  <CornerRadius x:Key="LumenRadiusSmall">6</CornerRadius>
+  <CornerRadius x:Key="LumenRadiusCard">10</CornerRadius>
+  <CornerRadius x:Key="LumenRadiusLarge">14</CornerRadius>
+  <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+  <CornerRadius x:Key="OverlayCornerRadius">12</CornerRadius>
+  <x:Double x:Key="LumenFontSizePageTitle">30</x:Double>
+  <x:Double x:Key="LumenFontSizeSection">16</x:Double>
+  <x:Double x:Key="LumenFontSizeBody">14</x:Double>
+  <x:Double x:Key="LumenFontSizeCaption">12</x:Double>
+  <FontFamily x:Key="LumenFontFamily">avares://Lumen.UI/Assets/Fonts#Inter</FontFamily>
+</ResourceDictionary>

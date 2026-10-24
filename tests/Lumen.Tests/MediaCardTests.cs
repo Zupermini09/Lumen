@@ -19,6 +19,13 @@ public class MediaCardTests
         Assert.Equal(("Film", "2024"), MediaCardViewModel.Describe(movie));
     }
 
+    [Fact]
+    public void Seasons_in_a_row_of_latest_items_name_their_series()
+    {
+        var season = new MediaItem { Id = "s", Name = "Season 8", Type = "Season", SeriesName = "Arrow", SeriesId = "a" };
+        Assert.Equal(("Arrow", "Season 8"), MediaCardViewModel.Describe(season));
+    }
+
     [Theory]
     [InlineData("Movie", CardShape.Poster)]
     [InlineData("Series", CardShape.Poster)]

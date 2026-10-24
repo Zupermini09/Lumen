@@ -1,0 +1,143 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- FluentAvalonia's own colour keys, re-pointed at the Lumen palette so every stock control follows it.
+       Colour and Brush are overridden together because FluentAvalonia defines both. -->
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Dark">
+      <!-- Accent ramp: FluentAvalonia derives its accent brushes from these (dark theme uses Light2 as the default fill). -->
+      <Color x:Key="SystemAccentColor">#8B5CF6</Color>
+      <Color x:Key="SystemAccentColorLight1">#A27BF8</Color>
+      <Color x:Key="SystemAccentColorLight2">#8B5CF6</Color>
+      <Color x:Key="SystemAccentColorLight3">#B79CFA</Color>
+      <Color x:Key="SystemAccentColorDark1">#7745E8</Color>
+      <Color x:Key="SystemAccentColorDark2">#6D3AE8</Color>
+      <Color x:Key="SystemAccentColorDark3">#3B1F8F</Color>
+      <Color x:Key="SolidBackgroundFillColorBase">#0E0B1A</Color>
+      <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="#0E0B1A" />
+      <Color x:Key="SolidBackgroundFillColorSecondary">#15112A</Color>
+      <SolidColorBrush x:Key="SolidBackgroundFillColorSecondaryBrush" Color="#15112A" />
+      <Color x:Key="SolidBackgroundFillColorTertiary">#1C1733</Color>
+      <SolidColorBrush x:Key="SolidBackgroundFillColorTertiaryBrush" Color="#1C1733" />
+      <Color x:Key="SolidBackgroundFillColorQuarternary">#231D3E</Color>
+      <SolidColorBrush x:Key="SolidBackgroundFillColorQuarternaryBrush" Color="#231D3E" />
+      <Color x:Key="CardBackgroundFillColorDefault">#15112A</Color>
+      <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#15112A" />
+      <Color x:Key="CardBackgroundFillColorSecondary">#1C1733</Color>
+      <SolidColorBrush x:Key="CardBackgroundFillColorSecondaryBrush" Color="#1C1733" />
+      <Color x:Key="CardStrokeColorDefault">#14FFFFFF</Color>
+      <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#14FFFFFF" />
+      <Color x:Key="TextFillColorPrimary">#F4F0EA</Color>
+      <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#F4F0EA" />
+      <Color x:Key="TextFillColorSecondary">#B9B3C9</Color>
+      <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#B9B3C9" />
+      <Color x:Key="TextFillColorTertiary">#7D7791</Color>
+      <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="#7D7791" />
+      <Color x:Key="TextFillColorDisabled">#5E5876</Color>
+      <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="#5E5876" />
+      <Color x:Key="TextFillColorInverse">#0E0B1A</Color>
+      <SolidColorBrush x:Key="TextFillColorInverseBrush" Color="#0E0B1A" />
+      <Color x:Key="AccentFillColorDefault">#8B5CF6</Color>
+      <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#8B5CF6" />
+      <Color x:Key="AccentFillColorSecondary">#E68B5CF6</Color>
+      <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#E68B5CF6" />
+      <Color x:Key="AccentFillColorTertiary">#CC8B5CF6</Color>
+      <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#CC8B5CF6" />
+      <Color x:Key="AccentTextFillColorPrimary">#B79CFA</Color>
+      <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#B79CFA" />
+      <Color x:Key="AccentTextFillColorSecondary">#A68AF9</Color>
+      <SolidColorBrush x:Key="AccentTextFillColorSecondaryBrush" Color="#A68AF9" />
+      <Color x:Key="AccentTextFillColorTertiary">#8B5CF6</Color>
+      <SolidColorBrush x:Key="AccentTextFillColorTertiaryBrush" Color="#8B5CF6" />
+      <Color x:Key="AccentTextFillColorDefault">#B79CFA</Color>
+      <SolidColorBrush x:Key="AccentTextFillColorDefaultBrush" Color="#B79CFA" />
+      <Color x:Key="TextOnAccentFillColorPrimary">#FFFFFF</Color>
+      <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FFFFFF" />
+      <Color x:Key="TextOnAccentFillColorSecondary">#B3FFFFFF</Color>
+      <SolidColorBrush x:Key="TextOnAccentFillColorSecondaryBrush" Color="#B3FFFFFF" />
+      <Color x:Key="SystemFillColorSuccess">#2EE59D</Color>
+      <SolidColorBrush x:Key="SystemFillColorSuccessBrush" Color="#2EE59D" />
+      <Color x:Key="SystemFillColorCaution">#F5B84B</Color>
+      <SolidColorBrush x:Key="SystemFillColorCautionBrush" Color="#F5B84B" />
+      <Color x:Key="SystemFillColorCritical">#F2577A</Color>
+      <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#F2577A" />
+          <!-- Menus, drop-downs and tooltips: popups are opaque (nothing to blur), tinted like the raised surface. -->
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#1C1733" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#2EFFFFFF" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#2E8B5CF6" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#408B5CF6" />
+      <SolidColorBrush x:Key="MenuFlyoutSeparatorBackground" Color="#14FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#1C1733" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#2EFFFFFF" />
+      <SolidColorBrush x:Key="ToolTipBackground" Color="#231D3E" />
+      <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#2EFFFFFF" />
+      <SolidColorBrush x:Key="ToolTipForeground" Color="#F4F0EA" />
+    </ResourceDictionary>
+    <ResourceDictionary x:Key="Light">
+      <Color x:Key="SystemAccentColor">#6D3AE8</Color>
+      <Color x:Key="SystemAccentColorLight1">#A27BF8</Color>
+      <Color x:Key="SystemAccentColorLight2">#8B5CF6</Color>
+      <Color x:Key="SystemAccentColorLight3">#B79CFA</Color>
+      <Color x:Key="SystemAccentColorDark1">#7745E8</Color>
+      <Color x:Key="SystemAccentColorDark2">#6D3AE8</Color>
+      <Color x:Key="SystemAccentColorDark3">#3B1F8F</Color>
+      <Color x:Key="SolidBackgroundFillColorBase">#F6F4FB</Color>
+      <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="#F6F4FB" />
+      <Color x:Key="SolidBackgroundFillColorSecondary">#EFECF8</Color>
+      <SolidColorBrush x:Key="SolidBackgroundFillColorSecondaryBrush" Color="#EFECF8" />
+      <Color x:Key="SolidBackgroundFillColorTertiary">#FFFFFF</Color>
+      <SolidColorBrush x:Key="SolidBackgroundFillColorTertiaryBrush" Color="#FFFFFF" />
+      <Color x:Key="SolidBackgroundFillColorQuarternary">#E7E3F4</Color>
+      <SolidColorBrush x:Key="SolidBackgroundFillColorQuarternaryBrush" Color="#E7E3F4" />
+      <Color x:Key="CardBackgroundFillColorDefault">#FFFFFF</Color>
+      <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#FFFFFF" />
+      <Color x:Key="CardBackgroundFillColorSecondary">#F1EEF9</Color>
+      <SolidColorBrush x:Key="CardBackgroundFillColorSecondaryBrush" Color="#F1EEF9" />
+      <Color x:Key="CardStrokeColorDefault">#14000000</Color>
+      <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#14000000" />
+      <Color x:Key="TextFillColorPrimary">#1A1530</Color>
+      <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#1A1530" />
+      <Color x:Key="TextFillColorSecondary">#5F5979</Color>
+      <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#5F5979" />
+      <Color x:Key="TextFillColorTertiary">#8A849E</Color>
+      <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="#8A849E" />
+      <Color x:Key="TextFillColorDisabled">#B3AEC4</Color>
+      <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="#B3AEC4" />
+      <Color x:Key="TextFillColorInverse">#FFFFFF</Color>
+      <SolidColorBrush x:Key="TextFillColorInverseBrush" Color="#FFFFFF" />
+      <Color x:Key="AccentFillColorDefault">#6D3AE8</Color>
+      <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#6D3AE8" />
+      <Color x:Key="AccentFillColorSecondary">#E66D3AE8</Color>
+      <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#E66D3AE8" />
+      <Color x:Key="AccentFillColorTertiary">#CC6D3AE8</Color>
+      <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#CC6D3AE8" />
+      <Color x:Key="AccentTextFillColorPrimary">#6D3AE8</Color>
+      <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#6D3AE8" />
+      <Color x:Key="AccentTextFillColorSecondary">#5B2FCB</Color>
+      <SolidColorBrush x:Key="AccentTextFillColorSecondaryBrush" Color="#5B2FCB" />
+      <Color x:Key="AccentTextFillColorTertiary">#8B5CF6</Color>
+      <SolidColorBrush x:Key="AccentTextFillColorTertiaryBrush" Color="#8B5CF6" />
+      <Color x:Key="AccentTextFillColorDefault">#6D3AE8</Color>
+      <SolidColorBrush x:Key="AccentTextFillColorDefaultBrush" Color="#6D3AE8" />
+      <Color x:Key="TextOnAccentFillColorPrimary">#FFFFFF</Color>
+      <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FFFFFF" />
+      <Color x:Key="TextOnAccentFillColorSecondary">#B3FFFFFF</Color>
+      <SolidColorBrush x:Key="TextOnAccentFillColorSecondaryBrush" Color="#B3FFFFFF" />
+      <Color x:Key="SystemFillColorSuccess">#0E9F6E</Color>
+      <SolidColorBrush x:Key="SystemFillColorSuccessBrush" Color="#0E9F6E" />
+      <Color x:Key="SystemFillColorCaution">#B7791F</Color>
+      <SolidColorBrush x:Key="SystemFillColorCautionBrush" Color="#B7791F" />
+      <Color x:Key="SystemFillColorCritical">#D6336C</Color>
+      <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#D6336C" />
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#2E000000" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#1F6D3AE8" />
+      <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#2E6D3AE8" />
+      <SolidColorBrush x:Key="MenuFlyoutSeparatorBackground" Color="#14000000" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#2E000000" />
+      <SolidColorBrush x:Key="ToolTipBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="ToolTipBorderBrush" Color="#2E000000" />
+      <SolidColorBrush x:Key="ToolTipForeground" Color="#1A1530" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

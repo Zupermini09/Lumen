@@ -1,4 +1,4 @@
-<p align="center"><img src="packaging/assets/lumen-256.png" width="96" alt=""></p>
+<p align="center"><img src="packaging/assets/lumen-256.png" width="96" alt="Lumen logo"></p>
 
 # Lumen
 
@@ -6,7 +6,21 @@
 
 Lumen is a native app (Avalonia UI, no embedded browser) that plays your Jellyfin library with VLC. The goal is everything the Jellyfin web client can do, with smooth playback and a fraction of the memory a web-view client needs.
 
-> **Status: early development.** You can connect to your server (http or https), sign in with a password or Quick Connect, browse your libraries and play movies, episodes and music with resume and watch-progress sync. Search, filters, subtitles/track selection, transcoding and everything else are still to come: see [PLAN.md](PLAN.md) for the roadmap and feature checklist.
+> **Status: early development.** Browsing, search and playback work against a real server; music, photos, Live TV, remote control and the admin dashboard are still to come. See [PLAN.md](PLAN.md) for the roadmap and feature checklist. Screenshots will be added once the design settles.
+
+## Features
+
+- **Connect and sign in:** http or https, password or Quick Connect, session restored on start, token kept in the OS credential store.
+- **Home:** greeting and search, Continue watching, Next up, your libraries and a "Latest in" row per library.
+- **Browse:** virtualized library grids with sort (name, date added, release date, rating, runtime) and filters (played, favourites, genres), remembered per library; search across movies, shows, episodes and more; favourites.
+- **Details pages:** movies, episodes, series and seasons with metadata, cast, media info, watched and favourite toggles, play / resume / start over.
+- **Player:** direct play with resume and progress sync; audio and subtitle tracks (embedded and external), subtitle delay, playback speed, chapters, volume, full screen.
+- **Skip segments:** intro, recap, credits, preview and commercial buttons (or auto-skip) from the server's media segments, plus a next-episode countdown.
+- **Transcoding:** quality menu in the player and in Settings; the server converts to HLS when you set a limit or a file cannot be played as it is, with an automatic fallback.
+- **Hardware decoding** (VAAPI/VDPAU, D3D11/DXVA2, VideoToolbox through VLC), on by default.
+- **Look:** violet and cream theme in dark, light or system mode, Inter font, restrained glass, Mica / vibrancy backdrop where the OS offers it.
+
+Skip buttons need segments on the server, which come from a provider such as the Intro Skipper plugin; without segments nothing is shown.
 
 ## Using Lumen
 
@@ -15,9 +29,36 @@ Lumen is a native app (Avalonia UI, no embedded browser) that plays your Jellyfi
 3. Lumen remembers the server and keeps you signed in. The access token is stored in the OS credential store (Windows: encrypted with your Windows account; macOS: Keychain; Linux: the desktop keyring through `secret-tool`, or a file only your user can read).
 4. Home shows your libraries, Continue watching and Next up. Click a library, show or season to open it, and a movie, episode or track to play it. Playback resumes where you left off and reports progress to the server.
 
-Player keys: **Space** pause, **←/→** back 10 s / forward 30 s, **↑/↓** volume, **M** mute, **F** or double-click full screen, **Esc** leave full screen, **Alt+←** or the mouse back button to go back.
+### Keyboard shortcuts
 
-Playback is direct play only for now (the server sends the original file and VLC plays it), which covers almost every format. HTTPS servers need a certificate the OS trusts (e.g. Let's Encrypt).
+| Key | Action |
+|---|---|
+| Space or K | Pause / play |
+| ← / → | Back / forward (15 s by default, configurable in Settings) |
+| ↑ / ↓ | Volume up / down |
+| M | Mute |
+| F | Full screen |
+| Esc | Leave full screen |
+| S | Skip the current segment (intro, recap, credits ...) |
+| G / H | Subtitles earlier / later by 100 ms |
+| [ / ] | Slower / faster |
+| Ctrl+F or Ctrl+K | Search |
+| Alt+← or the mouse back button | Go back |
+
+### Mouse
+
+Click the video to pause or resume, double-click it for full screen. A play button appears in the middle of the video while paused. In full screen the controls appear when you move the mouse.
+
+### Settings
+
+The gear at the bottom of the navigation pane opens Settings (changes apply and save immediately):
+
+- **Playback:** skip segments per type (ask, auto-skip, off), auto-play next episode and countdown length, skip back / forward step.
+- **Audio and subtitles:** preferred languages and subtitle mode (server default, always, only forced, off, only when the audio is in another language).
+- **Video:** hardware decoding, streaming quality (maximum bitrate).
+- **Appearance:** theme (dark, light, system).
+
+Playback is direct play by default (the server sends the original file and VLC plays it), which covers almost every format. A quality limit (player menu or Settings), or a file that does not play, makes the server transcode to HLS instead; that needs transcoding to be allowed for your user on the server. HTTPS servers need a certificate the OS trusts (e.g. Let's Encrypt).
 
 Lumen is not affiliated with the Jellyfin project.
 

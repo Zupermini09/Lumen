@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Lumen.UI.Views.PlayOverlayButton">
+  <!-- The big play button over the paused video (see PlayButtonOverlay): a rounded glass square that fills with the accent on hover.
+       A plain border rather than a Button: it lives in a window of its own and must not take the focus. -->
+  <UserControl.Styles>
+    <Style Selector="Border#Disc">
+      <Setter Property="Background" Value="{DynamicResource LumenGlassStrongBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineStrongBrush}" />
+    </Style>
+    <Style Selector="Border#Disc ui|SymbolIcon">
+      <Setter Property="Foreground" Value="{DynamicResource LumenTextBrush}" />
+    </Style>
+    <Style Selector="Border#Disc:pointerover">
+      <Setter Property="Background" Value="{DynamicResource LumenAccentBrush}" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Border#Disc:pointerover ui|SymbolIcon">
+      <Setter Property="Foreground" Value="{DynamicResource LumenOnAccentBrush}" />
+    </Style>
+  </UserControl.Styles>
+  <Border x:Name="Disc" Width="88" Height="88" CornerRadius="20" BorderThickness="1" Cursor="Hand" ToolTip.Tip="Play (Space)">
+    <ui:SymbolIcon Symbol="PlayFilled" FontSize="38" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5,0,0,0" />
+  </Border>
+</UserControl>

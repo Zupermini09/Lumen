@@ -5,31 +5,64 @@
              xmlns:views="using:Lumen.UI.Views"
              x:Class="Lumen.UI.Views.TransportBar"
              x:DataType="vm:TransportViewModel">
-  <StackPanel Spacing="6">
+  <StackPanel Spacing="4">
     <Grid ColumnDefinitions="Auto,*,Auto">
-      <TextBlock Grid.Column="0" Text="{Binding PositionText}" VerticalAlignment="Center" MinWidth="56" />
-      <Slider Grid.Column="1" Minimum="0" Maximum="{Binding DurationSeconds}" Value="{Binding PositionSeconds}" Margin="8,0" />
-      <TextBlock Grid.Column="2" Text="{Binding DurationText}" VerticalAlignment="Center" MinWidth="56" TextAlignment="Right" />
+      <TextBlock Grid.Column="0" Text="{Binding PositionText}" Classes="caption" VerticalAlignment="Center" MinWidth="52"
+                 Foreground="{DynamicResource LumenTextBrush}" />
+      <Slider Grid.Column="1" Classes="seek" Minimum="0" Maximum="{Binding DurationSeconds}" Value="{Binding PositionSeconds}" Margin="8,0" />
+      <TextBlock Grid.Column="2" Text="{Binding DurationText}" Classes="caption" VerticalAlignment="Center" MinWidth="52" TextAlignment="Right" />
     </Grid>
     <DockPanel>
-      <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
-        <Button Command="{Binding TogglePauseCommand}" ToolTip.Tip="Play / pause (Space)" Width="44">
-          <ui:SymbolIcon Symbol="{Binding IsPlaying, Converter={x:Static views:TransportBar.PlayPauseSymbol}}" />
+      <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4">
+        <Button Classes="accent" IsVisible="{Binding HasSkip}" Click="OnSkipClick" ToolTip.Tip="Skip (S)" Margin="0,0,8,0">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="{Binding SkipLabel}" VerticalAlignment="Center" />
+            <ui:SymbolIcon Symbol="Next" FontSize="14" />
+          </StackPanel>
         </Button>
-        <Button Command="{Binding StopCommand}" ToolTip.Tip="Stop" Width="44">
-          <ui:SymbolIcon Symbol="Stop" />
+        <Button Classes="icon" Padding="10,0" ToolTip.Tip="{Binding SkipBackTip}" Click="OnBackClick" AutomationProperties.Name="Skip back">
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <ui:SymbolIcon Symbol="RotateCounterClockwise" FontSize="16" />
+            <TextBlock Text="{Binding SkipBackLabel}" FontSize="12" VerticalAlignment="Center" />
+          </StackPanel>
         </Button>
-        <TextBlock Text="{Binding State}" VerticalAlignment="Center" Margin="8,0,0,0" Opacity="0.7" />
-        <TextBlock Text="{Binding ErrorMessage}" VerticalAlignment="Center" Margin="8,0,0,0"
-                   Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+        <Button Classes="accent round" Margin="4,0" Command="{Binding TogglePauseCommand}" ToolTip.Tip="Play / pause (Space)"
+                AutomationProperties.Name="Play or pause">
+          <ui:SymbolIcon Symbol="{Binding IsPlaying, Converter={x:Static views:TransportBar.PlayPauseSymbol}}" FontSize="18" />
+        </Button>
+        <Button Classes="icon" Padding="10,0" ToolTip.Tip="{Binding SkipForwardTip}" Click="OnForwardClick" AutomationProperties.Name="Skip forward">
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <TextBlock Text="{Binding SkipForwardLabel}" FontSize="12" VerticalAlignment="Center" />
+            <ui:SymbolIcon Symbol="RotateClockwise" FontSize="16" />
+          </StackPanel>
+        </Button>
+        <Button Classes="icon" Command="{Binding StopCommand}" ToolTip.Tip="Stop" AutomationProperties.Name="Stop">
+          <ui:SymbolIcon Symbol="Stop" FontSize="16" />
+        </Button>
+        <TextBlock Text="{Binding State}" VerticalAlignment="Center" Margin="10,0,0,0" Classes="caption" />
+        <TextBlock Text="{Binding ModeText}" VerticalAlignment="Center" Margin="6,0,0,0" Classes="caption tertiary"
+                   IsVisible="{Binding ModeText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        <TextBlock Text="{Binding ErrorMessage}" VerticalAlignment="Center" Margin="10,0,0,0" Classes="caption"
+                   Foreground="{DynamicResource LumenErrorBrush}" />
       </StackPanel>
-      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-        <ToggleButton IsChecked="{Binding IsMuted}" ToolTip.Tip="Mute (M)" Width="44">
-          <ui:SymbolIcon Symbol="Mute" />
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2" HorizontalAlignment="Right">
+        <Button Classes="icon" Padding="12,0" Content="Chapters" FontSize="13" ToolTip.Tip="Chapters" Click="OnChaptersClick" />
+        <Button Classes="icon" Padding="12,0" Content="Audio" FontSize="13" ToolTip.Tip="Audio track" Click="OnAudioClick" />
+        <Button Classes="icon" Padding="12,0" Content="Subtitles" FontSize="13" ToolTip.Tip="Subtitles (G / H: delay)" Click="OnSubtitlesClick" />
+        <Button Classes="icon" Padding="12,0" Content="{Binding QualityText}" FontSize="13" IsVisible="{Binding CanChooseQuality}"
+                ToolTip.Tip="Streaming quality" Click="OnQualityClick" />
+        <Button Classes="icon" Padding="12,0" Content="{Binding SpeedText}" FontSize="13" MinWidth="52" ToolTip.Tip="Playback speed ([ / ])"
+                Click="OnSpeedClick" />
+        <Rectangle Width="1" Height="18" Fill="{DynamicResource LumenHairlineStrongBrush}" Margin="8,0" />
+        <ToggleButton Classes="icon" IsChecked="{Binding IsMuted}" ToolTip.Tip="Mute (M)" AutomationProperties.Name="Mute">
+          <Panel>
+            <ui:SymbolIcon Symbol="Speaker2" FontSize="16" IsVisible="{Binding !IsMuted}" />
+            <ui:SymbolIcon Symbol="SpeakerMute" FontSize="16" IsVisible="{Binding IsMuted}" />
+          </Panel>
         </ToggleButton>
-        <Slider Minimum="0" Maximum="100" Value="{Binding Volume}" Width="140" VerticalAlignment="Center" />
-        <Button ToolTip.Tip="Full screen (F)" Width="44" Click="OnFullScreenClick">
-          <ui:SymbolIcon Symbol="FullScreenMaximize" />
+        <Slider Classes="volume" Minimum="0" Maximum="100" Value="{Binding Volume}" Width="110" VerticalAlignment="Center" />
+        <Button Classes="icon" ToolTip.Tip="Full screen (F)" Margin="6,0,0,0" Click="OnFullScreenClick" AutomationProperties.Name="Full screen">
+          <ui:SymbolIcon Symbol="FullScreenMaximize" FontSize="16" />
         </Button>
       </StackPanel>
     </DockPanel>

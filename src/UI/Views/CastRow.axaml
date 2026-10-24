@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:imaging="using:Lumen.UI.Imaging"
+             x:Class="Lumen.UI.Views.CastRow"
+             x:DataType="vm:DetailsViewModelBase">
+  <StackPanel Spacing="12" IsVisible="{Binding HasCast}">
+    <TextBlock Text="Cast" Classes="section" />
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,14">
+      <ItemsControl ItemsSource="{Binding Cast}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="12" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="vm:PersonCardViewModel">
+            <StackPanel Width="116" Spacing="3" ToolTip.Tip="{Binding Name}">
+              <Border Classes="avatar" Width="88" Height="88" CornerRadius="44" Margin="0,0,0,8">
+                <Panel>
+                  <TextBlock Text="{Binding Initials}" FontSize="24" FontWeight="Medium" Classes="tertiary"
+                             HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <Image Stretch="UniformToFill" imaging:RemoteImage.Uri="{Binding ImageUri}" />
+                </Panel>
+              </Border>
+              <TextBlock Text="{Binding Name}" TextAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="13" FontWeight="SemiBold"
+                         Foreground="{DynamicResource LumenTextBrush}" />
+              <TextBlock Text="{Binding Role}" TextAlignment="Center" TextTrimming="CharacterEllipsis" Classes="caption" />
+            </StackPanel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </StackPanel>
+</UserControl>

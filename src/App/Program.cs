@@ -1,5 +1,6 @@
 using System.Reflection;
 using Avalonia;
+using Avalonia.Media;
 using Lumen.Platform;
 using Serilog;
 
@@ -55,5 +56,7 @@ internal static class Program
     public static AppBuilder BuildAvaloniaApp() =>
         AppBuilder.Configure<App>()
             .UsePlatformDetect()
+            // Inter ships inside Lumen.UI so the look does not depend on installed fonts.
+            .With(new FontManagerOptions { DefaultFamilyName = "avares://Lumen.UI/Assets/Fonts#Inter" })
             .LogToTrace();
 }

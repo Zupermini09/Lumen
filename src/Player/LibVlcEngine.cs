@@ -31,7 +31,13 @@ public sealed class LibVlcEngine : IDisposable
         LibVLCSharp.Shared.Core.Initialize(libVlcDirectory);
         LibVlc = new LibVLC(DefaultOptions);
         LibVlc.Log += OnLibVlcLog;
-        MediaPlayer = new MediaPlayer(LibVlc);
+        MediaPlayer = new MediaPlayer(LibVlc)
+        {
+            // Let mouse and keyboard events reach the app (double-click for full screen, showing the controls on mouse
+            // move, shortcuts) instead of being swallowed by VLC's video window.
+            EnableMouseInput = false,
+            EnableKeyInput = false,
+        };
 
         _log.Information("LibVLC {Version} initialized (directory: {Directory})", LibVlc.Version, libVlcDirectory ?? "<default>");
     }

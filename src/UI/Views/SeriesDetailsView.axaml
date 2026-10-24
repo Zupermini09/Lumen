@@ -1,0 +1,158 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:views="using:Lumen.UI.Views"
+             xmlns:imaging="using:Lumen.UI.Imaging"
+             xmlns:core="using:Lumen.Core.Jellyfin"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Lumen.UI.Views.SeriesDetailsView"
+             x:DataType="vm:SeriesDetailsViewModel">
+  <UserControl.Styles>
+    <!-- Season selector: a pill-shaped segmented control. -->
+    <Style Selector="ListBox.seasons ListBoxItem">
+      <Setter Property="Padding" Value="16,6" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="CornerRadius" Value="999" />
+      <Setter Property="Foreground" Value="{DynamicResource LumenTextSecondaryBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="ListBox.seasons ListBoxItem /template/ Rectangle#SelectionIndicator">
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="ListBox.seasons ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource LumenSurfaceRaisedBrush}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource LumenTextBrush}" />
+    </Style>
+    <Style Selector="ListBox.seasons ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource LumenAccentBrush}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource LumenOnAccentBrush}" />
+    </Style>
+    <Style Selector="ListBox.seasons ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource LumenAccentBrush}" />
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource LumenOnAccentBrush}" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer>
+    <Panel>
+      <views:DetailsBackdrop />
+
+      <StackPanel Margin="32,28,32,36" Spacing="32" MaxWidth="1400">
+        <ui:ProgressRing IsIndeterminate="True" Width="32" Height="32" IsVisible="{Binding IsLoading}" HorizontalAlignment="Left" />
+        <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
+                   TextWrapping="Wrap" Foreground="{DynamicResource LumenErrorBrush}" />
+
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="36">
+          <views:DetailsPoster />
+
+          <StackPanel Grid.Column="1" Spacing="14">
+            <views:DetailsHeading />
+
+            <WrapPanel ItemSpacing="8" LineSpacing="8" Margin="0,8,0,0">
+              <Button Classes="accent" Padding="20,9" Command="{Binding PlayCommand}" IsVisible="{Binding HasPlayTarget}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="PlayFilled" FontSize="16" />
+                  <TextBlock Text="{Binding PlayLabel}" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Classes="quiet" Command="{Binding ToggleWatchedCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="Accept" FontSize="16" Foreground="{DynamicResource LumenSuccessBrush}" IsVisible="{Binding IsPlayed}" />
+                  <ui:SymbolIcon Symbol="Accept" FontSize="16" IsVisible="{Binding !IsPlayed}" />
+                  <TextBlock Text="{Binding WatchedLabel}" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Classes="quiet" Command="{Binding ToggleFavoriteCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <ui:SymbolIcon Symbol="StarFilled" FontSize="16" Foreground="{DynamicResource LumenAccentTextBrush}" IsVisible="{Binding IsFavorite}" />
+                  <ui:SymbolIcon Symbol="Star" FontSize="16" IsVisible="{Binding !IsFavorite}" />
+                  <TextBlock Text="{Binding FavoriteLabel}" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </WrapPanel>
+            <TextBlock Text="{Binding ActionError}" IsVisible="{Binding ActionError, Converter={x:Static ObjectConverters.IsNotNull}}"
+                       TextWrapping="Wrap" Foreground="{DynamicResource LumenErrorBrush}" />
+
+            <TextBlock Text="{Binding Overview}" TextWrapping="Wrap" MaxWidth="760" HorizontalAlignment="Left" LineHeight="23"
+                       Margin="0,10,0,0" Foreground="{DynamicResource LumenTextBrush}"
+                       IsVisible="{Binding Overview, Converter={x:Static ObjectConverters.IsNotNull}}" />
+          </StackPanel>
+        </Grid>
+
+        <StackPanel Spacing="14">
+          <DockPanel>
+            <TextBlock Text="Episodes" Classes="section" VerticalAlignment="Center" DockPanel.Dock="Left" Margin="0,0,20,0" />
+            <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+              <Border Classes="pill" Padding="3" HorizontalAlignment="Left">
+                <ListBox Classes="seasons" ItemsSource="{Binding Seasons}" SelectedItem="{Binding SelectedSeason}" Background="Transparent"
+                         Padding="0" BorderThickness="0">
+                  <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="2" /></ItemsPanelTemplate>
+                  </ListBox.ItemsPanel>
+                  <ListBox.ItemTemplate>
+                    <DataTemplate DataType="core:MediaItem">
+                      <TextBlock Text="{Binding Name}" FontWeight="Medium" />
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </Border>
+            </ScrollViewer>
+          </DockPanel>
+
+          <ui:ProgressRing IsIndeterminate="True" Width="28" Height="28" IsVisible="{Binding IsLoadingEpisodes}" HorizontalAlignment="Left" />
+          <StackPanel Orientation="Horizontal" Spacing="12" IsVisible="{Binding EpisodesError, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <TextBlock Text="{Binding EpisodesError}" TextWrapping="Wrap" VerticalAlignment="Center"
+                       Foreground="{DynamicResource LumenErrorBrush}" />
+            <Button Classes="quiet" Content="Retry" Command="{Binding RetryEpisodesCommand}" />
+          </StackPanel>
+          <TextBlock Text="No episodes in this season." Classes="secondary" IsVisible="{Binding HasNoEpisodes}" />
+
+          <!-- A season holds at most a few dozen episodes, so a plain list is fine; the thumbnails load as rows are created. -->
+          <ItemsControl ItemsSource="{Binding Episodes}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="vm:EpisodeRowViewModel">
+                <Border Classes="card" Padding="10" Margin="0,0,0,10">
+                  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Button Classes="flat" Command="{Binding OpenCommand}">
+                      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="18">
+                        <Border Classes="poster" Width="176" Height="99" CornerRadius="{DynamicResource LumenRadiusSmall}">
+                          <Panel>
+                            <Image Stretch="UniformToFill" imaging:RemoteImage.Uri="{Binding ImageUri}" />
+                            <Border Classes="hoverShade" />
+                            <Border IsVisible="{Binding IsPlayed}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="6"
+                                    Background="{DynamicResource LumenSuccessBrush}" CornerRadius="10" Width="20" Height="20">
+                              <ui:SymbolIcon Symbol="Accept" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             Foreground="{DynamicResource LumenOnSuccessBrush}" />
+                            </Border>
+                            <ProgressBar IsVisible="{Binding HasProgress}" Value="{Binding Progress}" Maximum="1" VerticalAlignment="Bottom"
+                                         MinHeight="3" Height="3" Margin="0" CornerRadius="0"
+                                         Background="{DynamicResource LumenScrimBrush}" Foreground="{DynamicResource LumenAccentBrush}" />
+                          </Panel>
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis"
+                                     Foreground="{DynamicResource LumenTextBrush}" />
+                          <TextBlock Text="{Binding Runtime}" Classes="caption"
+                                     IsVisible="{Binding Runtime, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                          <TextBlock Text="{Binding Overview}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                                     FontSize="13" Classes="secondary"
+                                     IsVisible="{Binding Overview, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        </StackPanel>
+                      </Grid>
+                    </Button>
+                    <Button Grid.Column="1" Classes="icon" Width="40" Height="40" CornerRadius="20" Command="{Binding PlayCommand}"
+                            VerticalAlignment="Center" ToolTip.Tip="Play" AutomationProperties.Name="Play">
+                      <ui:SymbolIcon Symbol="PlayFilled" FontSize="16" />
+                    </Button>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <views:CastRow />
+      </StackPanel>
+    </Panel>
+  </ScrollViewer>
+</UserControl>

@@ -70,6 +70,7 @@ public sealed class MediaCardViewModel
                 : item.Name),
         "Audio" => (item.IndexNumber is { } track ? $"{track}. {item.Name}" : item.Name, item.AlbumArtist),
         "MusicAlbum" => (item.Name, item.AlbumArtist),
+        "Season" when item.SeriesName is not null => (item.SeriesName, item.Name),
         _ => (item.Name, item.ProductionYear?.ToString()),
     };
 
@@ -91,8 +92,11 @@ public sealed class MediaCardViewModel
     }
 }
 
+/// <summary>A row of a virtualized grid: a row of cards, or the heading of a group of them.</summary>
+public interface IGridRow;
+
 /// <summary>A row of cards in a virtualized grid (the list virtualizes rows; each row lays out its cards).</summary>
-public sealed record CardRow(IReadOnlyList<MediaCardViewModel> Cards);
+public sealed record CardRow(IReadOnlyList<MediaCardViewModel> Cards) : IGridRow;
 
 /// <summary>A page that shows cards and opens them when clicked.</summary>
 public interface ICardHost

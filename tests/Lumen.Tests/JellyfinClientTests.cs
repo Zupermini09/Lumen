@@ -69,3 +69,16 @@ public class JellyfinClientTests
         Assert.Contains("certificate is not trusted", JellyfinClient.DescribeConnectionError("media.example.org", error));
     }
 }
+
+public class SubtitleFormatTests
+{
+    [Theory]
+    [InlineData("subrip", "srt")]
+    [InlineData("SRT", "srt")]
+    [InlineData("ass", "ass")]
+    [InlineData("webvtt", "vtt")]
+    [InlineData("PGSSUB", "srt")]
+    [InlineData(null, "srt")]
+    public void Subtitle_files_use_formats_vlc_reads(string? codec, string expected) =>
+        Assert.Equal(expected, Lumen.Jellyfin.JellyfinClient.SubtitleFormat(codec));
+}

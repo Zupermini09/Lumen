@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:views="using:Lumen.UI.Views"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Lumen.UI.Views.FavoritesView"
+             x:DataType="vm:FavoritesViewModel">
+  <DockPanel Margin="28,24,12,0">
+    <DockPanel DockPanel.Dock="Top" Margin="0,0,16,16">
+      <Button DockPanel.Dock="Right" Classes="link" VerticalAlignment="Top" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh">
+        <ui:SymbolIcon Symbol="Refresh" FontSize="16" />
+      </Button>
+      <StackPanel>
+        <TextBlock Text="Favourites" Classes="title" />
+        <TextBlock Text="{Binding Summary}" Classes="secondary" />
+      </StackPanel>
+    </DockPanel>
+
+    <Panel>
+      <ui:ProgressRing IsIndeterminate="True" Width="40" Height="40" IsVisible="{Binding IsLoading}"
+                       HorizontalAlignment="Left" VerticalAlignment="Top" />
+      <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
+                 TextWrapping="Wrap" Foreground="{DynamicResource LumenErrorBrush}" />
+      <TextBlock Text="Nothing here yet. Use the Favourite button on a movie, show or episode to add it." Classes="secondary"
+                 TextWrapping="Wrap" IsVisible="{Binding IsEmpty}" />
+      <views:ResultsGrid DataContext="{Binding Results}" />
+    </Panel>
+  </DockPanel>
+</UserControl>

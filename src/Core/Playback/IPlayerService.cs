@@ -23,6 +23,34 @@ public interface IPlayerService : IDisposable
     /// <summary>Human-readable engine name and version, e.g. "LibVLC 3.0.21".</summary>
     string EngineDescription { get; }
 
+    /// <summary>Audio tracks of the current media (VLC's view: embedded tracks in container order).</summary>
+    IReadOnlyList<TrackInfo> AudioTracks { get; }
+
+    /// <summary>Subtitle tracks: embedded ones in container order, then added external ones.</summary>
+    IReadOnlyList<TrackInfo> SubtitleTracks { get; }
+
+    int AudioTrackId { get; }
+
+    /// <summary>Selected subtitle track id, or -1 when subtitles are off.</summary>
+    int SubtitleTrackId { get; }
+
+    void SelectAudioTrack(int id);
+
+    /// <param name="id">Track id, or -1 to turn subtitles off.</param>
+    void SelectSubtitleTrack(int id);
+
+    /// <summary>Adds a subtitle file (e.g. served by Jellyfin) to the current media; it is appended to <see cref="SubtitleTracks"/>.</summary>
+    void AddExternalSubtitle(Uri uri, bool select);
+
+    /// <summary>Positive values show subtitles later.</summary>
+    TimeSpan SubtitleDelay { get; set; }
+
+    /// <summary>Playback speed, 1.0 = normal.</summary>
+    double Rate { get; set; }
+
+    /// <summary>Raised (on any thread) when tracks are added, removed or selected.</summary>
+    event EventHandler? TracksChanged;
+
     event EventHandler<PlaybackState>? StateChanged;
     event EventHandler<TimeSpan>? PositionChanged;
     event EventHandler<TimeSpan>? DurationChanged;

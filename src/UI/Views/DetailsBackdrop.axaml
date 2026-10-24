@@ -1,0 +1,14 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Lumen.UI.ViewModels"
+             xmlns:imaging="using:Lumen.UI.Imaging"
+             x:Class="Lumen.UI.Views.DetailsBackdrop"
+             x:DataType="vm:DetailsViewModelBase">
+  <!-- The artwork sits behind the header and dissolves into the window colour: from the left, where the title is,
+       and towards the bottom, where the page content starts. -->
+  <Panel Height="520" VerticalAlignment="Top" IsHitTestVisible="False">
+    <Image Stretch="UniformToFill" Opacity="0.6" imaging:RemoteImage.Uri="{Binding BackdropUri}" />
+    <Border Background="{DynamicResource LumenBackdropSideBrush}" />
+    <Border Background="{DynamicResource LumenBackdropFadeBrush}" />
+  </Panel>
+</UserControl>
