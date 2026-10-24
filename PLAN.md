@@ -155,8 +155,8 @@ Code signing (decide before first public release):
 - Skip-segment UI is unverified against a real segment provider (no test server has one).
 - Library grids do not refresh when navigating Back (Home, Favourites and Search do).
 - Seek bar: a click at the far right edge can land short of the end.
-- Linux without a compositor: the rounded corners of overlays (play button, glass bars) are drawn square or with a dark edge.
-- Untested on Windows and macOS: Mica / vibrancy backdrop, the new `.ico` / `.icns`, click-to-pause and the centre play button (mouse polling through `GetAsyncKeyState` / `CGEventSourceButtonState`), subtitle sync while transcoding (10 s HLS offset), HLS seeking, hardware decoding. Steps are in TESTING.md.
+- Linux without a compositor: transparent windows are not possible, so the player keeps the controls in rows above and below the video (solid bars, mouse polled for clicks, cursor not hidden while playing); the paused play button window has square or dark corners.
+- Untested on Windows and macOS: Mica / vibrancy backdrop, the new `.ico` / `.icns`, the floating player controls (transparent overlay window over the video: clicks, double-click timing, hidden cursor, focus handling), subtitle sync while transcoding (10 s HLS offset), HLS seeking, hardware decoding. Steps are in TESTING.md.
 
 ## Milestones
 Each milestone ends with: builds clean on all three OSes (via CI), app runs, manual test notes in `TESTING.md`, parity checklist ticked, memory targets verified, a git commit.

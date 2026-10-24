@@ -47,7 +47,7 @@ Skip buttons need segments on the server, which come from a provider such as the
 
 ### Mouse
 
-Click the video to pause or resume, double-click it for full screen. A play button appears in the middle of the video while paused. In full screen the controls appear when you move the mouse.
+Click the video to pause or resume, double-click it for full screen. A play button appears in the middle of the video while paused. The header and controls float over the video; they and the mouse cursor hide after a few seconds of playback without mouse movement (in a window and in full screen) and come back when you move the mouse.
 
 ### Settings
 
