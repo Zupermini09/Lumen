@@ -72,7 +72,12 @@ public partial class MainWindow : Window
 
     private async void OnItemInvoked(object? sender, NavigationViewItemInvokedEventArgs e)
     {
-        if (e.InvokedItemContainer is NavigationViewItem { Tag: string tag } && ViewModel is { } vm)
+        if (e.IsSettingsInvoked && ViewModel is { } settingsVm)
+        {
+            ExitFullScreen();
+            await settingsVm.OpenMenuAsync("Settings");
+        }
+        else if (e.InvokedItemContainer is NavigationViewItem { Tag: string tag } && ViewModel is { } vm)
         {
             ExitFullScreen();
             await vm.OpenMenuAsync(tag);

@@ -1,4 +1,5 @@
 using LibVLCSharp.Shared;
+using Lumen.Core;
 using Lumen.Core.Playback;
 using Serilog;
 
@@ -7,6 +8,7 @@ namespace Lumen.Player;
 public sealed class LibVlcPlayerService : IPlayerService
 {
     private readonly LibVlcEngine _engine;
+    private readonly ISettingsStore _settings;
     private readonly ILogger _log;
 
     // LibVLC's Play/Stop block while threads start or join, and must never run on the UI thread
@@ -16,9 +18,10 @@ public sealed class LibVlcPlayerService : IPlayerService
     private PlaybackState _state = PlaybackState.Idle;
     private bool _disposed;
 
-    public LibVlcPlayerService(LibVlcEngine engine, ILogger log)
+    public LibVlcPlayerService(LibVlcEngine engine, ISettingsStore settings, ILogger log)
     {
         _engine = engine;
+        _settings = settings;
         _log = log.ForContext<LibVlcPlayerService>();
 
         var player = engine.MediaPlayer;
@@ -102,10 +105,14 @@ public sealed class LibVlcPlayerService : IPlayerService
                 // Speed and subtitle delay are per-media choices; start each item at the defaults.
                 _engine.MediaPlayer.SetRate(1);
                 _engine.MediaPlayer.SetSpuDelay(0);
-                _media = startAt is { TotalSeconds: > 0 } start
-                    ? new Media(_engine.LibVlc, source, $":start-time={start.TotalSeconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}")
-                    : new Media(_engine.LibVlc, source);
-                _log.Information("Playing {Source}", source.IsFile ? "<local file>" : source.GetLeftPart(UriPartial.Path));
+                // Per-media options, so the settings apply to the next item without restarting the app.
+                var hardware = _settings.Settings.HardwareDecoding;
+                var options = new List<string> { hardware ? ":avcodec-hw=any" : ":avcodec-hw=none" };
+                if (startAt is { TotalSeconds: > 0 } start)
+                    options.Add($":start-time={start.TotalSeconds.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)}");
+                _media = new Media(_engine.LibVlc, source, [.. options]);
+                _log.Information("Playing {Source} (hardware decoding {Mode})",
+                    source.IsFile ? "<local file>" : source.GetLeftPart(UriPartial.Path), hardware ? "allowed" : "off");
                 if (!_engine.MediaPlayer.Play(_media))
                     ReportError("Playback could not be started.");
             }, cancellationToken).ConfigureAwait(false);

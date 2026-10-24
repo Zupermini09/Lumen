@@ -32,6 +32,7 @@ public interface IPageFactory
     /// <summary>The page of a series (or of one of its seasons, which is then preselected).</summary>
     PageViewModel Series(MediaItem item);
     PageViewModel PlaybackTest();
+    PageViewModel Settings();
     PageViewModel About();
 }
 

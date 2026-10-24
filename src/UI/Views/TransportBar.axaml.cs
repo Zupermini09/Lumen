@@ -17,13 +17,11 @@ public partial class TransportBar : UserControl
 
     private TransportViewModel? ViewModel => DataContext as TransportViewModel;
 
-    private static readonly TimeSpan SeekStep = TimeSpan.FromSeconds(15);
-
     private void OnSkipClick(object? sender, RoutedEventArgs e) => ViewModel?.Skip();
 
-    private void OnBackClick(object? sender, RoutedEventArgs e) => ViewModel?.SeekBy(-SeekStep);
+    private void OnBackClick(object? sender, RoutedEventArgs e) => ViewModel?.SkipBack();
 
-    private void OnForwardClick(object? sender, RoutedEventArgs e) => ViewModel?.SeekBy(SeekStep);
+    private void OnForwardClick(object? sender, RoutedEventArgs e) => ViewModel?.SkipForward();
 
     private void OnAudioClick(object? sender, RoutedEventArgs e) =>
         ShowMenu(sender, ViewModel?.AudioOptions(), "No audio tracks");
@@ -99,10 +97,10 @@ public partial class TransportBar : UserControl
                 vm.TogglePauseCommand.Execute(null);
                 return true;
             case Key.Left when e.KeyModifiers == KeyModifiers.None:
-                vm.SeekBy(-SeekStep);
+                vm.SkipBack();
                 return true;
             case Key.Right when e.KeyModifiers == KeyModifiers.None:
-                vm.SeekBy(SeekStep);
+                vm.SkipForward();
                 return true;
             case Key.Up:
                 vm.Volume = Math.Min(100, vm.Volume + 5);

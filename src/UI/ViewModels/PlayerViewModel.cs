@@ -13,7 +13,6 @@ namespace Lumen.UI.ViewModels;
 /// </summary>
 public sealed partial class PlayerViewModel : TransportViewModel
 {
-    private const int NextEpisodeCountdownSeconds = 10;
     private static readonly TimeSpan ProgressInterval = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan TrackDefaultsTimeout = TimeSpan.FromSeconds(5);
 
@@ -40,7 +39,7 @@ public sealed partial class PlayerViewModel : TransportViewModel
 
     public PlayerViewModel(MediaItem item, IJellyfinClient client, IPlayerService player, IVideoSurfaceFactory surfaceFactory,
         ISettingsStore settings, INavigator navigator, IPageFactory pages, ILogger log)
-        : base(player, surfaceFactory)
+        : base(player, surfaceFactory, settings)
     {
         _item = item;
         _client = client;
@@ -146,7 +145,7 @@ public sealed partial class PlayerViewModel : TransportViewModel
     {
         if (_nextEpisode is null || !_settings.Settings.AutoPlayNextEpisode)
             return;
-        _countdown = NextEpisodeCountdownSeconds;
+        _countdown = Math.Max(1, _settings.Settings.NextEpisodeCountdownSeconds);
         CountdownText = $"Next episode in {_countdown} s";
         _countdownTimer.Start();
     }
@@ -265,8 +264,9 @@ public sealed partial class PlayerViewModel : TransportViewModel
             : stream.DisplayTitle;
 
     /// <summary>
-    /// Once playback runs: add the server's external subtitle files and apply the user's default audio and subtitle
-    /// tracks (chosen by the server from the user's language preferences, like in the web client).
+    /// Once playback runs: add the server's external subtitle files and apply the audio and subtitle tracks to start
+    /// with. They follow the language preferences in the settings; where those do not apply, the defaults the server
+    /// chose from the user's server-side preferences (like the web client) are used.
     /// </summary>
     private void PrepareTracks()
     {
@@ -277,8 +277,11 @@ public sealed partial class PlayerViewModel : TransportViewModel
         foreach (var external in _details.SubtitleStreams.Where(s => s.IsExternal).OrderBy(s => s.Index))
             Player.AddExternalSubtitle(_client.GetSubtitleUri(_item, _details.MediaSourceId, external), select: false);
 
+        var choice = TrackSelector.Select(_details.Streams, _details.DefaultAudioStreamIndex, _details.DefaultSubtitleStreamIndex,
+            _settings.Settings.GetTrackPreferences());
+
         var audio = ServerAudio;
-        if (_details.DefaultAudioStreamIndex is { } audioIndex && Player.AudioTracks is { } tracks && tracks.Count == audio.Count)
+        if (choice.AudioStreamIndex is { } audioIndex && Player.AudioTracks is { } tracks && tracks.Count == audio.Count)
         {
             var position = audio.ToList().FindIndex(s => s.Index == audioIndex);
             if (position >= 0)
@@ -286,11 +289,11 @@ public sealed partial class PlayerViewModel : TransportViewModel
         }
 
         var subtitles = ServerSubtitles.ToList();
-        var subtitlePosition = _details.DefaultSubtitleStreamIndex is { } subIndex ? subtitles.FindIndex(s => s.Index == subIndex) : -1;
+        var subtitlePosition = choice.SubtitleStreamIndex is { } subIndex ? subtitles.FindIndex(s => s.Index == subIndex) : -1;
         if (subtitlePosition < 0)
         {
             if (_details.Streams.Count > 0)
-                Player.SelectSubtitleTrack(-1); // the user's preference is "no subtitles" for this item
+                Player.SelectSubtitleTrack(-1); // no subtitles for this item
             return;
         }
 

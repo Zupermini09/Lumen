@@ -16,6 +16,7 @@ internal sealed class PageFactory(IServiceProvider services) : IPageFactory
     public PageViewModel Details(MediaItem item) => Create<ItemDetailsViewModel>(item);
     public PageViewModel Series(MediaItem item) => Create<SeriesDetailsViewModel>(item);
     public PageViewModel PlaybackTest() => Create<PlaybackTestViewModel>();
+    public PageViewModel Settings() => Create<SettingsViewModel>();
     public PageViewModel About() => Create<AboutViewModel>();
 
     // Constructor arguments not registered in DI (the item, the server...) are passed explicitly.

@@ -3,7 +3,9 @@ namespace Lumen.App;
 /// <summary>Command-line options. Only used for automated testing today.</summary>
 /// <param name="SmokeServer">End-to-end test against a real server; the account comes from the
 /// LUMEN_SMOKE_USER / LUMEN_SMOKE_PASSWORD environment variables (never the command line).</param>
-public sealed record StartupOptions(bool SmokeTest, string? SmokePlayPath, bool SmokeRequireVideo, TimeSpan SmokeTimeout, string? SmokeServer = null)
+/// <param name="VlcVerbose">Write every libvlc message to the log (diagnostics: decoder choice, track selection...).</param>
+public sealed record StartupOptions(
+    bool SmokeTest, string? SmokePlayPath, bool SmokeRequireVideo, TimeSpan SmokeTimeout, string? SmokeServer = null, bool VlcVerbose = false)
 {
     public static StartupOptions Parse(IReadOnlyList<string> args)
     {
@@ -11,6 +13,7 @@ public sealed record StartupOptions(bool SmokeTest, string? SmokePlayPath, bool 
         string? play = null;
         string? server = null;
         var requireVideo = true;
+        var vlcVerbose = false;
         var timeout = TimeSpan.FromSeconds(30);
 
         for (var i = 0; i < args.Count; i++)
@@ -31,6 +34,9 @@ public sealed record StartupOptions(bool SmokeTest, string? SmokePlayPath, bool 
                     // For runners without a usable display/GPU for video output (playback itself is still checked).
                     requireVideo = false;
                     break;
+                case "--vlc-verbose":
+                    vlcVerbose = true;
+                    break;
                 case "--smoke-timeout" when i + 1 < args.Count && int.TryParse(args[i + 1], out var seconds):
                     timeout = TimeSpan.FromSeconds(seconds);
                     i++;
@@ -38,6 +44,6 @@ public sealed record StartupOptions(bool SmokeTest, string? SmokePlayPath, bool 
             }
         }
 
-        return new StartupOptions(smoke, play, requireVideo, timeout, server);
+        return new StartupOptions(smoke, play, requireVideo, timeout, server, vlcVerbose);
     }
 }

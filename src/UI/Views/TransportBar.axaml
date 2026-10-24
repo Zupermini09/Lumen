@@ -15,11 +15,11 @@
       <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
         <Button Content="{Binding SkipLabel}" IsVisible="{Binding HasSkip}" Classes="accent" Click="OnSkipClick"
                 ToolTip.Tip="Skip (S)" />
-        <Button Content="−15" ToolTip.Tip="Back 15 seconds (Left)" MinWidth="44" Click="OnBackClick" />
+        <Button Content="{Binding SkipBackLabel}" ToolTip.Tip="{Binding SkipBackTip}" MinWidth="44" Click="OnBackClick" />
         <Button Command="{Binding TogglePauseCommand}" ToolTip.Tip="Play / pause (Space)" Width="44">
           <ui:SymbolIcon Symbol="{Binding IsPlaying, Converter={x:Static views:TransportBar.PlayPauseSymbol}}" />
         </Button>
-        <Button Content="+15" ToolTip.Tip="Forward 15 seconds (Right)" MinWidth="44" Click="OnForwardClick" />
+        <Button Content="{Binding SkipForwardLabel}" ToolTip.Tip="{Binding SkipForwardTip}" MinWidth="44" Click="OnForwardClick" />
         <Button Command="{Binding StopCommand}" ToolTip.Tip="Stop" Width="44">
           <ui:SymbolIcon Symbol="Stop" />
         </Button>

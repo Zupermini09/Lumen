@@ -133,7 +133,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigator, IDi
         return true;
     }
 
-    /// <summary>Handles the navigation pane: Home, Search, Favourites, Play a file, About, Sign out.</summary>
+    /// <summary>Handles the navigation pane: Home, Search, Favourites, Play a file, Settings, About, Sign out.</summary>
     public async Task OpenMenuAsync(string key)
     {
         switch (key)
@@ -149,6 +149,10 @@ public sealed partial class MainWindowViewModel : ViewModelBase, INavigator, IDi
                 break;
             case "PlayFile":
                 Navigate(Pages.PlaybackTest());
+                break;
+            case "Settings":
+                if (CurrentPage is not SettingsViewModel)
+                    Navigate(Pages.Settings());
                 break;
             case "About":
                 Navigate(Pages.About());

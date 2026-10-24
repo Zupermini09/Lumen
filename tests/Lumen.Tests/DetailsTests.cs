@@ -308,6 +308,7 @@ internal sealed class FakePages : IPageFactory
     public PageViewModel Details(MediaItem item) => new FakePage("Details", item);
     public PageViewModel Series(MediaItem item) => new FakePage("Series", item);
     public PageViewModel PlaybackTest() => throw new NotSupportedException();
+    public PageViewModel Settings() => throw new NotSupportedException();
     public PageViewModel About() => throw new NotSupportedException();
 }
 

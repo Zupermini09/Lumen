@@ -1,6 +1,7 @@
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Lumen.Core;
 using Lumen.Core.Formatting;
 using Lumen.Core.Playback;
 
@@ -12,6 +13,7 @@ namespace Lumen.UI.ViewModels;
 public abstract partial class TransportViewModel : PageViewModel
 {
     private readonly IVideoSurfaceFactory _surfaceFactory;
+    private readonly ISettingsStore _appSettings;
     private int _positionUpdatePending;
     private bool _updatingFromPlayer;
 
@@ -58,10 +60,11 @@ public abstract partial class TransportViewModel : PageViewModel
     /// <summary>Called on the UI thread whenever the displayed position changes.</summary>
     protected virtual void OnPositionUpdated(TimeSpan position) { }
 
-    protected TransportViewModel(IPlayerService player, IVideoSurfaceFactory surfaceFactory)
+    protected TransportViewModel(IPlayerService player, IVideoSurfaceFactory surfaceFactory, ISettingsStore settings)
     {
         Player = player;
         _surfaceFactory = surfaceFactory;
+        _appSettings = settings;
         _state = player.State;
         _volume = player.Volume;
         _isMuted = player.IsMuted;
@@ -86,6 +89,19 @@ public abstract partial class TransportViewModel : PageViewModel
 
     [RelayCommand]
     private Task StopAsync() => Player.StopAsync();
+
+    // The skip steps are read when the controls are built; the settings page cannot be open during playback.
+    private int SkipBackSeconds => Math.Clamp(_appSettings.Settings.SkipBackSeconds, 1, 600);
+    private int SkipForwardSeconds => Math.Clamp(_appSettings.Settings.SkipForwardSeconds, 1, 600);
+
+    public string SkipBackLabel => $"−{SkipBackSeconds}";
+    public string SkipForwardLabel => $"+{SkipForwardSeconds}";
+    public string SkipBackTip => $"Back {SkipBackSeconds} seconds (Left)";
+    public string SkipForwardTip => $"Forward {SkipForwardSeconds} seconds (Right)";
+
+    public void SkipBack() => SeekBy(TimeSpan.FromSeconds(-SkipBackSeconds));
+
+    public void SkipForward() => SeekBy(TimeSpan.FromSeconds(SkipForwardSeconds));
 
     public void SeekBy(TimeSpan offset) => Player.Seek(Player.Position + offset);
 

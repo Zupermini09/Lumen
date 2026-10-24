@@ -1,12 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Lumen.Core;
 using Lumen.Core.Playback;
 
 namespace Lumen.UI.ViewModels;
 
 /// <summary>Plays a local file or URL, without a server. Useful for checking playback and overlays on each OS.</summary>
-public sealed partial class PlaybackTestViewModel(IPlayerService player, IVideoSurfaceFactory surfaceFactory)
-    : TransportViewModel(player, surfaceFactory)
+public sealed partial class PlaybackTestViewModel(IPlayerService player, IVideoSurfaceFactory surfaceFactory, ISettingsStore settings)
+    : TransportViewModel(player, surfaceFactory, settings)
 {
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(PlayCommand))]
