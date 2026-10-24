@@ -64,8 +64,11 @@ public interface IJellyfinClient
     Uri GetImageUri(string itemId, ImageKind kind, string? tag, int maxHeight);
     Uri GetUserImageUri(ServerInfo server, UserInfo user, int maxHeight);
 
-    /// <summary>File version, tracks with the user's default choices (PlaybackInfo) and chapters.</summary>
-    Task<PlaybackDetails> GetPlaybackDetailsAsync(MediaItem item, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// File version, tracks with the user's default choices and chapters, and how the server will deliver the stream
+    /// for <paramref name="request"/> (PlaybackInfo): as the file, or converted with a transcoding URL.
+    /// </summary>
+    Task<PlaybackDetails> GetPlaybackDetailsAsync(MediaItem item, PlaybackRequest? request = null, CancellationToken cancellationToken = default);
 
     /// <summary>Intro/credits/... segments for an item; empty when the server has none or is too old for the API.</summary>
     Task<IReadOnlyList<Playback.MediaSegment>> GetMediaSegmentsAsync(MediaItem item, CancellationToken cancellationToken = default);
@@ -79,11 +82,15 @@ public interface IJellyfinClient
     Task ReportPlaybackStartAsync(PlaybackReport report, CancellationToken cancellationToken = default);
     Task ReportPlaybackProgressAsync(PlaybackReport report, CancellationToken cancellationToken = default);
     Task ReportPlaybackStoppedAsync(PlaybackReport report, CancellationToken cancellationToken = default);
+
+    /// <summary>Stops the server's conversion job of a playback session (when playback ends or the quality changes).</summary>
+    Task StopTranscodingAsync(string playSessionId, CancellationToken cancellationToken = default);
 }
 
 public sealed record QuickConnectRequest(string Code, string Secret);
 
-public sealed record PlaybackReport(string ItemId, string MediaSourceId, string PlaySessionId, TimeSpan Position, bool IsPaused);
+public sealed record PlaybackReport(string ItemId, string MediaSourceId, string PlaySessionId, TimeSpan Position, bool IsPaused,
+    PlayMethod Method = PlayMethod.DirectPlay);
 
 public class ServerConnectionException(string message, Exception? inner = null) : Exception(message, inner);
 

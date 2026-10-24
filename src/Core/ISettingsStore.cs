@@ -30,6 +30,9 @@ public sealed class AppSettings
     /// <summary>Let the GPU decode video where the system supports it; turn off if playback shows glitches.</summary>
     public bool HardwareDecoding { get; set; } = true;
 
+    /// <summary>Most bits per second a video may use; the server converts anything above it. Null plays the original file.</summary>
+    public int? MaxStreamingBitrate { get; set; }
+
     public AppTheme Theme { get; set; } = AppTheme.Dark;
 
     /// <summary>Per segment type: show a skip button (default), skip automatically, or ignore.</summary>

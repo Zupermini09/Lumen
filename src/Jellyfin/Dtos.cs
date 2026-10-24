@@ -181,12 +181,21 @@ internal sealed class MediaSourceDto
     public List<MediaStreamDto> MediaStreams { get; set; } = [];
     public int? DefaultAudioStreamIndex { get; set; }
     public int? DefaultSubtitleStreamIndex { get; set; }
+
+    // What the server can do for the PlaybackInfo request; absent on old servers (then the file plays as it is).
+    public bool? SupportsDirectPlay { get; set; }
+    public bool? SupportsDirectStream { get; set; }
+    public bool? SupportsTranscoding { get; set; }
+
+    /// <summary>Server-relative URL of the HLS playlist, with the access token and play session in its query.</summary>
+    public string? TranscodingUrl { get; set; }
 }
 
 internal sealed class PlaybackInfoDto
 {
     public List<MediaSourceDto> MediaSources { get; set; } = [];
     public string? PlaySessionId { get; set; }
+    public string? ErrorCode { get; set; }
 }
 
 internal sealed class ChapterDto

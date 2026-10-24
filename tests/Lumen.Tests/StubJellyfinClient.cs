@@ -31,11 +31,12 @@ internal abstract class StubJellyfinClient : IJellyfinClient
     public virtual Task SetFavoriteAsync(string itemId, bool favorite, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Uri GetImageUri(string itemId, ImageKind kind, string? tag, int maxHeight) => throw new NotSupportedException();
     public virtual Uri GetUserImageUri(ServerInfo server, UserInfo user, int maxHeight) => throw new NotSupportedException();
-    public virtual Task<PlaybackDetails> GetPlaybackDetailsAsync(MediaItem item, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task<PlaybackDetails> GetPlaybackDetailsAsync(MediaItem item, PlaybackRequest? request = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task<IReadOnlyList<Lumen.Core.Playback.MediaSegment>> GetMediaSegmentsAsync(MediaItem item, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Uri GetStreamUri(MediaItem item, string? mediaSourceId = null) => throw new NotSupportedException();
     public virtual Uri GetSubtitleUri(MediaItem item, string mediaSourceId, MediaStreamInfo stream) => throw new NotSupportedException();
     public virtual Task ReportPlaybackStartAsync(PlaybackReport report, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task ReportPlaybackProgressAsync(PlaybackReport report, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public virtual Task ReportPlaybackStoppedAsync(PlaybackReport report, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public virtual Task StopTranscodingAsync(string playSessionId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
 }

@@ -104,6 +104,39 @@ public sealed record MediaStreamInfo(
 
 public sealed record ChapterInfo(string Name, TimeSpan Start);
 
+/// <summary>How a stream reaches the player. The names are the values Jellyfin's playback reports use.</summary>
+public enum PlayMethod
+{
+    /// <summary>The server sends the file as it is.</summary>
+    DirectPlay,
+    /// <summary>The server repackages the streams without re-encoding them.</summary>
+    DirectStream,
+    /// <summary>The server converts the video (HLS) to fit the bitrate or what the player can play.</summary>
+    Transcode,
+}
+
+/// <summary>What the player asks the server to prepare (the PlaybackInfo request).</summary>
+public sealed record PlaybackRequest
+{
+    /// <summary>Most bits per second the stream may use, or null for the original quality.</summary>
+    public int? MaxBitrate { get; init; }
+
+    /// <summary>False makes the server convert the video even if the file could be sent as it is (direct play failed).</summary>
+    public bool AllowDirectPlay { get; init; } = true;
+
+    /// <summary>The file version; the server only honours the stream indexes below when it is given.</summary>
+    public string? MediaSourceId { get; init; }
+
+    /// <summary>Audio stream a converted video should carry, as a server stream index; null lets the server choose.</summary>
+    public int? AudioStreamIndex { get; init; }
+
+    /// <summary>Subtitle stream to burn into a converted video, -1 for none, or null to let the server choose.</summary>
+    public int? SubtitleStreamIndex { get; init; }
+
+    /// <summary>Also load the chapter list (only the first request of a playback needs it).</summary>
+    public bool IncludeChapters { get; init; } = true;
+}
+
 /// <summary>What the player needs from the server before starting: which file version, its tracks and defaults.</summary>
 public sealed record PlaybackDetails(
     string MediaSourceId,
@@ -115,6 +148,25 @@ public sealed record PlaybackDetails(
 {
     public IEnumerable<MediaStreamInfo> AudioStreams => Streams.Where(s => s.Type == "Audio");
     public IEnumerable<MediaStreamInfo> SubtitleStreams => Streams.Where(s => s.Type == "Subtitle");
+
+    /// <summary>How the server will deliver the stream.</summary>
+    public PlayMethod Method { get; init; } = PlayMethod.DirectPlay;
+
+    /// <summary>For <see cref="PlayMethod.Transcode"/>: the HLS playlist to open (the access token is part of it, never log it).</summary>
+    public Uri? TranscodeUri { get; init; }
+
+    /// <summary>Why the server converts the video (Jellyfin's TranscodeReasons, e.g. ContainerBitrateExceedsLimit).</summary>
+    public IReadOnlyList<string> TranscodeReasons { get; init; } = [];
+
+    /// <summary>Audio stream and burned-in subtitle stream of a converted video, as the server set them up.</summary>
+    public int? TranscodeAudioStreamIndex { get; init; }
+    public int? BurnedSubtitleStreamIndex { get; init; }
+
+    /// <summary>False when the server offers neither direct play, direct stream nor a conversion for the request.</summary>
+    public bool Playable { get; init; } = true;
+
+    /// <summary>False when the server does not let this user have video converted (so only the original file plays).</summary>
+    public bool TranscodingAllowed { get; init; } = true;
 
     /// <summary>When the server knows nothing more (old server, error): play the item's own file with player defaults.</summary>
     public static PlaybackDetails Fallback(MediaItem item) => new(item.Id, null, [], null, null, []);

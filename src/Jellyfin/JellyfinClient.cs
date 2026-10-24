@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Authentication;
 using Lumen.Core.Jellyfin;
+using Lumen.Core.Playback;
 using Serilog;
 using AuthenticationException = Lumen.Core.Jellyfin.AuthenticationException;
 
@@ -421,34 +422,129 @@ public sealed class JellyfinClient : IJellyfinClient
         _ => "srt",
     };
 
-    public async Task<PlaybackDetails> GetPlaybackDetailsAsync(MediaItem item, CancellationToken cancellationToken = default)
+    public async Task<PlaybackDetails> GetPlaybackDetailsAsync(MediaItem item, PlaybackRequest? request = null, CancellationToken cancellationToken = default)
     {
+        request ??= new PlaybackRequest();
         var session = _session.Require();
-        // A permissive profile: Lumen plays everything directly (VLC decodes almost any format), so the server only
-        // has to tell us the streams and the user's default track choices.
         var info = await SendAsync<PlaybackInfoDto>(HttpMethod.Post, session.Server.Address,
-            $"Items/{item.Id}/PlaybackInfo?userId={session.User.Id}", session.AccessToken, new
-            {
-                DeviceProfile = new
-                {
-                    Name = "Lumen",
-                    DirectPlayProfiles = new object[] { new { Type = "Video" }, new { Type = "Audio" } },
-                },
-            }, cancellationToken);
+            $"Items/{item.Id}/PlaybackInfo?userId={session.User.Id}", session.AccessToken,
+            BuildPlaybackInfoBody(request, session.User.Id), cancellationToken);
 
+        var chapters = request.IncludeChapters ? await GetChaptersAsync(item, session, cancellationToken) : [];
+        return ToPlaybackDetails(item, session.Server.Address, info, chapters);
+    }
+
+    /// <summary>The body of the PlaybackInfo request, as jellyfin-web sends it: the limits and wishes plus a device profile.</summary>
+    internal static Dictionary<string, object> BuildPlaybackInfoBody(PlaybackRequest request, string userId)
+    {
+        var bitrate = request.MaxBitrate ?? StreamingPolicy.UnlimitedBitrate;
+        var body = new Dictionary<string, object>
+        {
+            ["UserId"] = userId,
+            ["MaxStreamingBitrate"] = bitrate,
+            ["EnableTranscoding"] = true,
+            ["DeviceProfile"] = BuildDeviceProfile(bitrate),
+        };
+        if (!request.AllowDirectPlay)
+        {
+            body["EnableDirectPlay"] = false;
+            body["EnableDirectStream"] = false;
+        }
+        // The server ignores the stream indexes unless it is told which file version they belong to.
+        if (request.MediaSourceId is { Length: > 0 } sourceId)
+            body["MediaSourceId"] = sourceId;
+        if (request.AudioStreamIndex is { } audio)
+            body["AudioStreamIndex"] = audio;
+        if (request.SubtitleStreamIndex is { } subtitle)
+            body["SubtitleStreamIndex"] = subtitle;
+        return body;
+    }
+
+    /// <summary>
+    /// What the player can take. Lumen plays anything the file holds directly (VLC decodes almost any format and draws
+    /// embedded subtitles itself), so the direct play profile has no limits; the transcoding profile is the HLS the
+    /// server falls back to: MPEG-TS segments of H.264/HEVC and AAC/AC-3, subtitles delivered as files where they
+    /// are text (picture-based ones are burned in by the server).
+    /// </summary>
+    internal static object BuildDeviceProfile(int maxBitrate) => new
+    {
+        Name = "Lumen",
+        MaxStreamingBitrate = maxBitrate,
+        DirectPlayProfiles = new object[] { new { Type = "Video" }, new { Type = "Audio" } },
+        TranscodingProfiles = new object[]
+        {
+            new
+            {
+                Type = "Video",
+                Container = "ts",
+                Protocol = "hls",
+                Context = "Streaming",
+                VideoCodec = "h264,hevc",
+                AudioCodec = "aac,mp3,ac3,eac3",
+                MaxAudioChannels = "6",
+                MinSegments = 1,
+                BreakOnNonKeyFrames = true,
+            },
+        },
+        SubtitleProfiles = new[] { "srt", "ass", "ssa", "vtt" }.Select(f => new { Format = f, Method = "External" })
+            .Concat(new[] { "srt", "subrip", "ass", "ssa", "vtt", "pgssub", "dvdsub", "dvbsub" }.Select(f => new { Format = f, Method = "Embed" }))
+            .ToArray(),
+    };
+
+    /// <summary>Reads the server's answer: whether to play the file or a conversion, and the conversion's URL.</summary>
+    internal static PlaybackDetails ToPlaybackDetails(MediaItem item, Uri serverAddress, PlaybackInfoDto? info, IReadOnlyList<ChapterInfo> chapters)
+    {
         var source = info?.MediaSources.FirstOrDefault();
-        var chapters = await GetChaptersAsync(item, session, cancellationToken);
         if (source is null)
             return PlaybackDetails.Fallback(item) with { Chapters = chapters };
 
+        var transcodeUri = ResolveTranscodingUrl(serverAddress, source.TranscodingUrl);
+        var directPlay = source.SupportsDirectPlay ?? true;
+        var directStream = source.SupportsDirectStream ?? false;
         return new PlaybackDetails(
             source.Id ?? item.Id,
             info!.PlaySessionId,
             source.MediaStreams.Select(s => s.ToModel()).ToList(),
             source.DefaultAudioStreamIndex,
             source.DefaultSubtitleStreamIndex,
-            chapters);
+            chapters)
+        {
+            Method = transcodeUri is not null ? PlayMethod.Transcode : directPlay ? PlayMethod.DirectPlay : PlayMethod.DirectStream,
+            TranscodeUri = transcodeUri,
+            TranscodeReasons = transcodeUri is null ? [] : QueryValue(transcodeUri, "TranscodeReasons")?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? [],
+            TranscodeAudioStreamIndex = transcodeUri is null ? null : IntQueryValue(transcodeUri, "AudioStreamIndex"),
+            // The server burns the subtitle in when it says "Encode"; text subtitles are delivered as files instead.
+            BurnedSubtitleStreamIndex = transcodeUri is not null && QueryValue(transcodeUri, "SubtitleMethod") == "Encode"
+                ? IntQueryValue(transcodeUri, "SubtitleStreamIndex") : null,
+            Playable = transcodeUri is not null || directPlay || directStream,
+            TranscodingAllowed = source.SupportsTranscoding ?? true,
+        };
     }
+
+    /// <summary>The server sends a path ("/videos/{id}/master.m3u8?..."); the player needs it under the server's address.</summary>
+    internal static Uri? ResolveTranscodingUrl(Uri serverAddress, string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return null;
+        if (Uri.TryCreate(url, UriKind.Absolute, out var absolute) && absolute.Scheme is "http" or "https")
+            return absolute;
+        // Not Uri(base, relative): a rooted path would drop a base path such as /jellyfin.
+        return new Uri(serverAddress.AbsoluteUri.TrimEnd('/') + "/" + url.TrimStart('/'));
+    }
+
+    private static string? QueryValue(Uri uri, string name)
+    {
+        foreach (var pair in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var separator = pair.IndexOf('=');
+            if (separator > 0 && pair[..separator].Equals(name, StringComparison.OrdinalIgnoreCase))
+                return Uri.UnescapeDataString(pair[(separator + 1)..]);
+        }
+        return null;
+    }
+
+    private static int? IntQueryValue(Uri uri, string name) =>
+        int.TryParse(QueryValue(uri, name), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var value) ? value : null;
 
     public async Task<IReadOnlyList<Core.Playback.MediaSegment>> GetMediaSegmentsAsync(MediaItem item, CancellationToken cancellationToken = default)
     {
@@ -501,6 +597,14 @@ public sealed class JellyfinClient : IJellyfinClient
     public Task ReportPlaybackStoppedAsync(PlaybackReport report, CancellationToken cancellationToken = default) =>
         ReportAsync("Sessions/Playing/Stopped", report, cancellationToken);
 
+    public async Task StopTranscodingAsync(string playSessionId, CancellationToken cancellationToken = default)
+    {
+        var session = _session.Require();
+        await SendAsync<object>(HttpMethod.Delete, session.Server.Address,
+            $"Videos/ActiveEncodings?deviceId={Uri.EscapeDataString(_identity.DeviceId)}&playSessionId={Uri.EscapeDataString(playSessionId)}",
+            session.AccessToken, null, cancellationToken);
+    }
+
     private async Task ReportAsync(string path, PlaybackReport report, CancellationToken cancellationToken)
     {
         var session = _session.Require();
@@ -512,7 +616,7 @@ public sealed class JellyfinClient : IJellyfinClient
             PositionTicks = report.Position.Ticks,
             IsPaused = report.IsPaused,
             CanSeek = true,
-            PlayMethod = "DirectPlay",
+            PlayMethod = report.Method.ToString(),
         }, cancellationToken);
     }
 
