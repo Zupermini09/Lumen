@@ -20,7 +20,7 @@
                   Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
             <Panel>
               <TextBlock Text="{Binding Title}" TextWrapping="Wrap" TextAlignment="Center" Margin="12"
-                         VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5" />
+                         VerticalAlignment="Center" HorizontalAlignment="Center" Classes="tertiary" />
               <Image Stretch="UniformToFill" Height="{Binding PosterHeight}" imaging:RemoteImage.Uri="{Binding PosterUri}" />
             </Panel>
           </Border>
@@ -32,7 +32,7 @@
                          Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
             </Button>
             <TextBlock Text="{Binding Title}" FontSize="32" FontWeight="SemiBold" TextWrapping="Wrap" />
-            <TextBlock Text="{Binding Tagline}" FontStyle="Italic" Opacity="0.7" TextWrapping="Wrap"
+            <TextBlock Text="{Binding Tagline}" FontStyle="Italic" Classes="secondary" TextWrapping="Wrap"
                        IsVisible="{Binding Tagline, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
             <StackPanel Orientation="Horizontal" Spacing="14">
@@ -45,7 +45,7 @@
               <TextBlock Text="{Binding CommunityRating}" VerticalAlignment="Center"
                          IsVisible="{Binding CommunityRating, Converter={x:Static ObjectConverters.IsNotNull}}" />
             </StackPanel>
-            <TextBlock Text="{Binding Genres}" Opacity="0.7" TextWrapping="Wrap"
+            <TextBlock Text="{Binding Genres}" Classes="secondary" TextWrapping="Wrap"
                        IsVisible="{Binding Genres, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
             <WrapPanel ItemSpacing="8" LineSpacing="8" Margin="0,8,0,4">
@@ -76,20 +76,20 @@
 
             <TextBlock Text="{Binding Overview}" TextWrapping="Wrap" MaxWidth="820" HorizontalAlignment="Left" LineHeight="22"
                        IsVisible="{Binding Overview, Converter={x:Static ObjectConverters.IsNotNull}}" />
-            <TextBlock Text="{Binding Directors}" TextWrapping="Wrap" Opacity="0.8"
+            <TextBlock Text="{Binding Directors}" TextWrapping="Wrap" Classes="secondary"
                        IsVisible="{Binding Directors, Converter={x:Static ObjectConverters.IsNotNull}}" />
-            <TextBlock Text="{Binding Writers}" TextWrapping="Wrap" Opacity="0.8"
+            <TextBlock Text="{Binding Writers}" TextWrapping="Wrap" Classes="secondary"
                        IsVisible="{Binding Writers, Converter={x:Static ObjectConverters.IsNotNull}}" />
           </StackPanel>
         </Grid>
 
         <StackPanel Spacing="8" IsVisible="{Binding HasStreams}">
-          <TextBlock Text="Media info" Theme="{StaticResource SubtitleTextBlockStyle}" />
+          <TextBlock Text="Media info" Classes="section" />
           <ItemsControl ItemsSource="{Binding StreamRows}">
             <ItemsControl.ItemTemplate>
               <DataTemplate DataType="vm:StreamRow">
                 <Grid ColumnDefinitions="100,*" Margin="0,0,0,6">
-                  <TextBlock Text="{Binding Label}" Opacity="0.7" />
+                  <TextBlock Text="{Binding Label}" Classes="secondary" />
                   <TextBlock Grid.Column="1" Text="{Binding Text}" TextWrapping="Wrap" />
                 </Grid>
               </DataTemplate>

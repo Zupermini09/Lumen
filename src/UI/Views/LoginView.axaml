@@ -8,8 +8,8 @@
   <ScrollViewer>
     <StackPanel Margin="32" Spacing="14" MaxWidth="560" HorizontalAlignment="Center" VerticalAlignment="Center">
       <StackPanel>
-        <TextBlock Text="{Binding ServerName, StringFormat='Sign in to {0}'}" Theme="{StaticResource TitleTextBlockStyle}" />
-        <TextBlock Text="{Binding ServerDescription}" Opacity="0.7" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding ServerName, StringFormat='Sign in to {0}'}" Classes="title" />
+        <TextBlock Text="{Binding ServerDescription}" Classes="secondary" TextWrapping="Wrap" />
       </StackPanel>
 
       <!-- Users the server shows on its login screen -->
@@ -26,7 +26,7 @@
                 <Border Width="64" Height="64" CornerRadius="32" ClipToBounds="True"
                         Background="{DynamicResource AccentFillColorDefaultBrush}">
                   <Panel>
-                    <TextBlock Text="{Binding Initial}" FontSize="26" Foreground="White"
+                    <TextBlock Text="{Binding Initial}" FontSize="26" Foreground="{DynamicResource LumenOnAccentBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center" />
                     <Image Width="64" Height="64" Stretch="UniformToFill" imaging:RemoteImage.Uri="{Binding ImageUri}" />
                   </Panel>
@@ -60,7 +60,7 @@
           <TextBlock Text="Quick Connect code" FontWeight="SemiBold" />
           <SelectableTextBlock Text="{Binding QuickConnectCode}" FontSize="36" FontFamily="Consolas,Menlo,monospace"
                                LetterSpacing="6" />
-          <TextBlock TextWrapping="Wrap" Opacity="0.8"
+          <TextBlock TextWrapping="Wrap" Classes="secondary"
                      Text="On a device where you are already signed in, open Settings → Quick Connect and enter this code. Lumen signs in automatically once you approve it." />
           <Button Content="Cancel" Command="{Binding CancelQuickConnectCommand}" />
         </StackPanel>
@@ -70,7 +70,7 @@
                  TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
 
       <Button Content="Use a different server" Command="{Binding ChangeServerCommand}"
-              Background="Transparent" BorderThickness="0" Padding="0" Opacity="0.7" Margin="0,8,0,0" />
+              Background="Transparent" BorderThickness="0" Padding="0" Foreground="{DynamicResource LumenTextSecondaryBrush}" Margin="0,8,0,0" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

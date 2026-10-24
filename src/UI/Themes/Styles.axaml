@@ -1,0 +1,133 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!--
+    Reusable Lumen styles. Classes:
+      TextBlock.title / .section / .secondary / .tertiary / .caption
+      Border.card (hover), Border.pill, Border.pill.accent
+      ContentControl.glass (+ .strong): translucent surface with grain, hairline border and a brighter top edge
+      Button.accent (stock FluentAvalonia accent button, semibold), Button.card (borderless card button, lifts on hover)
+  -->
+
+  <!-- Typography -->
+  <Style Selector=":is(TextBlock).title">
+    <Setter Property="FontSize" Value="{DynamicResource LumenFontSizePageTitle}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="-0.3" />
+    <Setter Property="Foreground" Value="{DynamicResource LumenTextBrush}" />
+  </Style>
+  <Style Selector=":is(TextBlock).section">
+    <Setter Property="FontSize" Value="{DynamicResource LumenFontSizeSection}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource LumenTextBrush}" />
+  </Style>
+  <Style Selector=":is(TextBlock).secondary">
+    <Setter Property="Foreground" Value="{DynamicResource LumenTextSecondaryBrush}" />
+  </Style>
+  <Style Selector=":is(TextBlock).tertiary">
+    <Setter Property="Foreground" Value="{DynamicResource LumenTextTertiaryBrush}" />
+  </Style>
+  <Style Selector=":is(TextBlock).caption">
+    <Setter Property="FontSize" Value="{DynamicResource LumenFontSizeCaption}" />
+    <Setter Property="Foreground" Value="{DynamicResource LumenTextSecondaryBrush}" />
+  </Style>
+
+  <!-- Card: a simple raised surface with a hairline; no blur. -->
+  <Style Selector="Border.card">
+    <Setter Property="Background" Value="{DynamicResource LumenSurfaceBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource LumenRadiusCard}" />
+    <Setter Property="Padding" Value="16" />
+  </Style>
+  <Style Selector="Border.card:pointerover">
+    <Setter Property="Background" Value="{DynamicResource LumenSurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineStrongBrush}" />
+  </Style>
+
+  <!-- Pill / badge -->
+  <Style Selector="Border.pill">
+    <Setter Property="Background" Value="{DynamicResource LumenSurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="999" />
+    <Setter Property="Padding" Value="10,3" />
+  </Style>
+  <Style Selector="Border.pill > TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource LumenFontSizeCaption}" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="Foreground" Value="{DynamicResource LumenTextSecondaryBrush}" />
+  </Style>
+  <Style Selector="Border.pill.accent">
+    <Setter Property="Background" Value="{DynamicResource LumenAccentSoftBrush}" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+  <Style Selector="Border.pill.accent > TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource LumenAccentTextBrush}" />
+  </Style>
+
+  <!-- Glass: use on a ContentControl. Fill + grain + hairline border whose top edge is brighter. -->
+  <Style Selector="ContentControl.glass">
+    <Setter Property="Background" Value="{DynamicResource LumenGlassBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenGlassBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource LumenRadiusLarge}" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+                ClipToBounds="True">
+          <Panel>
+            <Border Background="{DynamicResource LumenNoiseBrush}" IsHitTestVisible="False" />
+            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                              Padding="{TemplateBinding Padding}"
+                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+          </Panel>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="ContentControl.glass.strong">
+    <Setter Property="Background" Value="{DynamicResource LumenGlassStrongBrush}" />
+  </Style>
+
+  <!-- Buttons -->
+  <Style Selector="Button.accent">
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Padding" Value="16,7" />
+  </Style>
+  <Style Selector="Button.card">
+    <Setter Property="RenderTransform" Value="translateY(0px)" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.card:pointerover">
+    <Setter Property="RenderTransform" Value="translateY(-2px)" />
+  </Style>
+  <Style Selector="Button.card /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.card:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="Button.card:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <!-- The poster inside a card button: hairline, brighter on hover. -->
+  <Style Selector="Border.poster">
+    <Setter Property="Background" Value="{DynamicResource LumenSurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource LumenRadiusCard}" />
+    <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+  <Style Selector="Button.card:pointerover Border.poster">
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineStrongBrush}" />
+  </Style>
+  <Style Selector="Button.card:focus-visible Border.poster">
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenFocusBrush}" />
+  </Style>
+</Styles>

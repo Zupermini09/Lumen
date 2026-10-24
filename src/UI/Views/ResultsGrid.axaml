@@ -13,8 +13,8 @@
       <ItemsControl.DataTemplates>
         <DataTemplate DataType="vm:GroupHeaderRow">
           <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,12">
-            <TextBlock Text="{Binding Title}" Theme="{StaticResource SubtitleTextBlockStyle}" />
-            <TextBlock Text="{Binding Count}" Opacity="0.6" VerticalAlignment="Bottom" Margin="0,0,0,2" />
+            <TextBlock Text="{Binding Title}" Classes="section" />
+            <TextBlock Text="{Binding Count}" Classes="tertiary" VerticalAlignment="Bottom" Margin="0,0,0,2" />
           </StackPanel>
         </DataTemplate>
         <DataTemplate DataType="vm:CardRow"><views:CardRowView /></DataTemplate>

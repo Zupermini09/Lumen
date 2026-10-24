@@ -11,8 +11,8 @@
         <ui:SymbolIcon Symbol="Refresh" />
       </Button>
       <StackPanel>
-        <TextBlock Text="Favourites" Theme="{StaticResource TitleTextBlockStyle}" />
-        <TextBlock Text="{Binding Summary}" Opacity="0.7" />
+        <TextBlock Text="Favourites" Classes="title" />
+        <TextBlock Text="{Binding Summary}" Classes="secondary" />
       </StackPanel>
     </DockPanel>
 
@@ -21,7 +21,7 @@
                        HorizontalAlignment="Left" VerticalAlignment="Top" />
       <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
                  TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
-      <TextBlock Text="Nothing here yet. Use the Favourite button on a movie, show or episode to add it." Opacity="0.7"
+      <TextBlock Text="Nothing here yet. Use the Favourite button on a movie, show or episode to add it." Classes="secondary"
                  TextWrapping="Wrap" IsVisible="{Binding IsEmpty}" />
       <views:ResultsGrid DataContext="{Binding Results}" />
     </Panel>

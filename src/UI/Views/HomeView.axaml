@@ -21,8 +21,8 @@
           <ui:SymbolIcon Symbol="Refresh" />
         </Button>
         <StackPanel>
-          <TextBlock Text="Home" Theme="{StaticResource TitleTextBlockStyle}" />
-          <TextBlock Text="{Binding Greeting}" Opacity="0.7" />
+          <TextBlock Text="Home" Classes="title" />
+          <TextBlock Text="{Binding Greeting}" Classes="secondary" />
         </StackPanel>
       </DockPanel>
 
@@ -35,7 +35,7 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate DataType="vm:HomeRow">
             <StackPanel Spacing="8" Margin="0,0,0,12" IsVisible="{Binding HasCards}">
-              <TextBlock Text="{Binding Title}" Theme="{StaticResource SubtitleTextBlockStyle}" />
+              <TextBlock Text="{Binding Title}" Classes="section" />
               <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,12">
                 <ItemsControl ItemsSource="{Binding Cards}" ItemsPanel="{StaticResource HorizontalPanel}"
                               ItemTemplate="{StaticResource Card}" />

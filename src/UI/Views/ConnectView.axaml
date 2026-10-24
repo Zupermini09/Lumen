@@ -10,8 +10,8 @@
       <StackPanel Orientation="Horizontal" Spacing="16">
         <Image Source="avares://Lumen.UI/Assets/lumen-256.png" Width="56" Height="56" />
         <StackPanel VerticalAlignment="Center">
-          <TextBlock Text="Connect to your server" Theme="{StaticResource TitleTextBlockStyle}" />
-          <TextBlock Text="Lumen is a desktop client for Jellyfin" Opacity="0.7" />
+          <TextBlock Text="Connect to your server" Classes="title" />
+          <TextBlock Text="Lumen is a desktop client for Jellyfin" Classes="secondary" />
         </StackPanel>
       </StackPanel>
 
@@ -22,7 +22,7 @@
         </TextBox.KeyBindings>
       </TextBox>
       <TextBlock Text="http and https both work. Without http(s)://, Lumen tries https first, then http on port 8096."
-                 TextWrapping="Wrap" FontSize="12" Opacity="0.6" />
+                 TextWrapping="Wrap" FontSize="12" Classes="tertiary" />
 
       <StackPanel Orientation="Horizontal" Spacing="12">
         <Button Content="Connect" Classes="accent" Command="{Binding ConnectCommand}" MinWidth="120" />
@@ -42,7 +42,7 @@
                       CommandParameter="{Binding}">
                 <StackPanel>
                   <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                  <TextBlock Text="{Binding Address}" FontSize="12" Opacity="0.7" />
+                  <TextBlock Text="{Binding Address}" FontSize="12" Classes="secondary" />
                 </StackPanel>
               </Button>
             </DataTemplate>
@@ -51,7 +51,7 @@
       </StackPanel>
 
       <Button Content="Play a local file instead" Classes="link" Command="{Binding PlayLocalFileCommand}"
-              Background="Transparent" BorderThickness="0" Padding="0" Opacity="0.7" Margin="0,8,0,0" />
+              Background="Transparent" BorderThickness="0" Padding="0" Foreground="{DynamicResource LumenTextSecondaryBrush}" Margin="0,8,0,0" />
     </StackPanel>
   </ScrollViewer>
 </UserControl>

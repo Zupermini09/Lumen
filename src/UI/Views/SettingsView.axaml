@@ -6,7 +6,6 @@
              x:DataType="vm:SettingsViewModel">
   <UserControl.Styles>
     <Style Selector="TextBlock.section">
-      <Setter Property="Theme" Value="{StaticResource SubtitleTextBlockStyle}" />
       <Setter Property="Margin" Value="0,16,0,2" />
     </Style>
     <Style Selector="ComboBox.value">
@@ -16,9 +15,8 @@
 
   <ScrollViewer>
     <StackPanel Margin="32,24,32,32" Spacing="6" MaxWidth="820" HorizontalAlignment="Left">
-      <TextBlock Text="Settings" Theme="{StaticResource TitleTextBlockStyle}" />
-      <TextBlock Text="Changes are saved and applied straight away. Playback settings take effect with the next video you play."
-                 Opacity="0.7" TextWrapping="Wrap" />
+      <TextBlock Text="Settings" Classes="title" />
+      <TextBlock Text="Changes are saved and applied straight away. Playback settings take effect with the next video you play." Classes="secondary" TextWrapping="Wrap" />
 
       <TextBlock Classes="section" Text="Playback" />
 

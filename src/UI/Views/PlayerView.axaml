@@ -11,7 +11,7 @@
                    IsVisible="{Binding Notice, Converter={x:Static ObjectConverters.IsNotNull}}" />
         <Border IsVisible="{Binding IsCountingDown}" Background="{DynamicResource AccentFillColorDefaultBrush}"
                 CornerRadius="4" Padding="10,4">
-          <TextBlock Text="{Binding CountdownText}" Foreground="White" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding CountdownText}" Foreground="{DynamicResource LumenOnAccentBrush}" VerticalAlignment="Center" />
         </Border>
         <Button Content="Cancel" IsVisible="{Binding IsCountingDown}" Click="OnCancelNextClick" />
         <Button IsVisible="{Binding HasNextEpisode}" Click="OnNextEpisodeClick" Classes="accent"
@@ -22,7 +22,7 @@
       </StackPanel>
       <StackPanel>
         <TextBlock Text="{Binding ItemTitle}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-        <TextBlock Text="{Binding ItemSubtitle}" Opacity="0.7" TextTrimming="CharacterEllipsis"
+        <TextBlock Text="{Binding ItemSubtitle}" Classes="secondary" TextTrimming="CharacterEllipsis"
                    IsVisible="{Binding ItemSubtitle, Converter={x:Static ObjectConverters.IsNotNull}}" />
       </StackPanel>
     </DockPanel>

@@ -23,8 +23,8 @@
         <Button Command="{Binding StopCommand}" ToolTip.Tip="Stop" Width="44">
           <ui:SymbolIcon Symbol="Stop" />
         </Button>
-        <TextBlock Text="{Binding State}" VerticalAlignment="Center" Margin="8,0,0,0" Opacity="0.7" />
-        <TextBlock Text="{Binding ModeText}" VerticalAlignment="Center" Opacity="0.7"
+        <TextBlock Text="{Binding State}" VerticalAlignment="Center" Margin="8,0,0,0" Classes="secondary" />
+        <TextBlock Text="{Binding ModeText}" VerticalAlignment="Center" Classes="secondary"
                    IsVisible="{Binding ModeText, Converter={x:Static ObjectConverters.IsNotNull}}" />
         <TextBlock Text="{Binding ErrorMessage}" VerticalAlignment="Center" Margin="8,0,0,0"
                    Foreground="{DynamicResource SystemFillColorCriticalBrush}" />

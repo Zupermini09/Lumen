@@ -21,14 +21,14 @@
                   Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
             <Panel>
               <TextBlock Text="{Binding Title}" TextWrapping="Wrap" TextAlignment="Center" Margin="12"
-                         VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5" />
+                         VerticalAlignment="Center" HorizontalAlignment="Center" Classes="tertiary" />
               <Image Stretch="UniformToFill" Height="{Binding PosterHeight}" imaging:RemoteImage.Uri="{Binding PosterUri}" />
             </Panel>
           </Border>
 
           <StackPanel Grid.Column="1" Spacing="10">
             <TextBlock Text="{Binding Title}" FontSize="32" FontWeight="SemiBold" TextWrapping="Wrap" />
-            <TextBlock Text="{Binding Tagline}" FontStyle="Italic" Opacity="0.7" TextWrapping="Wrap"
+            <TextBlock Text="{Binding Tagline}" FontStyle="Italic" Classes="secondary" TextWrapping="Wrap"
                        IsVisible="{Binding Tagline, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
             <StackPanel Orientation="Horizontal" Spacing="14">
@@ -41,7 +41,7 @@
               <TextBlock Text="{Binding CommunityRating}" VerticalAlignment="Center"
                          IsVisible="{Binding CommunityRating, Converter={x:Static ObjectConverters.IsNotNull}}" />
             </StackPanel>
-            <TextBlock Text="{Binding Genres}" Opacity="0.7" TextWrapping="Wrap"
+            <TextBlock Text="{Binding Genres}" Classes="secondary" TextWrapping="Wrap"
                        IsVisible="{Binding Genres, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
             <WrapPanel ItemSpacing="8" LineSpacing="8" Margin="0,8,0,4">
@@ -75,7 +75,7 @@
         </Grid>
 
         <StackPanel Spacing="8">
-          <TextBlock Text="Seasons" Theme="{StaticResource SubtitleTextBlockStyle}" />
+          <TextBlock Text="Seasons" Classes="section" />
           <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,8">
             <ListBox ItemsSource="{Binding Seasons}" SelectedItem="{Binding SelectedSeason}">
               <ListBox.ItemsPanel>
@@ -95,7 +95,7 @@
                        Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
             <Button Content="Retry" Command="{Binding RetryEpisodesCommand}" />
           </StackPanel>
-          <TextBlock Text="No episodes in this season." Opacity="0.7" IsVisible="{Binding HasNoEpisodes}" />
+          <TextBlock Text="No episodes in this season." Classes="secondary" IsVisible="{Binding HasNoEpisodes}" />
 
           <!-- A season holds at most a few dozen episodes, so a plain list is fine; the thumbnails load as rows are created. -->
           <ItemsControl ItemsSource="{Binding Episodes}">
@@ -110,8 +110,8 @@
                         <Panel>
                           <Image Stretch="UniformToFill" Height="99" imaging:RemoteImage.Uri="{Binding ImageUri}" />
                           <Border IsVisible="{Binding IsPlayed}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="6"
-                                  Background="{DynamicResource AccentFillColorDefaultBrush}" CornerRadius="10" Width="20" Height="20">
-                            <TextBlock Text="✓" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
+                                  Background="{DynamicResource LumenSuccessBrush}" CornerRadius="10" Width="20" Height="20">
+                            <TextBlock Text="✓" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource LumenOnSuccessBrush}" />
                           </Border>
                           <ProgressBar IsVisible="{Binding HasProgress}" Value="{Binding Progress}" Maximum="1" VerticalAlignment="Bottom"
                                        MinHeight="4" Height="4" Margin="0" CornerRadius="0" />
@@ -119,10 +119,10 @@
                       </Border>
                       <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
                         <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{Binding Runtime}" FontSize="12" Opacity="0.7"
+                        <TextBlock Text="{Binding Runtime}" FontSize="12" Classes="secondary"
                                    IsVisible="{Binding Runtime, Converter={x:Static ObjectConverters.IsNotNull}}" />
                         <TextBlock Text="{Binding Overview}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
-                                   FontSize="13" Opacity="0.8"
+                                   FontSize="13" Classes="secondary"
                                    IsVisible="{Binding Overview, Converter={x:Static ObjectConverters.IsNotNull}}" />
                       </StackPanel>
                     </Grid>
