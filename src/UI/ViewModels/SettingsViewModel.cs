@@ -39,6 +39,9 @@ public sealed partial class SettingsViewModel : PageViewModel
     private bool _hardwareDecoding;
 
     [ObservableProperty]
+    private SettingChoice<int?> _streamingQuality;
+
+    [ObservableProperty]
     private SettingChoice<AppTheme> _theme;
 
     public SettingsViewModel(ISettingsStore store, IThemeService themes)
@@ -67,6 +70,8 @@ public sealed partial class SettingsViewModel : PageViewModel
         _selectedSubtitleMode = SettingChoices.SubtitleModes.FirstOrDefault(c => c.Value == settings.SubtitleMode) ?? SettingChoices.SubtitleModes[0];
 
         _hardwareDecoding = settings.HardwareDecoding;
+        StreamingQualityChoices = SettingChoices.StreamingQualities(settings.MaxStreamingBitrate);
+        _streamingQuality = StreamingQualityChoices.First(c => c.Value == settings.MaxStreamingBitrate);
         _theme = SettingChoices.Themes.FirstOrDefault(c => c.Value == settings.Theme) ?? SettingChoices.Themes[0];
     }
 
@@ -79,6 +84,7 @@ public sealed partial class SettingsViewModel : PageViewModel
     public IReadOnlyList<SettingChoice<string?>> AudioLanguageChoices { get; }
     public IReadOnlyList<SettingChoice<string?>> SubtitleLanguageChoices { get; }
     public IReadOnlyList<SettingChoice<SubtitleMode>> SubtitleModeChoices => SettingChoices.SubtitleModes;
+    public IReadOnlyList<SettingChoice<int?>> StreamingQualityChoices { get; }
     public IReadOnlyList<SettingChoice<AppTheme>> ThemeChoices => SettingChoices.Themes;
 
     /// <summary>The subtitle language only matters for the modes that pick a track.</summary>
@@ -99,6 +105,8 @@ public sealed partial class SettingsViewModel : PageViewModel
     partial void OnSelectedSubtitleModeChanged(SettingChoice<SubtitleMode> value) => Update(s => s.SubtitleMode = value.Value);
 
     partial void OnHardwareDecodingChanged(bool value) => Update(s => s.HardwareDecoding = value);
+
+    partial void OnStreamingQualityChanged(SettingChoice<int?> value) => Update(s => s.MaxStreamingBitrate = value.Value);
 
     partial void OnThemeChanged(SettingChoice<AppTheme> value)
     {

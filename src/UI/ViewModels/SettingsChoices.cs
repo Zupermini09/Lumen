@@ -35,6 +35,10 @@ public static class SettingChoices
         new(AppTheme.System, "Use system setting"),
     ];
 
+    /// <summary>The streaming qualities, plus the saved one when a settings file holds another bitrate.</summary>
+    public static IReadOnlyList<SettingChoice<int?>> StreamingQualities(int? current) =>
+        QualityPresets.With(current).Select(p => new SettingChoice<int?>(p.MaxBitrate, p.Label)).ToList();
+
     private static readonly int[] Steps = [5, 10, 15, 30];
 
     /// <summary>5 / 10 / 15 / 30 seconds, plus the current value when a settings file holds another one.</summary>

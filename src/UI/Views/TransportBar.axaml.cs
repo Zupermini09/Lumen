@@ -29,6 +29,9 @@ public partial class TransportBar : UserControl
     private void OnChaptersClick(object? sender, RoutedEventArgs e) =>
         ShowMenu(sender, ViewModel?.ChapterOptions(), "No chapters");
 
+    private void OnQualityClick(object? sender, RoutedEventArgs e) =>
+        ShowMenu(sender, ViewModel?.QualityOptions(), "", header: ViewModel?.ModeText);
+
     private void OnSpeedClick(object? sender, RoutedEventArgs e) =>
         ShowMenu(sender, ViewModel?.SpeedOptions(), "");
 
@@ -49,12 +52,17 @@ public partial class TransportBar : UserControl
     /// <summary>When the last player menu closed (UTC); the click that closes a menu must not reach the video.</summary>
     public static DateTime LastMenuClosed { get; private set; }
 
-    private static void ShowMenu(object? anchor, IReadOnlyList<MenuOption>? options, string emptyText, IEnumerable<Control>? extra = null)
+    private static void ShowMenu(object? anchor, IReadOnlyList<MenuOption>? options, string emptyText, IEnumerable<Control>? extra = null, string? header = null)
     {
         if (anchor is not Control control || options is null)
             return;
 
         var flyout = new MenuFlyout { Placement = PlacementMode.TopEdgeAlignedRight };
+        if (header is { Length: > 0 })
+        {
+            flyout.Items.Add(new MenuItem { Header = $"Now: {header}", IsEnabled = false });
+            flyout.Items.Add(new Separator());
+        }
         foreach (var option in options)
         {
             var item = Item(option.Label, option.Select);

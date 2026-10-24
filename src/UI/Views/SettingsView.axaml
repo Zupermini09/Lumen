@@ -93,6 +93,13 @@
         </ui:SettingsExpander.Footer>
       </ui:SettingsExpander>
 
+      <ui:SettingsExpander Header="Streaming quality"
+                           Description="The most video data the server sends. Original plays the file as it is (direct play); lower qualities are converted by the server, which also happens when a file cannot be played directly. Can also be changed while playing.">
+        <ui:SettingsExpander.Footer>
+          <ComboBox Classes="value" ItemsSource="{Binding StreamingQualityChoices}" SelectedItem="{Binding StreamingQuality}" />
+        </ui:SettingsExpander.Footer>
+      </ui:SettingsExpander>
+
       <TextBlock Classes="section" Text="Interface" />
 
       <ui:SettingsExpander Header="Theme" Description="Light or dark colours.">

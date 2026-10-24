@@ -24,6 +24,8 @@
           <ui:SymbolIcon Symbol="Stop" />
         </Button>
         <TextBlock Text="{Binding State}" VerticalAlignment="Center" Margin="8,0,0,0" Opacity="0.7" />
+        <TextBlock Text="{Binding ModeText}" VerticalAlignment="Center" Opacity="0.7"
+                   IsVisible="{Binding ModeText, Converter={x:Static ObjectConverters.IsNotNull}}" />
         <TextBlock Text="{Binding ErrorMessage}" VerticalAlignment="Center" Margin="8,0,0,0"
                    Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
       </StackPanel>
@@ -31,6 +33,7 @@
         <Button Content="Chapters" ToolTip.Tip="Chapters" Click="OnChaptersClick" />
         <Button Content="Audio" ToolTip.Tip="Audio track" Click="OnAudioClick" />
         <Button Content="Subtitles" ToolTip.Tip="Subtitles (G / H: delay)" Click="OnSubtitlesClick" />
+        <Button Content="{Binding QualityText}" IsVisible="{Binding CanChooseQuality}" ToolTip.Tip="Streaming quality" Click="OnQualityClick" />
         <Button Content="{Binding SpeedText}" ToolTip.Tip="Playback speed ([ / ])" MinWidth="52" Click="OnSpeedClick" />
         <ToggleButton IsChecked="{Binding IsMuted}" ToolTip.Tip="Mute (M)" Width="44">
           <ui:SymbolIcon Symbol="Mute" />

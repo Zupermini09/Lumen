@@ -7,9 +7,10 @@ using Serilog;
 namespace Lumen.UI.ViewModels;
 
 /// <summary>
-/// Plays a Jellyfin item (direct play): asks the server for the file version, tracks and the user's default track
-/// choices, resumes from the saved position, and reports progress so "Continue watching" and watched state work like
-/// in the other clients.
+/// Plays a Jellyfin item: asks the server for the file version, tracks and the user's default track choices and how
+/// to stream it (the original file, or an HLS conversion when a quality limit is set or direct play fails; see
+/// PlayerViewModel.Streaming.cs), resumes from the saved position, and reports progress so "Continue watching" and
+/// watched state work like in the other clients.
 /// </summary>
 public sealed partial class PlayerViewModel : TransportViewModel
 {
@@ -34,8 +35,10 @@ public sealed partial class PlayerViewModel : TransportViewModel
     private bool _stopped;
     private bool _tracksPrepared;
     private int? _pendingSubtitlePosition;
+    private int _pendingSubtitleCount;
     private DateTime _pendingSubtitleDeadline;
     private TimeSpan _lastPosition;
+    private TimeSpan _streamStart;
 
     public PlayerViewModel(MediaItem item, IJellyfinClient client, IPlayerService player, IVideoSurfaceFactory surfaceFactory,
         ISettingsStore settings, INavigator navigator, IPageFactory pages, ILogger log)
@@ -63,6 +66,8 @@ public sealed partial class PlayerViewModel : TransportViewModel
     public MediaItem Item => _item;
     public IReadOnlyList<ChapterInfo> Chapters => _details.Chapters;
 
+    protected override TimeSpan? KnownDuration => _item.RunTime;
+
     /// <summary>Resume where the user left off, unless they (nearly) finished it.</summary>
     public TimeSpan StartPosition => _item.ResumePosition;
 
@@ -74,31 +79,9 @@ public sealed partial class PlayerViewModel : TransportViewModel
     public async Task StartAsync()
     {
         ErrorMessage = null;
-        try
-        {
-            _details = await _client.GetPlaybackDetailsAsync(_item);
-            if (_details.PlaySessionId is { } sessionId)
-                _playSessionId = sessionId;
-            OnPropertyChanged(nameof(Chapters));
-        }
-        catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException or TaskCanceledException)
-        {
-            // Without PlaybackInfo the file still plays; only server track names and defaults are missing.
-            _log.Information("Playback info unavailable, playing with player defaults: {Error}", ex.Message);
-        }
-
+        await StartStreamAsync();
         _ = LoadSegmentsAsync();
         _ = LoadNextEpisodeAsync();
-
-        try
-        {
-            await Player.PlayAsync(_client.GetStreamUri(_item, _details.MediaSourceId), StartPosition);
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Could not start playback");
-            ErrorMessage = "Playback could not be started.";
-        }
     }
 
     public async Task StartOverAsync()
@@ -106,8 +89,14 @@ public sealed partial class PlayerViewModel : TransportViewModel
         IsResuming = false;
         await Player.StopAsync();
         _reportedStart = false;
+        _stopped = false;
         _tracksPrepared = false;
-        await Player.PlayAsync(_client.GetStreamUri(_item, _details.MediaSourceId));
+        _pendingSubtitlePosition = null;
+        _subtitleFiles.Clear();
+        _streamStart = TimeSpan.Zero;
+        _lastPosition = TimeSpan.Zero;
+        _openedAt = DateTime.UtcNow;
+        await Player.PlayAsync(StreamUri(_details));
     }
 
     // ---- Next episode -------------------------------------------------------------------------------------------
@@ -226,25 +215,46 @@ public sealed partial class PlayerViewModel : TransportViewModel
 
     public override IReadOnlyList<MenuOption> AudioOptions()
     {
+        if (IsTranscoding)
+            return TranscodeAudioOptions();
+
         var tracks = Player.AudioTracks;
         var server = ServerAudio;
         // Server names are nicer ("English - Dolby TrueHD + Atmos 7.1"); use them when the lists line up.
+        var lined = tracks.Count == server.Count;
         return tracks.Select((t, i) => new MenuOption(
-                tracks.Count == server.Count ? server[i].DisplayTitle : t.Name,
+                lined ? server[i].DisplayTitle : t.Name,
                 t.Id == Player.AudioTrackId,
-                () => Player.SelectAudioTrack(t.Id)))
+                () =>
+                {
+                    Player.SelectAudioTrack(t.Id);
+                    if (lined)
+                        _audioIndex = server[i].Index;
+                }))
             .ToList();
     }
 
     public override IReadOnlyList<MenuOption> SubtitleOptions()
     {
+        if (IsTranscoding)
+            return TranscodeSubtitleOptions();
+
         var tracks = Player.SubtitleTracks;
         var server = ServerSubtitles;
+        var lined = tracks.Count == server.Count;
         return tracks.Select((t, i) => new MenuOption(
-                tracks.Count == server.Count ? SubtitleLabel(server[i]) : t.Name,
+                lined ? SubtitleLabel(server[i]) : t.Name,
                 t.Id == Player.SubtitleTrackId,
-                () => Player.SelectSubtitleTrack(t.Id)))
-            .Prepend(new MenuOption("Off", Player.SubtitleTrackId < 0, () => Player.SelectSubtitleTrack(-1)))
+                () =>
+                {
+                    Player.SelectSubtitleTrack(t.Id);
+                    _subtitleIndex = lined ? server[i].Index : null;
+                }))
+            .Prepend(new MenuOption("Off", Player.SubtitleTrackId < 0, () =>
+            {
+                Player.SelectSubtitleTrack(-1);
+                _subtitleIndex = null;
+            }))
             .ToList();
     }
 
@@ -266,22 +276,27 @@ public sealed partial class PlayerViewModel : TransportViewModel
     /// <summary>
     /// Once playback runs: add the server's external subtitle files and apply the audio and subtitle tracks to start
     /// with. They follow the language preferences in the settings; where those do not apply, the defaults the server
-    /// chose from the user's server-side preferences (like the web client) are used.
+    /// chose from the user's server-side preferences (like the web client) are used. A converted video carries one
+    /// audio track and no subtitles of its own, so there the tracks were chosen when it was requested.
     /// </summary>
     private void PrepareTracks()
     {
         if (_tracksPrepared)
             return;
         _tracksPrepared = true;
+        ChooseTracks(_details);
+
+        if (IsTranscoding)
+        {
+            PrepareTranscodeSubtitles();
+            return;
+        }
 
         foreach (var external in _details.SubtitleStreams.Where(s => s.IsExternal).OrderBy(s => s.Index))
             Player.AddExternalSubtitle(_client.GetSubtitleUri(_item, _details.MediaSourceId, external), select: false);
 
-        var choice = TrackSelector.Select(_details.Streams, _details.DefaultAudioStreamIndex, _details.DefaultSubtitleStreamIndex,
-            _settings.Settings.GetTrackPreferences());
-
         var audio = ServerAudio;
-        if (choice.AudioStreamIndex is { } audioIndex && Player.AudioTracks is { } tracks && tracks.Count == audio.Count)
+        if (_audioIndex is { } audioIndex && Player.AudioTracks is { } tracks && tracks.Count == audio.Count)
         {
             var position = audio.ToList().FindIndex(s => s.Index == audioIndex);
             if (position >= 0)
@@ -289,7 +304,7 @@ public sealed partial class PlayerViewModel : TransportViewModel
         }
 
         var subtitles = ServerSubtitles.ToList();
-        var subtitlePosition = choice.SubtitleStreamIndex is { } subIndex ? subtitles.FindIndex(s => s.Index == subIndex) : -1;
+        var subtitlePosition = _subtitleIndex is { } subIndex ? subtitles.FindIndex(s => s.Index == subIndex) : -1;
         if (subtitlePosition < 0)
         {
             if (_details.Streams.Count > 0)
@@ -298,7 +313,13 @@ public sealed partial class PlayerViewModel : TransportViewModel
         }
 
         // External files are added asynchronously; select once the player lists all subtitle tracks.
-        _pendingSubtitlePosition = subtitlePosition;
+        SelectWhenListed(subtitlePosition, subtitles.Count);
+    }
+
+    private void SelectWhenListed(int position, int expectedCount)
+    {
+        _pendingSubtitlePosition = position;
+        _pendingSubtitleCount = expectedCount;
         _pendingSubtitleDeadline = DateTime.UtcNow + TrackDefaultsTimeout;
         ApplyPendingSubtitle();
     }
@@ -308,7 +329,7 @@ public sealed partial class PlayerViewModel : TransportViewModel
         if (_pendingSubtitlePosition is not { } position)
             return;
         var tracks = Player.SubtitleTracks;
-        if (tracks.Count == ServerSubtitles.Count)
+        if (tracks.Count == _pendingSubtitleCount)
         {
             Player.SelectSubtitleTrack(tracks[position].Id);
             _pendingSubtitlePosition = null;
@@ -341,8 +362,16 @@ public sealed partial class PlayerViewModel : TransportViewModel
             // Reporting the full runtime marks the item as watched.
             _lastPosition = TimeSpan.FromSeconds(DurationSeconds);
             ReportStopped();
+            EndTranscode(Task.CompletedTask);
             StartCountdown();
         }
+        else if (state == PlaybackState.Error)
+        {
+            OnStreamFailed();
+        }
+
+        if (state == PlaybackState.Playing && DurationSeconds <= 0)
+            ApplyDuration(Player.Duration);
     }
 
     private void ReportProgress()
@@ -365,13 +394,13 @@ public sealed partial class PlayerViewModel : TransportViewModel
     {
         if (State != PlaybackState.Ended)
         {
-            // Right after starting, the player may not have reported time yet: use the resume point.
-            var position = Player.Position > TimeSpan.Zero ? Player.Position : StartPosition;
+            // Right after starting, the player may not have reported time yet: use where the stream began.
+            var position = Player.Position > TimeSpan.Zero ? Player.Position : _streamStart;
             if (position > TimeSpan.Zero)
                 _lastPosition = position;
         }
 
-        var report = new PlaybackReport(_item.Id, _details.MediaSourceId, _playSessionId, _lastPosition, State == PlaybackState.Paused);
+        var report = new PlaybackReport(_item.Id, _details.MediaSourceId, _playSessionId, _lastPosition, State == PlaybackState.Paused, _details.Method);
         _ = Task.Run(async () =>
         {
             try
@@ -393,7 +422,8 @@ public sealed partial class PlayerViewModel : TransportViewModel
         _countdownTimer.Stop();
         ReportStopped();
         _progressTimer.Stop();
-        _ = Player.StopAsync();
+        var stopping = Player.StopAsync();
+        EndTranscode(stopping); // the server's conversion keeps running until told to stop
         base.Dispose();
     }
 }

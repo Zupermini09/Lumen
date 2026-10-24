@@ -17,7 +17,7 @@ Lumen is a native app (Avalonia UI, no embedded browser) that plays your Jellyfi
 
 Player keys: **Space** pause, **←/→** back 10 s / forward 30 s, **↑/↓** volume, **M** mute, **F** or double-click full screen, **Esc** leave full screen, **Alt+←** or the mouse back button to go back.
 
-Playback is direct play only for now (the server sends the original file and VLC plays it), which covers almost every format. HTTPS servers need a certificate the OS trusts (e.g. Let's Encrypt).
+Playback is direct play by default (the server sends the original file and VLC plays it), which covers almost every format. A quality limit (player menu or Settings), or a file that does not play, makes the server transcode to HLS instead; that needs transcoding to be allowed for your user on the server. HTTPS servers need a certificate the OS trusts (e.g. Let's Encrypt).
 
 Lumen is not affiliated with the Jellyfin project.
 
