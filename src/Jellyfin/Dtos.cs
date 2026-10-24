@@ -102,6 +102,15 @@ internal sealed class BaseItemDto
     public List<string>? BackdropImageTags { get; set; }
     public string? ParentBackdropItemId { get; set; }
     public List<string>? ParentBackdropImageTags { get; set; }
+    public string? SeriesThumbImageTag { get; set; }
+    public string? ParentThumbItemId { get; set; }
+    public string? ParentThumbImageTag { get; set; }
+
+    // The series' own thumb, else the one inherited down the hierarchy (jellyfin-web does the same).
+    private (string? Item, string? Tag) SeriesThumb() =>
+        SeriesThumbImageTag is { Length: > 0 } tag && SeriesId is { Length: > 0 } series ? (series, tag)
+        : ParentThumbItemId is { Length: > 0 } parent && ParentThumbImageTag is { Length: > 0 } inherited ? (parent, inherited)
+        : (null, null);
 
     private (string? Item, string? Tag) Backdrop() =>
         BackdropImageTags is { Count: > 0 } own ? (Id, own[0])
@@ -133,6 +142,10 @@ internal sealed class BaseItemDto
         BackdropItemId = Backdrop().Item,
         BackdropTag = Backdrop().Tag,
         SeriesPrimaryImageTag = SeriesPrimaryImageTag,
+        SeriesThumbItemId = SeriesThumb().Item,
+        SeriesThumbTag = SeriesThumb().Tag,
+        SeriesBackdropItemId = ParentBackdropItemId is { Length: > 0 } && ParentBackdropImageTags is { Count: > 0 } ? ParentBackdropItemId : null,
+        SeriesBackdropTag = ParentBackdropImageTags is { Count: > 0 } ? ParentBackdropImageTags[0] : null,
         AlbumId = AlbumId,
         AlbumPrimaryImageTag = AlbumPrimaryImageTag,
     };

@@ -15,6 +15,8 @@
       <!-- Glass: translucent tinted fill. Over the plain window it reads as a tinted surface, so there is no separate fallback. -->
       <SolidColorBrush x:Key="LumenGlassBrush" Color="#B815112A" />
       <SolidColorBrush x:Key="LumenGlassStrongBrush" Color="#E61C1733" />
+      <!-- The player header and controls floating over the video: lighter than the app glass so the picture shows through. -->
+      <SolidColorBrush x:Key="LumenPlayerGlassBrush" Color="#9915112A" />
       <SolidColorBrush x:Key="LumenScrimBrush" Color="#99000000" />
       <SolidColorBrush x:Key="LumenHoverShadeBrush" Color="#12FFFFFF" />
       <!-- Details backdrop: fades into the window colour from the bottom and from the left (behind the title). -->
@@ -82,6 +84,7 @@
       <SolidColorBrush x:Key="LumenBackdropBrush" Color="#BFF6F4FB" />
       <SolidColorBrush x:Key="LumenGlassBrush" Color="#CCFFFFFF" />
       <SolidColorBrush x:Key="LumenGlassStrongBrush" Color="#F2FFFFFF" />
+      <SolidColorBrush x:Key="LumenPlayerGlassBrush" Color="#B3FFFFFF" />
       <SolidColorBrush x:Key="LumenScrimBrush" Color="#99000000" />
       <LinearGradientBrush x:Key="LumenBackdropFadeBrush" StartPoint="0%,0%" EndPoint="0%,100%">
         <GradientStop Offset="0" Color="#00F6F4FB" />
@@ -135,6 +138,18 @@
 
   <!-- The video letterbox: black in both themes. -->
   <SolidColorBrush x:Key="LumenVideoBrush" Color="#000000" />
+
+  <!-- Darkening behind the floating player header and controls, so text stays readable on a bright picture. -->
+  <LinearGradientBrush x:Key="LumenPlayerScrimTopBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+    <GradientStop Offset="0" Color="#B3000000" />
+    <GradientStop Offset="0.5" Color="#59000000" />
+    <GradientStop Offset="1" Color="#00000000" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="LumenPlayerScrimBottomBrush" StartPoint="0%,100%" EndPoint="0%,0%">
+    <GradientStop Offset="0" Color="#CC000000" />
+    <GradientStop Offset="0.5" Color="#66000000" />
+    <GradientStop Offset="1" Color="#00000000" />
+  </LinearGradientBrush>
 
   <!-- Brand gradient (the icon tile); the same in both themes. -->
   <LinearGradientBrush x:Key="LumenBrandGradientBrush" StartPoint="0%,0%" EndPoint="0%,100%">

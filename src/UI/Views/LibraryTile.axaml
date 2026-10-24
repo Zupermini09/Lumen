@@ -2,27 +2,22 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Lumen.UI.ViewModels"
              xmlns:imaging="using:Lumen.UI.Imaging"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
              x:Class="Lumen.UI.Views.LibraryTile"
              x:DataType="vm:MediaCardViewModel">
-  <!-- A library on Home. The server's artwork already has the library's name painted on it, so it is shown blurred, as colour
-       only, and the name is set once, in Lumen's own type, over it. -->
+  <!-- A library on Home: the server's artwork, sharp and as it is (it usually carries the library's name already), with the
+       name as a caption below like the other cards. Only a library without artwork gets a small label in the tile. -->
   <Button Classes="card" Padding="0" Background="Transparent" BorderThickness="0" Cursor="Hand"
-          Width="260" HorizontalContentAlignment="Stretch" Click="OnClick" ToolTip.Tip="{Binding Title}">
-    <Border Classes="poster" Height="112">
-      <Panel>
-        <Image Stretch="UniformToFill" Height="146" imaging:RemoteImage.Uri="{Binding ImageUri}"
-               RenderTransform="scale(1.3)">
-          <Image.Effect><BlurEffect Radius="40" /></Image.Effect>
-        </Image>
-        <Border Background="{DynamicResource LumenScrimBrush}" Opacity="0.55" />
-        <Border Classes="hoverShade" />
-        <DockPanel Margin="16,0" VerticalAlignment="Center">
-          <ui:SymbolIcon DockPanel.Dock="Right" Symbol="ChevronRight" FontSize="14" Foreground="{DynamicResource LumenOnAccentBrush}" Opacity="0.7" />
-          <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="18" LetterSpacing="-0.2" TextTrimming="CharacterEllipsis"
-                     Foreground="{DynamicResource LumenOnAccentBrush}" VerticalAlignment="Center" />
-        </DockPanel>
-      </Panel>
-    </Border>
+          Width="{Binding Width}" HorizontalContentAlignment="Stretch" Click="OnClick" ToolTip.Tip="{Binding Title}">
+    <StackPanel Spacing="3">
+      <Border Classes="poster" Height="{Binding ImageHeight}" Margin="0,0,0,5">
+        <Panel>
+          <TextBlock Text="{Binding Title}" TextWrapping="Wrap" TextAlignment="Center" Margin="10"
+                     VerticalAlignment="Center" HorizontalAlignment="Center" Classes="tertiary" FontSize="13" />
+          <Image Stretch="UniformToFill" Height="{Binding ImageHeight}" imaging:RemoteImage.Uri="{Binding ImageUri}" />
+          <Border Classes="hoverShade" />
+        </Panel>
+      </Border>
+      <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" FontWeight="SemiBold" FontSize="13" />
+    </StackPanel>
   </Button>
 </UserControl>

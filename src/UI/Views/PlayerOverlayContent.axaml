@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Lumen.UI.Views"
+             x:Class="Lumen.UI.Views.PlayerOverlayContent">
+  <!-- Everything drawn over the video (see PlayerOverlayWindow). Header and controls are added to Layer by the page, in
+       rows 0 and 2. The click surface is nearly invisible but not clear: a fully transparent area would let the mouse
+       through to the native video window below. -->
+  <Grid x:Name="Layer" RowDefinitions="Auto,*,Auto">
+    <Border x:Name="ClickSurface" Grid.RowSpan="3" Background="#01000000" />
+    <Border x:Name="TopScrim" Grid.RowSpan="3" Height="150" VerticalAlignment="Top" IsHitTestVisible="False"
+            Background="{DynamicResource LumenPlayerScrimTopBrush}" />
+    <Border x:Name="BottomScrim" Grid.RowSpan="3" Height="190" VerticalAlignment="Bottom" IsHitTestVisible="False"
+            Background="{DynamicResource LumenPlayerScrimBottomBrush}" />
+    <views:PlayOverlayButton x:Name="PlayButton" Grid.RowSpan="3" HorizontalAlignment="Center" VerticalAlignment="Center"
+                             Width="88" Height="88" IsVisible="False" />
+  </Grid>
+</UserControl>

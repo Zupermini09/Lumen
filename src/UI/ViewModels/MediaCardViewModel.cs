@@ -44,7 +44,7 @@ public sealed class MediaCardViewModel
         _ => CardShape.Poster,
     };
 
-    public static MediaCardViewModel Create(MediaItem item, IJellyfinClient client, CardShape? shape = null)
+    public static MediaCardViewModel Create(MediaItem item, IJellyfinClient client, CardShape? shape = null, bool seriesArt = false)
     {
         var cardShape = shape ?? ShapeFor(item);
         var (title, subtitle) = Describe(item);
@@ -57,7 +57,7 @@ public sealed class MediaCardViewModel
             Title = title,
             Subtitle = subtitle,
             Progress = progress,
-            ImageUri = ImageFor(item, cardShape, client),
+            ImageUri = ImageFor(item, cardShape, client, seriesArt),
         };
     }
 
@@ -74,12 +74,28 @@ public sealed class MediaCardViewModel
         _ => (item.Name, item.ProductionYear?.ToString()),
     };
 
-    private static Uri? ImageFor(MediaItem item, CardShape shape, IJellyfinClient client)
+    /// <summary>
+    /// The series' artwork for an episode, as jellyfin-web shows it in Continue watching and Next up: its Thumb, else its
+    /// backdrop, else its primary image; null for anything else, or when the series has none.
+    /// </summary>
+    internal static Uri? SeriesArtFor(MediaItem item, IJellyfinClient client, int height, bool backdropFirst = false)
+    {
+        if (item.Type != "Episode")
+            return null;
+        Uri? Thumb() => item is { SeriesThumbItemId: { } id, SeriesThumbTag: { } tag } ? client.GetImageUri(id, ImageKind.Thumb, tag, height) : null;
+        Uri? Backdrop() => item is { SeriesBackdropItemId: { } id, SeriesBackdropTag: { } tag } ? client.GetImageUri(id, ImageKind.Backdrop, tag, height) : null;
+        Uri? Primary() => item is { SeriesId: { } id, SeriesPrimaryImageTag: { } tag } ? client.GetImageUri(id, ImageKind.Primary, tag, height) : null;
+        return backdropFirst ? Backdrop() ?? Thumb() ?? Primary() : Thumb() ?? Backdrop() ?? Primary();
+    }
+
+    private static Uri? ImageFor(MediaItem item, CardShape shape, IJellyfinClient client, bool seriesArt)
     {
         var height = shape == CardShape.Wide ? 146 : shape == CardShape.Poster ? 225 : 160;
         // Request at 2x for high-DPI screens; the server scales it down before sending.
         height *= 2;
 
+        if (seriesArt && SeriesArtFor(item, client, height) is { } series)
+            return series;
         if (shape == CardShape.Wide && item.ThumbImageTag is { } thumb)
             return client.GetImageUri(item.Id, ImageKind.Thumb, thumb, height);
         if (item.PrimaryImageTag is { } primary)

@@ -52,6 +52,9 @@ public partial class TransportBar : UserControl
     /// <summary>When the last player menu closed (UTC); the click that closes a menu must not reach the video.</summary>
     public static DateTime LastMenuClosed { get; private set; }
 
+    /// <summary>Raised when a player menu closes.</summary>
+    public static event Action? MenuClosed;
+
     private static void ShowMenu(object? anchor, IReadOnlyList<MenuOption>? options, string emptyText, IEnumerable<Control>? extra = null, string? header = null)
     {
         if (anchor is not Control control || options is null)
@@ -80,6 +83,7 @@ public partial class TransportBar : UserControl
         {
             IsMenuOpen = false;
             LastMenuClosed = DateTime.UtcNow;
+            MenuClosed?.Invoke();
         };
         flyout.ShowAt(control);
     }

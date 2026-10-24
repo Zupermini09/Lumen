@@ -286,10 +286,14 @@
     <Setter Property="Foreground" Value="{DynamicResource LumenSuccessBrush}" />
   </Style>
 
-  <!-- Player header and controls: a glass bar with the grain, separate from the video. -->
+  <!-- Player header and controls: a glass bar with the grain, in its own row beside the video... -->
   <Style Selector="ContentControl.glass.bar">
     <Setter Property="CornerRadius" Value="{DynamicResource LumenRadiusLarge}" />
     <Setter Property="Padding" Value="16,10" />
+  </Style>
+  <!-- ...floating over the video (see PlayerOverlayWindow): more translucent, the picture shows through. -->
+  <Style Selector="ContentControl.glass.bar.floating">
+    <Setter Property="Background" Value="{DynamicResource LumenPlayerGlassBrush}" />
   </Style>
 
   <!-- Seek bar: thin track, accent fill, a small round thumb that grows while hovered or dragged. -->

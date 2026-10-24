@@ -7,9 +7,11 @@ using Avalonia.Platform;
 namespace Lumen.UI.Views;
 
 /// <summary>
-/// The large play button shown in the middle of the video while paused. Only a separate window can be drawn over the
-/// native video surface; this one is owned by the main window (so it stays with Lumen and never floats over other
-/// apps, unlike a popup on X11) and is shown without taking focus, so the keyboard shortcuts keep working.
+/// The large play button shown in the middle of the video while paused, for pages that cannot float their controls in a
+/// <see cref="PlayerOverlayWindow"/> (Linux without a compositor); elsewhere the overlay window carries the button.
+/// Only a separate window can be drawn over the native video surface; this one is owned by the main window (so it stays
+/// with Lumen and never floats over other apps, unlike a popup on X11) and is shown without taking focus, so the
+/// keyboard shortcuts keep working.
 /// </summary>
 internal sealed class PlayButtonOverlay
 {
