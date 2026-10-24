@@ -14,6 +14,7 @@ public partial class PlaybackTestView : VideoPage
     protected override ContentControl VideoHost => Host;
     protected override IReadOnlyList<Control> Chrome => [Controls];
     protected override IReadOnlyList<Control> WindowedOnly => [SourceBar];
+    protected override Thickness? FloatingMargin => new Thickness(12);
 
     private PlaybackTestViewModel? ViewModel => DataContext as PlaybackTestViewModel;
 
