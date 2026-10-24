@@ -12,14 +12,16 @@
           <KeyBinding Gesture="Enter" Command="{Binding PlayCommand}" />
         </TextBox.KeyBindings>
       </TextBox>
-      <Button Grid.Column="1" Content="Browse…" Margin="8,0,0,0" Click="OnBrowseClick" />
+      <Button Grid.Column="1" Content="Browse…" Classes="quiet" Margin="8,0,0,0" Click="OnBrowseClick" />
       <Button Grid.Column="2" Content="Play" Margin="8,0,0,0" Classes="accent" Command="{Binding PlayCommand}" />
     </Grid>
 
-    <Border Grid.Row="1" Background="Black" CornerRadius="6" ClipToBounds="True">
+    <Border Grid.Row="1" Background="{DynamicResource LumenVideoBrush}" CornerRadius="{DynamicResource LumenRadiusSmall}" ClipToBounds="True">
       <ContentControl x:Name="Host" />
     </Border>
 
-    <views:TransportBar x:Name="Controls" Grid.Row="2" Margin="0,12,0,0" />
+    <ContentControl x:Name="Controls" Grid.Row="2" Classes="glass bar" Margin="0,12,0,0">
+      <views:TransportBar />
+    </ContentControl>
   </Grid>
 </views:VideoPage>

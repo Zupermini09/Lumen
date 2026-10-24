@@ -1,10 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform;
-using FluentAvalonia.UI.Controls;
 
 namespace Lumen.UI.Views;
 
@@ -15,7 +13,7 @@ namespace Lumen.UI.Views;
 /// </summary>
 internal sealed class PlayButtonOverlay
 {
-    private const double Size = 96;
+    private const double Size = 88;
     private readonly Action _onClick;
     private Window? _overlay;
 
@@ -51,28 +49,7 @@ internal sealed class PlayButtonOverlay
 
     private Window CreateWindow()
     {
-        // A plain border rather than a Button: the theme's hover style would turn it white behind a white icon.
-        var normal = new SolidColorBrush(Color.FromArgb(0xC0, 0x20, 0x20, 0x20));
-        var hover = new SolidColorBrush(Color.FromArgb(0xE0, 0x40, 0x40, 0x40));
-        var button = new Border
-        {
-            Width = Size,
-            Height = Size,
-            CornerRadius = new CornerRadius(12),
-            Background = normal,
-            Cursor = new Cursor(StandardCursorType.Hand),
-            Child = new SymbolIcon
-            {
-                Symbol = Symbol.Play,
-                FontSize = 48,
-                Foreground = Brushes.White,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-            },
-        };
-        ToolTip.SetTip(button, "Play (Space)");
-        button.PointerEntered += (_, _) => button.Background = hover;
-        button.PointerExited += (_, _) => button.Background = normal;
+        var button = new PlayOverlayButton { Width = Size, Height = Size };
         button.PointerReleased += (_, e) =>
         {
             if (e.InitialPressMouseButton == MouseButton.Left)

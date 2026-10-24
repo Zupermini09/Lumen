@@ -11,7 +11,7 @@ namespace Lumen.UI.Views;
 public partial class TransportBar : UserControl
 {
     public static readonly IValueConverter PlayPauseSymbol =
-        new FuncValueConverter<bool, Symbol>(playing => playing ? Symbol.Pause : Symbol.Play);
+        new FuncValueConverter<bool, Symbol>(playing => playing ? Symbol.PauseFilled : Symbol.PlayFilled);
 
     public TransportBar() => InitializeComponent();
 

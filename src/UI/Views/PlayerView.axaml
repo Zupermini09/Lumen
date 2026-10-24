@@ -2,35 +2,49 @@
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:vm="using:Lumen.UI.ViewModels"
                  xmlns:views="using:Lumen.UI.Views"
+                 xmlns:ui="using:FluentAvalonia.UI.Controls"
                  x:Class="Lumen.UI.Views.PlayerView"
                  x:DataType="vm:PlayerViewModel">
+  <!-- Header and controls are glass bars in their own rows: the native video surface cannot be drawn over. -->
   <Grid RowDefinitions="Auto,*,Auto">
-    <DockPanel x:Name="Header" Grid.Row="0" Margin="16,12">
-      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
-        <TextBlock Text="{Binding Notice}" VerticalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
-                   IsVisible="{Binding Notice, Converter={x:Static ObjectConverters.IsNotNull}}" />
-        <Border IsVisible="{Binding IsCountingDown}" Background="{DynamicResource AccentFillColorDefaultBrush}"
-                CornerRadius="4" Padding="10,4">
-          <TextBlock Text="{Binding CountdownText}" Foreground="{DynamicResource LumenOnAccentBrush}" VerticalAlignment="Center" />
-        </Border>
-        <Button Content="Cancel" IsVisible="{Binding IsCountingDown}" Click="OnCancelNextClick" />
-        <Button IsVisible="{Binding HasNextEpisode}" Click="OnNextEpisodeClick" Classes="accent"
-                ToolTip.Tip="{Binding NextEpisodeLabel}">
-          <TextBlock Text="{Binding NextEpisodeLabel, StringFormat='Next: {0}'}" MaxWidth="260" TextTrimming="CharacterEllipsis" />
-        </Button>
-        <Button x:Name="StartOverButton" Content="Start over" IsVisible="{Binding IsResuming}" Click="OnStartOverClick" />
-      </StackPanel>
-      <StackPanel>
-        <TextBlock Text="{Binding ItemTitle}" FontSize="18" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-        <TextBlock Text="{Binding ItemSubtitle}" Classes="secondary" TextTrimming="CharacterEllipsis"
-                   IsVisible="{Binding ItemSubtitle, Converter={x:Static ObjectConverters.IsNotNull}}" />
-      </StackPanel>
-    </DockPanel>
+    <ContentControl x:Name="Header" Grid.Row="0" Classes="glass bar" Margin="12,8,12,10">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <TextBlock Text="{Binding Notice}" Classes="caption" VerticalAlignment="Center" Foreground="{DynamicResource LumenAccentTextBrush}"
+                     IsVisible="{Binding Notice, Converter={x:Static ObjectConverters.IsNotNull}}" />
+          <Border Classes="pill accent" Padding="12,5" VerticalAlignment="Center" IsVisible="{Binding IsCountingDown}">
+            <TextBlock Text="{Binding CountdownText}" />
+          </Border>
+          <Button Classes="quiet" Content="Cancel" IsVisible="{Binding IsCountingDown}" Click="OnCancelNextClick" />
+          <Button Classes="accent" IsVisible="{Binding HasNextEpisode}" Click="OnNextEpisodeClick" ToolTip.Tip="{Binding NextEpisodeLabel}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="{Binding NextEpisodeLabel, StringFormat='Next: {0}'}" MaxWidth="260" TextTrimming="CharacterEllipsis"
+                         VerticalAlignment="Center" />
+              <ui:SymbolIcon Symbol="Next" FontSize="14" />
+            </StackPanel>
+          </Button>
+          <Button x:Name="StartOverButton" Classes="quiet" IsVisible="{Binding IsResuming}" Click="OnStartOverClick">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <ui:SymbolIcon Symbol="Undo" FontSize="14" />
+              <TextBlock Text="Start over" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center" Spacing="1">
+          <TextBlock Text="{Binding ItemTitle}" FontSize="17" FontWeight="SemiBold" LetterSpacing="-0.1" TextTrimming="CharacterEllipsis"
+                     Foreground="{DynamicResource LumenTextBrush}" />
+          <TextBlock Text="{Binding ItemSubtitle}" Classes="caption" TextTrimming="CharacterEllipsis"
+                     IsVisible="{Binding ItemSubtitle, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+      </DockPanel>
+    </ContentControl>
 
-    <Border Grid.Row="1" Background="Black">
+    <Border Grid.Row="1" Background="{DynamicResource LumenVideoBrush}">
       <ContentControl x:Name="Host" />
     </Border>
 
-    <views:TransportBar x:Name="Controls" Grid.Row="2" Margin="16,12" />
+    <ContentControl x:Name="Controls" Grid.Row="2" Classes="glass bar" Margin="12,10,12,12">
+      <views:TransportBar />
+    </ContentControl>
   </Grid>
 </views:VideoPage>
