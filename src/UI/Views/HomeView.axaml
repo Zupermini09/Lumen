@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Lumen.UI.ViewModels"
              xmlns:views="using:Lumen.UI.Views"
+             xmlns:imaging="using:Lumen.UI.Imaging"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              x:Class="Lumen.UI.Views.HomeView"
              x:DataType="vm:HomeViewModel">
@@ -15,28 +16,94 @@
   </UserControl.Resources>
 
   <ScrollViewer x:Name="Scroller">
-    <StackPanel Margin="24" Spacing="12">
-      <DockPanel>
-        <Button DockPanel.Dock="Right" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh">
-          <ui:SymbolIcon Symbol="Refresh" />
-        </Button>
-        <StackPanel>
-          <TextBlock Text="Home" Classes="title" />
-          <TextBlock Text="{Binding Greeting}" Classes="secondary" />
-        </StackPanel>
-      </DockPanel>
+    <StackPanel Margin="28,24,28,28" Spacing="28" MaxWidth="1700">
 
-      <ui:ProgressRing IsIndeterminate="True" Width="40" Height="40" IsVisible="{Binding IsLoading}" HorizontalAlignment="Left" />
-      <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
-                 TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+      <!-- Hero: greeting and search on the left, the featured item on the right (stacked when narrow). -->
+      <Grid x:Name="Hero" ColumnDefinitions="5*,6*" ColumnSpacing="20" RowDefinitions="Auto,Auto" RowSpacing="20">
+        <ContentControl x:Name="SearchPanel" Classes="glass" Padding="32" MinHeight="320">
+          <Panel>
+            <Button HorizontalAlignment="Right" VerticalAlignment="Top" Margin="-16,-16,-16,0" Classes="link"
+                    Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh">
+              <ui:SymbolIcon Symbol="Refresh" FontSize="16" />
+            </Button>
+            <StackPanel VerticalAlignment="Center" Spacing="6">
+              <TextBlock Text="{Binding Greeting}" Classes="title" FontSize="32" TextWrapping="Wrap" />
+              <TextBlock Text="{Binding ServerName}" Classes="caption" />
+              <TextBox x:Name="SearchBox" Classes="hero" Margin="0,22,0,0" Text="{Binding SearchText}"
+                       Watermark="Search movies, shows, episodes…" AutomationProperties.Name="Search">
+                <TextBox.InnerLeftContent>
+                  <ui:SymbolIcon Symbol="Find" FontSize="18" Margin="16,0,10,0" Foreground="{DynamicResource LumenTextTertiaryBrush}" />
+                </TextBox.InnerLeftContent>
+              </TextBox>
+              <TextBlock Text="Press Enter to search. Ctrl+K opens search from any page." Classes="caption tertiary" Margin="2,2,0,0"
+                         TextWrapping="Wrap" />
+              <ui:ProgressRing IsIndeterminate="True" Width="28" Height="28" IsVisible="{Binding IsLoading}"
+                               HorizontalAlignment="Left" Margin="0,12,0,0" />
+              <TextBlock Text="{Binding Error}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}"
+                         TextWrapping="Wrap" Foreground="{DynamicResource LumenErrorBrush}" />
+            </StackPanel>
+          </Panel>
+        </ContentControl>
 
-      <!-- My media, Continue watching, Next up, then Latest in each library; rows without cards are hidden. -->
+        <Border x:Name="FeaturedCard" Grid.Column="1" Height="320" CornerRadius="{DynamicResource LumenRadiusLarge}" ClipToBounds="True"
+                Background="{DynamicResource LumenSurfaceRaisedBrush}" BorderBrush="{DynamicResource LumenHairlineBrush}" BorderThickness="1"
+                IsVisible="{Binding HasFeatured}">
+          <Panel x:DataType="vm:HomeViewModel">
+            <Panel DataContext="{Binding Featured}" x:DataType="vm:FeaturedViewModel">
+              <Image Stretch="UniformToFill" Height="320" VerticalAlignment="Center" imaging:RemoteImage.Uri="{Binding ImageUri}" />
+              <ContentControl Classes="glass strong" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="16" Padding="20,18"
+                              Width="400" MaxWidth="400">
+                <StackPanel Spacing="4">
+                  <Border Classes="pill accent" HorizontalAlignment="Left" Margin="0,0,0,6">
+                    <TextBlock Text="{Binding Kicker}" />
+                  </Border>
+                  <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="SemiBold" LetterSpacing="-0.2" TextTrimming="CharacterEllipsis"
+                             Foreground="{DynamicResource LumenTextBrush}" />
+                  <TextBlock Text="{Binding Subtitle}" Classes="caption" TextTrimming="CharacterEllipsis"
+                             IsVisible="{Binding Subtitle, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                  <ProgressBar IsVisible="{Binding HasProgress}" Value="{Binding Progress}" Maximum="1" MinHeight="4" Height="4"
+                               CornerRadius="2" Margin="0,8,0,0" Foreground="{DynamicResource LumenAccentBrush}" />
+                  <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+                    <Button Classes="accent" Command="{Binding $parent[views:HomeView].((vm:HomeViewModel)DataContext).PlayFeaturedCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ui:SymbolIcon Symbol="PlayFilled" FontSize="14" IsVisible="{Binding CanPlay}" />
+                        <TextBlock Text="{Binding ActionLabel}" VerticalAlignment="Center" />
+                      </StackPanel>
+                    </Button>
+                    <Button Content="Details" IsVisible="{Binding CanPlay}" Padding="16,7"
+                            Command="{Binding $parent[views:HomeView].((vm:HomeViewModel)DataContext).OpenFeaturedCommand}" />
+                  </StackPanel>
+                </StackPanel>
+              </ContentControl>
+            </Panel>
+          </Panel>
+        </Border>
+      </Grid>
+
+      <!-- My media: one tile per library. -->
+      <StackPanel Spacing="12" IsVisible="{Binding Libraries.HasCards}">
+        <TextBlock Text="{Binding Libraries.Title}" Classes="section" />
+        <ItemsControl ItemsSource="{Binding Libraries.Cards}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><WrapPanel ItemSpacing="16" LineSpacing="16" /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vm:MediaCardViewModel"><views:LibraryTile /></DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+      <!-- Continue watching, Next up, then Latest in each library; rows without cards are hidden. -->
       <ItemsControl ItemsSource="{Binding Rows}">
         <ItemsControl.ItemTemplate>
           <DataTemplate DataType="vm:HomeRow">
             <StackPanel Spacing="8" Margin="0,0,0,12" IsVisible="{Binding HasCards}">
-              <TextBlock Text="{Binding Title}" Classes="section" />
-              <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,12">
+              <DockPanel>
+                <Button DockPanel.Dock="Right" Classes="link" Content="See all" Command="{Binding SeeAllCommand}"
+                        IsVisible="{Binding HasSeeAll}" />
+                <TextBlock Text="{Binding Title}" Classes="section" VerticalAlignment="Center" />
+              </DockPanel>
+              <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,2,0,14">
                 <ItemsControl ItemsSource="{Binding Cards}" ItemsPanel="{StaticResource HorizontalPanel}"
                               ItemTemplate="{StaticResource Card}" />
               </ScrollViewer>

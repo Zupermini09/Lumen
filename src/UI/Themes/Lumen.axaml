@@ -60,6 +60,7 @@
       <SolidColorBrush x:Key="LumenGlassBrush" Color="#CCFFFFFF" />
       <SolidColorBrush x:Key="LumenGlassStrongBrush" Color="#F2FFFFFF" />
       <SolidColorBrush x:Key="LumenScrimBrush" Color="#99000000" />
+      <SolidColorBrush x:Key="LumenHoverShadeBrush" Color="#10FFFFFF" />
       <SolidColorBrush x:Key="LumenTextBrush" Color="#1A1530" />
       <SolidColorBrush x:Key="LumenTextSecondaryBrush" Color="#5F5979" />
       <SolidColorBrush x:Key="LumenTextTertiaryBrush" Color="#8A849E" />

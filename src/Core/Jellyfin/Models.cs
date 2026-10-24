@@ -53,6 +53,10 @@ public sealed record MediaItem
     public string? PrimaryImageTag { get; init; }
     public string? ThumbImageTag { get; init; }
 
+    /// <summary>The backdrop to show for the item: its own, or (for episodes and seasons) the series'. Only where the request asked for backdrops.</summary>
+    public string? BackdropItemId { get; init; }
+    public string? BackdropTag { get; init; }
+
     /// <summary>For episodes without their own image: the series' primary image.</summary>
     public string? SeriesPrimaryImageTag { get; init; }
 

@@ -103,6 +103,11 @@ internal sealed class BaseItemDto
     public string? ParentBackdropItemId { get; set; }
     public List<string>? ParentBackdropImageTags { get; set; }
 
+    private (string? Item, string? Tag) Backdrop() =>
+        BackdropImageTags is { Count: > 0 } own ? (Id, own[0])
+        : ParentBackdropItemId is { Length: > 0 } parent && ParentBackdropImageTags is { Count: > 0 } inherited ? (parent, inherited[0])
+        : (null, null);
+
     public MediaItem ToModel() => new()
     {
         Id = Id,
@@ -125,6 +130,8 @@ internal sealed class BaseItemDto
         SeasonId = SeasonId,
         PrimaryImageTag = ImageTags?.GetValueOrDefault("Primary"),
         ThumbImageTag = ImageTags?.GetValueOrDefault("Thumb"),
+        BackdropItemId = Backdrop().Item,
+        BackdropTag = Backdrop().Tag,
         SeriesPrimaryImageTag = SeriesPrimaryImageTag,
         AlbumId = AlbumId,
         AlbumPrimaryImageTag = AlbumPrimaryImageTag,
@@ -133,10 +140,7 @@ internal sealed class BaseItemDto
     public ItemDetails ToDetails()
     {
         // Episodes and seasons have no backdrop of their own: like the web client, show the series'.
-        var (backdropItem, backdropTag) =
-            BackdropImageTags is { Count: > 0 } own ? (Id, own[0])
-            : ParentBackdropItemId is { Length: > 0 } parent && ParentBackdropImageTags is { Count: > 0 } inherited ? (parent, inherited[0])
-            : ((string?)null, (string?)null);
+        var (backdropItem, backdropTag) = Backdrop();
 
         // The top-level list is the first file version's; older servers only fill it inside MediaSources.
         var streams = MediaStreams is { Count: > 0 } ? MediaStreams : MediaSources?.FirstOrDefault()?.MediaStreams;

@@ -183,7 +183,7 @@ public sealed class JellyfinClient : IJellyfinClient
     {
         var session = _session.Require();
         var result = await SendAsync<ItemsResultDto>(HttpMethod.Get, session.Server.Address,
-            $"Shows/NextUp?userId={session.User.Id}&limit={limit}&fields={ItemFields}&enableImageTypes=Primary,Thumb&imageTypeLimit=1",
+            $"Shows/NextUp?userId={session.User.Id}&limit={limit}&fields={ItemFields}&enableImageTypes=Primary,Thumb,Backdrop&imageTypeLimit=1",
             session.AccessToken, null, cancellationToken);
         return ToModels(result);
     }

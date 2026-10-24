@@ -6,6 +6,8 @@
       Border.card (hover), Border.pill, Border.pill.accent
       ContentControl.glass (+ .strong): translucent surface with grain, hairline border and a brighter top edge
       Button.accent (stock FluentAvalonia accent button, semibold), Button.card (borderless card button, lifts on hover)
+      Border.hoverShade (inside Button.card: a light veil that fades in on hover),
+      TextBox.hero (large rounded search field), Button.link (text-only "See all" style link)
   -->
 
   <!-- Typography -->
@@ -129,5 +131,56 @@
   </Style>
   <Style Selector="Button.card:focus-visible Border.poster">
     <Setter Property="BorderBrush" Value="{DynamicResource LumenFocusBrush}" />
+  </Style>
+
+  <!-- Hover veil on a card image: invisible until the card is hovered. -->
+  <Style Selector="Border.hoverShade">
+    <Setter Property="Background" Value="{DynamicResource LumenHoverShadeBrush}" />
+    <Setter Property="IsHitTestVisible" Value="False" />
+    <Setter Property="Opacity" Value="0" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.card:pointerover Border.hoverShade, Button.card:focus-visible Border.hoverShade">
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+
+  <!-- Large search field (Home, Search): rounded, quiet, accent ring on focus. -->
+  <Style Selector="TextBox.hero">
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="MinHeight" Value="52" />
+    <Setter Property="Padding" Value="4,13,12,13" />
+    <Setter Property="CornerRadius" Value="{DynamicResource LumenRadiusLarge}" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Background" Value="{DynamicResource LumenSurfaceBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineStrongBrush}" />
+  </Style>
+  <Style Selector="TextBox.hero:pointerover /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource LumenSurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenHairlineStrongBrush}" />
+  </Style>
+  <Style Selector="TextBox.hero:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource LumenSurfaceRaisedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource LumenFocusBrush}" />
+  </Style>
+
+  <!-- Quiet text link, e.g. "See all". -->
+  <Style Selector="Button.link">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="8,4" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="FontSize" Value="{DynamicResource LumenFontSizeCaption}" />
+    <Setter Property="Foreground" Value="{DynamicResource LumenTextSecondaryBrush}" />
+  </Style>
+  <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="TextElement.Foreground" Value="{DynamicResource LumenTextBrush}" />
+  </Style>
+  <Style Selector="Button.link:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
   </Style>
 </Styles>

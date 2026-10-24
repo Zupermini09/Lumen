@@ -375,7 +375,11 @@ public class HomeViewModelTests
             Library("live", "Live TV", "livetv"),
             Library("lists", "Playlists", "playlists"),
         ];
-        public List<MediaItem> Resume { get; set; } = [new() { Id = "r1", Name = "Resume me", Type = "Movie", MediaType = "Video", PlaybackPosition = TimeSpan.FromMinutes(5), RunTime = TimeSpan.FromMinutes(90) }];
+        public List<MediaItem> Resume { get; set; } =
+        [
+            new() { Id = "r1", Name = "Resume me", Type = "Movie", MediaType = "Video", PlaybackPosition = TimeSpan.FromMinutes(5), RunTime = TimeSpan.FromMinutes(90) },
+            new() { Id = "r2", Name = "Then this", Type = "Movie", MediaType = "Video", PlaybackPosition = TimeSpan.FromMinutes(1), RunTime = TimeSpan.FromMinutes(90) },
+        ];
         public List<MediaItem> NextUp { get; set; } = [];
         public Dictionary<string, List<MediaItem>> Latest { get; } = new()
         {
@@ -420,7 +424,8 @@ public class HomeViewModelTests
         public Task SignOutAsync() => Task.CompletedTask;
     }
 
-    private static HomeViewModel Create(HomeClient client) => new(client, new Sessions(), new RecordingNavigator(), new FakePages(), Log);
+    private static HomeViewModel Create(HomeClient client, RecordingNavigator? navigator = null, FakePages? pages = null) =>
+        new(client, new Sessions(), navigator ?? new RecordingNavigator(), pages ?? new FakePages(), Log);
 
     private static async Task WaitUntil(Func<bool> condition)
     {
@@ -436,9 +441,13 @@ public class HomeViewModelTests
     {
         var client = new HomeClient();
         var page = Create(client);
-        await WaitUntil(() => page.Rows.Count(r => r.HasCards) == 4);
+        await WaitUntil(() => page.Rows.Count(r => r.HasCards) == 3);
 
-        Assert.Equal(["My media", "Continue watching", "Latest in Movies", "Latest in TV Shows"], VisibleTitles(page));
+        // The libraries are tiles of their own; the item watched last is the featured card, not repeated in its row.
+        Assert.Equal(["Continue watching", "Latest in Movies", "Latest in TV Shows"], VisibleTitles(page));
+        Assert.Equal(["Then this"], page.Rows.Single(r => r.Key == "resume").Cards.Select(c => c.Title));
+        Assert.Equal(4, page.Libraries.Cards.Count);
+        Assert.Equal("Resume me", page.Featured?.Title);
         // Live TV and playlists have no "latest" row, and are not even asked.
         Assert.Equal(["movies", "tv"], client.LatestRequests.Order());
         Assert.False(page.IsLoading);
@@ -461,9 +470,9 @@ public class HomeViewModelTests
         var client = new HomeClient();
         client.FailLatest.Add("movies");
         var page = Create(client);
-        await WaitUntil(() => page.Rows.Count(r => r.HasCards) == 3);
+        await WaitUntil(() => page.Rows.Any(r => r.Key == "latest:tv" && r.HasCards));
 
-        Assert.Equal(["My media", "Continue watching", "Latest in TV Shows"], VisibleTitles(page));
+        Assert.Equal(["Continue watching", "Latest in TV Shows"], VisibleTitles(page));
         Assert.Null(page.Error);
     }
 
@@ -472,8 +481,8 @@ public class HomeViewModelTests
     {
         var client = new HomeClient();
         var page = Create(client);
-        await WaitUntil(() => page.Rows.Count(r => r.HasCards) == 4);
-        var media = page.Rows.Single(r => r.Key == "media").Cards;
+        await WaitUntil(() => page.Rows.Count(r => r.HasCards) == 3);
+        var media = page.Libraries.Cards;
         var latest = page.Rows.Single(r => r.Key == "latest:movies").Cards;
         var resume = page.Rows.Single(r => r.Key == "resume");
         var before = resume.Cards;
@@ -486,9 +495,10 @@ public class HomeViewModelTests
 
         Assert.False(resume.HasCards);
         Assert.NotSame(before, resume.Cards);
-        Assert.Same(media, page.Rows.Single(r => r.Key == "media").Cards);   // same card objects: no reload, no flicker
+        Assert.Same(media, page.Libraries.Cards);   // same card objects: no reload, no flicker
         Assert.Same(latest, page.Rows.Single(r => r.Key == "latest:movies").Cards);
-        Assert.Equal(["My media", "Next up", "Latest in Movies", "Latest in TV Shows"], VisibleTitles(page));
+        Assert.Equal(["Next up", "Latest in Movies", "Latest in TV Shows"], VisibleTitles(page));
+        Assert.Equal("Show", page.Featured?.Title); // nothing to resume any more: the next episode is featured
         Assert.False(page.IsLoading);
     }
 
@@ -498,7 +508,7 @@ public class HomeViewModelTests
         var client = new HomeClient();
         client.Resume.Clear();
         var page = Create(client);
-        await WaitUntil(() => page.Rows.Count(r => r.HasCards) == 3);
+        await WaitUntil(() => page.Rows.Count(r => r.HasCards) == 2);
 
         client.NextUp.Add(new MediaItem { Id = "n1", Name = "Next", Type = "Episode" });
         page.OnNavigatedTo();
@@ -507,7 +517,7 @@ public class HomeViewModelTests
         page.OnNavigatedTo();
         await WaitUntil(() => page.Rows.Any(r => r.Key == "resume"));
 
-        Assert.Equal(["media", "resume", "nextup", "latest:movies", "latest:tv"], page.Rows.Select(r => r.Key));
+        Assert.Equal(["resume", "nextup", "latest:movies", "latest:tv"], page.Rows.Select(r => r.Key));
     }
 
     [Fact]
@@ -515,20 +525,20 @@ public class HomeViewModelTests
     {
         var client = new HomeClient();
         var page = Create(client);
-        await WaitUntil(() => page.Rows.Count(r => r.HasCards) == 4);
+        await WaitUntil(() => page.Rows.Count(r => r.HasCards) == 3);
 
         client.FailAll = true;
         page.OnNavigatedTo();
         await WaitUntil(() => client.LoadCount == 2);
         await Task.Delay(30);
         Assert.Null(page.Error); // a silent refresh does not turn a working page into an error
-        Assert.Equal(4, page.Rows.Count(r => r.HasCards));
+        Assert.Equal(3, page.Rows.Count(r => r.HasCards));
 
         client.FailAll = false;
         client.Libraries.RemoveAll(l => l.Id == "tv");
         page.OnNavigatedTo();
         await WaitUntil(() => page.Rows.All(r => r.Key != "latest:tv"));
-        Assert.Equal(["My media", "Continue watching", "Latest in Movies"], VisibleTitles(page));
+        Assert.Equal(["Continue watching", "Latest in Movies"], VisibleTitles(page));
     }
 
     [Fact]
@@ -538,4 +548,89 @@ public class HomeViewModelTests
         await WaitUntil(() => !page.IsLoading);
         Assert.Contains("offline", page.Error);
     }
+
+    [Fact]
+    public async Task The_featured_card_resumes_the_item_watched_last()
+    {
+        var navigator = new RecordingNavigator();
+        var page = Create(new HomeClient(), navigator);
+        await WaitUntil(() => page.HasFeatured);
+
+        Assert.Equal("Continue watching", page.Featured!.Kicker);
+        Assert.Equal("Resume 5:00", page.Featured.ActionLabel);
+        Assert.Equal(5d / 90, page.Featured.Progress, 3);
+
+        page.PlayFeaturedCommand.Execute(null);
+        var played = Assert.IsType<FakePage>(Assert.Single(navigator.Pages));
+        Assert.Equal(("Player", "r1"), (played.Kind, played.Item.Id));
+        Assert.Equal(TimeSpan.FromMinutes(5), played.Item.ResumePosition);
+
+        page.OpenFeaturedCommand.Execute(null);
+        Assert.Equal("Details", Assert.IsType<FakePage>(navigator.Pages[1]).Kind);
+    }
+
+    [Fact]
+    public void Featured_choice_prefers_resume_then_next_up_then_something_new()
+    {
+        MediaItem Item(string id) => new() { Id = id, Name = id, Type = "Movie" };
+        Assert.Equal(("r", "Continue watching"), Choose([Item("r")], [Item("n")], [Item("l")]));
+        Assert.Equal(("n", "Next up"), Choose([], [Item("n")], [Item("l")]));
+        Assert.Equal(("l", "New"), Choose([], [], [Item("l")]));
+        Assert.Null(HomeViewModel.ChooseFeatured([], [], []));
+
+        static (string, string)? Choose(MediaItem[] resume, MediaItem[] nextUp, MediaItem[] latest) =>
+            HomeViewModel.ChooseFeatured(resume, nextUp, latest) is { } c ? (c.Item.Id, c.Kicker) : null;
+    }
+
+    [Fact]
+    public async Task Without_anything_to_resume_the_featured_card_plays_from_the_start_or_opens_a_series()
+    {
+        var client = new HomeClient();
+        client.Resume.Clear();
+        client.Latest["movies"] = [new() { Id = "s1", Name = "New show", Type = "Series" }];
+        client.Latest.Remove("tv");
+        var navigator = new RecordingNavigator();
+        var page = Create(client, navigator);
+        await WaitUntil(() => page.Featured is { Kicker: "New" });
+
+        Assert.Equal("Open", page.Featured!.ActionLabel);
+        Assert.False(page.Featured.CanPlay);
+        page.PlayFeaturedCommand.Execute(null);
+        Assert.Equal("Series", Assert.IsType<FakePage>(Assert.Single(navigator.Pages)).Kind);
+
+        Assert.Equal("Play", FeaturedViewModel.Create(new MediaItem { Id = "m", Name = "M", Type = "Movie", MediaType = "Video" }, "New", client).ActionLabel);
+    }
+
+    [Fact]
+    public async Task Typing_in_the_home_search_hands_the_text_to_the_search_page()
+    {
+        var navigator = new RecordingNavigator();
+        var searchPage = new SearchViewModel(new HomeClient(), navigator, new FakePages(), Log);
+        var page = Create(new HomeClient(), navigator, new FakePages { SearchPage = searchPage });
+        await WaitUntil(() => !page.IsLoading);
+
+        page.SearchCommand.Execute(null); // nothing typed: nothing happens
+        Assert.Empty(navigator.Pages);
+
+        page.SearchText = "  alien ";
+        page.SearchCommand.Execute(null);
+
+        Assert.Same(searchPage, Assert.Single(navigator.Pages));
+        Assert.Equal("alien", searchPage.Query);
+
+        page.OnNavigatedTo(); // back on Home the box is empty again
+        Assert.Equal("", page.SearchText);
+    }
+
+    [Theory]
+    [InlineData(6, "Good morning, Ada")]
+    [InlineData(13, "Good afternoon, Ada")]
+    [InlineData(21, "Good evening, Ada")]
+    [InlineData(2, "Good evening, Ada")]
+    public void The_greeting_follows_the_time_of_day(int hour, string expected) =>
+        Assert.Equal(expected, HomeViewModel.GreetingFor(new DateTime(2026, 1, 1, hour, 0, 0), "Ada"));
+
+    [Fact]
+    public void The_greeting_works_without_a_name() =>
+        Assert.Equal("Good morning", HomeViewModel.GreetingFor(new DateTime(2026, 1, 1, 8, 0, 0), null));
 }

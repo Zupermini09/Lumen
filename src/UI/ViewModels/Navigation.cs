@@ -58,9 +58,11 @@ public static class ItemNavigation
         _ => item.IsPlayable ? ItemTarget.Player : ItemTarget.Folder,
     };
 
-    public static void Open(MediaItem item, INavigator navigator, IPageFactory pages) =>
+    /// <summary>Opens the item's page; with <paramref name="play"/> a movie or episode goes straight to the player (resuming where it stopped).</summary>
+    public static void Open(MediaItem item, INavigator navigator, IPageFactory pages, bool play = false) =>
         navigator.Navigate(TargetFor(item) switch
         {
+            ItemTarget.Details when play => pages.Player(item),
             ItemTarget.Details => pages.Details(item),
             ItemTarget.Series => pages.Series(item),
             ItemTarget.Player => pages.Player(item),
