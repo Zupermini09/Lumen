@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>Lumen</title>
+  <defs>
+    <linearGradient id="tile" x1="512" y1="0" x2="512" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6D3AE8"/>
+      <stop offset="1" stop-color="#3B1F8F"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#tile)"/>
+  <rect x="2" y="2" width="1020" height="1020" rx="222" fill="none" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="4"/>
+  <path fill="#FFF1D6" d="M310.38 207.1A23.21 23.21 0 0 0 275.58 227.19L275.58 796.81A23.21 23.21 0 0 0 310.38 816.9L803.68 532.1A23.21 23.21 0 0 0 803.68 491.9L727.08 447.68L386.99 644.03L386.99 251.32ZM433.4 278.12L433.4 523.46A23.21 23.21 0 0 0 468.2 543.55L645.86 440.98A23.21 23.21 0 0 0 645.86 400.79Z"/>
+</svg>
